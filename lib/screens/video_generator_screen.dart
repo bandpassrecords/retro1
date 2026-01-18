@@ -316,7 +316,7 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
     try {
       await Share.shareXFiles(
         [XFile(_generatedVideoPath!)],
-        text: 'Meu vídeo do One Second Per Day',
+        text: 'Retro1 Rendered Video',
       );
     } catch (e) {
       if (mounted) {
