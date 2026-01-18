@@ -1,0 +1,123 @@
+{
+  "@@locale": "en",
+  "appTitle": "Retro1",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  "timeline": "Timeline",
+  "settings": "Settings",
+  "generateVideos": "Generate Videos",
+  "editTodayEntry": "Edit Today's Entry",
+  "recordToday": "Record Today",
+  "view": "View",
+  "edit": "Edit",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "yes": "Yes",
+  "replace": "Replace",
+  "confirmDeletion": "Confirm deletion",
+  "confirmDeletionMessage": "Are you sure you want to delete this entry?",
+  "entryDeleted": "Entry deleted",
+  "entrySaved": "Entry saved successfully!",
+  "addEntryFor": "Add entry for {date}",
+  "@addEntryFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "captureOrImport": "Do you want to capture or import media?",
+  "recordVideo": "Record Video",
+  "takePhoto": "Take Photo",
+  "videoFromGallery": "Video from Gallery",
+  "photoFromGallery": "Photo from Gallery",
+  "chooseHowToRecord": "Choose how you want to record your moment:",
+  "entryAlreadyExists": "Entry already exists",
+  "entryAlreadyExistsMessage": "An entry already exists for this day. Do you want to replace it?",
+  "editorChooseSecond": "Editor - Choose 1 Second",
+  "playing": "Playing...",
+  "preview1s": "Preview (1s)",
+  "errorLoadingVideo": "Error loading video: {error}",
+  "@errorLoadingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaving": "Error saving: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "video": "Video",
+  "photo": "Photo",
+  "all": "All",
+  "videosOnly": "Videos Only",
+  "photosOnly": "Photos Only",
+  "noCaption": "No caption",
+  "generateByPeriod": "Generate by Period",
+  "currentMonth": "Current Month",
+  "currentYear": "Current Year",
+  "customRange": "Custom Range",
+  "chooseDates": "Choose dates",
+  "generatingVideo": "Generating video... This may take a few minutes.",
+  "videoGeneratedSuccess": "Video generated successfully!",
+  "share": "Share",
+  "newButton": "New",
+  "@newButton": {
+    "description": "Button label for creating a new video"
+  },
+  "errorSharing": "Error sharing: {error}",
+  "@errorSharing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noEntriesFound": "No entries found for this period.",
+  "errorGeneratingVideo": "Error generating video: {error}",
+  "@errorGeneratingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enableNotifications": "Enable notifications",
+  "notificationTime": "Notification time",
+  "reminderAfter": "Reminder after (hours)",
+  "weeklySummary": "Weekly summary",
+  "videoQuality": "Video quality",
+  "showDateInVideo": "Show date in video",
+  "autoExportEndOfYear": "Auto export at end of year",
+  "autoBackup": "Auto backup",
+  "totalEntries": "Total entries",
+  "entriesThisYear": "Entries this year",
+  "entries": "entries",
+  "settingsSaved": "Settings saved",
+  "quality720p": "720p",
+  "quality1080p": "1080p",
+  "quality4k": "4K",
+  "language": "Language",
+  "languageEnglish": "English",
+  "languagePortuguese": "Portuguese",
+  "appLanguage": "App language",
+  "testNotification": "Test notification",
+  "testNotificationDescription": "Send a test notification now",
+  "testNotificationSent": "Test notification sent!",
+  "testNotificationError": "Error sending test notification",
+  "today": "Today",
+  "useExternalAudio": "Use external audio",
+  "selectAudioFile": "Select audio file",
+  "audioFileSelected": "Audio file selected",
+  "removeAudio": "Remove audio",
+  "noAudio": "No audio",
+  "externalAudio": "External audio",
+  "originalAudio": "Original audio"
+}

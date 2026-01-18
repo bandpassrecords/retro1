@@ -1,0 +1,120 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Retro1",
+  "timeline": "Timeline",
+  "settings": "Configurações",
+  "generateVideos": "Gerar Vídeos",
+  "editTodayEntry": "Editar Entrada de Hoje",
+  "recordToday": "Registrar Hoje",
+  "view": "Visualizar",
+  "edit": "Editar",
+  "delete": "Excluir",
+  "cancel": "Cancelar",
+  "yes": "Sim",
+  "replace": "Substituir",
+  "confirmDeletion": "Confirmar exclusão",
+  "confirmDeletionMessage": "Tem certeza que deseja excluir esta entrada?",
+  "entryDeleted": "Entrada excluída",
+  "entrySaved": "Entrada salva com sucesso!",
+  "addEntryFor": "Adicionar entrada para {date}",
+  "@addEntryFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "captureOrImport": "Deseja capturar ou importar uma mídia?",
+  "recordVideo": "Gravar Vídeo",
+  "takePhoto": "Tirar Foto",
+  "videoFromGallery": "Vídeo da Galeria",
+  "photoFromGallery": "Foto da Galeria",
+  "chooseHowToRecord": "Escolha como deseja registrar seu momento:",
+  "entryAlreadyExists": "Já existe uma entrada",
+  "entryAlreadyExistsMessage": "Já existe uma entrada para este dia. Deseja substituir?",
+  "editorChooseSecond": "Editor - Escolha 1 Segundo",
+  "playing": "Reproduzindo...",
+  "preview1s": "Preview (1s)",
+  "errorLoadingVideo": "Erro ao carregar vídeo: {error}",
+  "@errorLoadingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaving": "Erro ao salvar: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "video": "Vídeo",
+  "photo": "Foto",
+  "all": "Todos",
+  "videosOnly": "Apenas Vídeos",
+  "photosOnly": "Apenas Fotos",
+  "noCaption": "Sem legenda",
+  "generateByPeriod": "Gerar por Período",
+  "currentMonth": "Mês Atual",
+  "currentYear": "Ano Atual",
+  "customRange": "Intervalo Customizado",
+  "chooseDates": "Escolha as datas",
+  "generatingVideo": "Gerando vídeo... Isso pode levar alguns minutos.",
+  "videoGeneratedSuccess": "Vídeo gerado com sucesso!",
+  "share": "Compartilhar",
+  "newButton": "Novo",
+  "@newButton": {
+    "description": "Rótulo do botão para criar um novo vídeo"
+  },
+  "errorSharing": "Erro ao compartilhar: {error}",
+  "@errorSharing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noEntriesFound": "Nenhuma entrada encontrada para este período.",
+  "errorGeneratingVideo": "Erro ao gerar vídeo: {error}",
+  "@errorGeneratingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enableNotifications": "Ativar notificações",
+  "notificationTime": "Horário da notificação",
+  "reminderAfter": "Lembrete após (horas)",
+  "weeklySummary": "Resumo semanal",
+  "videoQuality": "Qualidade do vídeo",
+  "showDateInVideo": "Mostrar data no vídeo",
+  "autoExportEndOfYear": "Exportação automática no fim do ano",
+  "autoBackup": "Backup automático",
+  "totalEntries": "Total de entradas",
+  "entriesThisYear": "Entradas deste ano",
+  "entries": "entradas",
+  "settingsSaved": "Configurações salvas",
+  "quality720p": "720p",
+  "quality1080p": "1080p",
+  "quality4k": "4K",
+  "language": "Idioma",
+  "languageEnglish": "Inglês",
+  "languagePortuguese": "Português",
+  "appLanguage": "Idioma do aplicativo",
+  "testNotification": "Testar notificação",
+  "testNotificationDescription": "Enviar uma notificação de teste agora",
+  "testNotificationSent": "Notificação de teste enviada!",
+  "testNotificationError": "Erro ao enviar notificação de teste",
+  "today": "Hoje",
+  "useExternalAudio": "Usar áudio externo",
+  "selectAudioFile": "Selecionar arquivo de áudio",
+  "audioFileSelected": "Arquivo de áudio selecionado",
+  "removeAudio": "Remover áudio",
+  "noAudio": "Sem áudio",
+  "externalAudio": "Áudio externo",
+  "originalAudio": "Áudio original"
+}
