@@ -56,7 +56,15 @@ android {
             if (keystorePropertiesFile.exists()) {
                 val keystoreFile = keystoreProperties["storeFile"] as String?
                 if (keystoreFile != null) {
-                    val keystorePath = rootProject.file("android/app/$keystoreFile")
+                    // storeFile in key.properties is relative to android/app/ directory
+                    // e.g., "app/release.keystore" means android/app/release.keystore
+                    // or "release.keystore" also means android/app/release.keystore
+                    val keystorePath = if (keystoreFile.startsWith("app/")) {
+                        rootProject.file("android/$keystoreFile")
+                    } else {
+                        rootProject.file("android/app/$keystoreFile")
+                    }
+                    
                     if (keystorePath.exists()) {
                         keyAlias = keystoreProperties["keyAlias"] as String?
                         keyPassword = keystoreProperties["keyPassword"] as String?

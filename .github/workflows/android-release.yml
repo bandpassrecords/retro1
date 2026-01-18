@@ -203,6 +203,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "Verifying keystore configuration..."
+          echo "Current directory: $(pwd)"
+          echo "Listing android directory:"
+          ls -la android/ || true
+          echo "Listing android/app directory:"
+          ls -la android/app/ || true
+          
           if [ ! -f android/key.properties ]; then
             echo "ERROR: android/key.properties not found!"
             exit 1
@@ -211,9 +217,14 @@ jobs:
             echo "ERROR: android/app/release.keystore not found!"
             exit 1
           fi
+          
           echo "✓ Keystore files found"
+          echo ""
           echo "Key.properties contents (without passwords):"
-          grep -v "Password" android/key.properties || true
+          cat android/key.properties | grep -v "Password" || cat android/key.properties
+          echo ""
+          echo "Keystore file size:"
+          ls -lh android/app/release.keystore
 
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')
