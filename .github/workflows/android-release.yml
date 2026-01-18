@@ -147,7 +147,7 @@ jobs:
           # Create key.properties file
           mkdir -p android
           cat > android/key.properties << EOF
-          storeFile=release.keystore
+          storeFile=app/release.keystore
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
