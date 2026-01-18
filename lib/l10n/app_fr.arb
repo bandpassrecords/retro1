@@ -206,5 +206,13 @@
   "theme": "Thème",
   "themeLight": "Clair",
   "themeDark": "Sombre",
-  "themeSystem": "Système"
+  "themeSystem": "Système",
+  "loadMoreDays": "Charger Plus de Jours",
+  "mondayShort": "Lun",
+  "tuesdayShort": "Mar",
+  "wednesdayShort": "Mer",
+  "thursdayShort": "Jeu",
+  "fridayShort": "Ven",
+  "saturdayShort": "Sam",
+  "sundayShort": "Dim"
 }

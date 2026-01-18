@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
@@ -33,7 +32,7 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   late ScrollController _scrollController;
   late List<DateTime> _months;
   final Map<int, GlobalKey> _monthKeys = {};
-  Timer? _savePositionTimer;
+  int _monthsToShow = 2; // Começar com 2 meses (últimos ~60 dias)
 
   @override
   void initState() {
@@ -41,68 +40,12 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
     _scrollController = ScrollController();
     _generateMonths();
     
-    // Adicionar listener para salvar posição quando o scroll mudar
-    _scrollController.addListener(_onScrollChanged);
-    
-    // Aguardar que o layout esteja pronto antes de fazer scroll
-    // Usar múltiplos callbacks para garantir que o layout está completamente renderizado
+    // Garantir que o calendário mostre o dia atual ao abrir
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            _restoreScrollPosition();
-          });
-        });
+        _scrollToCurrentMonth();
       });
     });
-  }
-
-  void _onScrollChanged() {
-    // Debounce: salvar posição após 500ms sem scroll
-    _savePositionTimer?.cancel();
-    _savePositionTimer = Timer(const Duration(milliseconds: 500), () {
-      _saveScrollPosition();
-    });
-  }
-
-  void _saveScrollPosition() {
-    if (_scrollController.hasClients) {
-      final position = _scrollController.offset;
-      final settings = HiveService.getSettings();
-      if (settings != null) {
-        settings.lastCalendarScrollPosition = position;
-        HiveService.saveSettings(settings);
-      }
-    }
-  }
-
-  void _restoreScrollPosition() {
-    final settings = HiveService.getSettings();
-    if (settings != null && settings.lastCalendarScrollPositionOrDefault > 0) {
-      // Se temos uma posição salva, restaurar ela
-      if (_scrollController.hasClients) {
-        final savedPosition = settings.lastCalendarScrollPositionOrDefault;
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        final positionToRestore = savedPosition.clamp(0.0, maxScroll);
-        
-        // Aguardar um frame adicional para garantir que o layout está pronto
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients) {
-            _scrollController.jumpTo(positionToRestore);
-          }
-        });
-      } else {
-        // Se o controller ainda não está pronto, tentar novamente
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(milliseconds: 100), () {
-            _restoreScrollPosition();
-          });
-        });
-      }
-    } else {
-      // Se não há posição salva, ir para o mês atual
-      _scrollToCurrentMonth();
-    }
   }
 
   @override
@@ -120,43 +63,65 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   @override
   void dispose() {
-    _savePositionTimer?.cancel();
-    _scrollController.removeListener(_onScrollChanged);
-    // Salvar posição final antes de descartar
-    _saveScrollPosition();
     _scrollController.dispose();
     super.dispose();
   }
 
   void _generateMonths() {
     final today = DateTime.now();
-    // Gerar meses: 2 anos atrás até 2 anos à frente
-    final start = DateTime(today.year - 2, 1, 1);
-    final end = DateTime(today.year + 2, 12, 1);
-    
+    // Gerar apenas os últimos N meses (começando com 2 meses = ~60 dias)
+    // Sempre incluir o mês atual e os meses anteriores
     _months = [];
-    var current = DateTime(start.year, start.month, 1);
-    final endDate = DateTime(end.year, end.month, 1);
     
-    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+    // Começar do mês atual e ir para trás
+    var current = DateTime(today.year, today.month, 1);
+    
+    for (int i = 0; i < _monthsToShow; i++) {
       _months.add(DateTime(current.year, current.month, 1));
-      current = DateTime(current.year, current.month + 1, 1);
+      // Ir para o mês anterior
+      if (current.month == 1) {
+        current = DateTime(current.year - 1, 12, 1);
+      } else {
+        current = DateTime(current.year, current.month - 1, 1);
+      }
     }
     
-    // Criar keys para cada mês
+    // Reverter para mostrar do mais antigo para o mais recente (topo para baixo)
+    _months = _months.reversed.toList();
+    
+    // Criar/atualizar keys para cada mês
     for (int i = 0; i < _months.length; i++) {
-      _monthKeys[i] = GlobalKey();
+      if (!_monthKeys.containsKey(i)) {
+        _monthKeys[i] = GlobalKey();
+      }
     }
   }
 
+  void _loadMoreMonths() {
+    setState(() {
+      _monthsToShow += 2; // Carregar mais 2 meses
+      _generateMonths();
+    });
+  }
+
   void _scrollToCurrentMonth() {
-    _scrollToMonth(DateTime.now());
+    // Como sempre mostramos o mês atual no final da lista, scroll para o final
+    if (_scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
   
   // Método público para focar no dia atual (chamado pelo botão Today)
   void focusOnToday() {
-    final today = DateTime.now();
-    _scrollToMonth(today);
+    _scrollToCurrentMonth();
   }
 
   // Método público para forçar refresh do calendário
@@ -283,8 +248,13 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
-            itemCount: _months.length,
+            itemCount: _months.length + 1, // +1 para o botão "Load More"
             itemBuilder: (context, index) {
+              // Se for o último item, mostrar botão "Load More"
+              if (index == _months.length) {
+                return _buildLoadMoreButton();
+              }
+              
               return _MonthView(
                 key: _monthKeys[index],
                 month: _months[index],
@@ -299,7 +269,16 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   }
 
   Widget _buildWeekdayHeaders() {
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final l10n = AppLocalizations.of(context)!;
+    final weekdays = [
+      l10n.mondayShort,
+      l10n.tuesdayShort,
+      l10n.wednesdayShort,
+      l10n.thursdayShort,
+      l10n.fridayShort,
+      l10n.saturdayShort,
+      l10n.sundayShort,
+    ];
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -318,6 +297,20 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreButton() {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: _loadMoreMonths,
+          icon: const Icon(Icons.expand_more),
+          label: Text(l10n.loadMoreDays),
+        ),
       ),
     );
   }
@@ -351,17 +344,6 @@ class _MonthView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Column(
         children: [
-          // Título do mês
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              DateFormat('MMMM yyyy', 'en').format(month),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
           // Grade do calendário
           GridView.builder(
             shrinkWrap: true,

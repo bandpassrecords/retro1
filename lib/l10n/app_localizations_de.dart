@@ -502,4 +502,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themeSystem => 'System';
+
+  @override
+  String get loadMoreDays => 'Mehr Tage Laden';
+
+  @override
+  String get mondayShort => 'Mo';
+
+  @override
+  String get tuesdayShort => 'Di';
+
+  @override
+  String get wednesdayShort => 'Mi';
+
+  @override
+  String get thursdayShort => 'Do';
+
+  @override
+  String get fridayShort => 'Fr';
+
+  @override
+  String get saturdayShort => 'Sa';
+
+  @override
+  String get sundayShort => 'So';
 }

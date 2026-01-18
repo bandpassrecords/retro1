@@ -333,5 +333,13 @@
   "theme": "Tema",
   "themeLight": "Claro",
   "themeDark": "Escuro",
-  "themeSystem": "Sistema"
+  "themeSystem": "Sistema",
+  "loadMoreDays": "Carregar Mais Dias",
+  "mondayShort": "Seg",
+  "tuesdayShort": "Ter",
+  "wednesdayShort": "Qua",
+  "thursdayShort": "Qui",
+  "fridayShort": "Sex",
+  "saturdayShort": "Sáb",
+  "sundayShort": "Dom"
 }

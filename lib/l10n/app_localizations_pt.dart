@@ -497,4 +497,28 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get themeSystem => 'Sistema';
+
+  @override
+  String get loadMoreDays => 'Carregar Mais Dias';
+
+  @override
+  String get mondayShort => 'Seg';
+
+  @override
+  String get tuesdayShort => 'Ter';
+
+  @override
+  String get wednesdayShort => 'Qua';
+
+  @override
+  String get thursdayShort => 'Qui';
+
+  @override
+  String get fridayShort => 'Sex';
+
+  @override
+  String get saturdayShort => 'Sáb';
+
+  @override
+  String get sundayShort => 'Dom';
 }

@@ -206,5 +206,13 @@
   "theme": "Design",
   "themeLight": "Hell",
   "themeDark": "Dunkel",
-  "themeSystem": "System"
+  "themeSystem": "System",
+  "loadMoreDays": "Mehr Tage Laden",
+  "mondayShort": "Mo",
+  "tuesdayShort": "Di",
+  "wednesdayShort": "Mi",
+  "thursdayShort": "Do",
+  "fridayShort": "Fr",
+  "saturdayShort": "Sa",
+  "sundayShort": "So"
 }
