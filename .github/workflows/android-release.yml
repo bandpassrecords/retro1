@@ -226,9 +226,56 @@ jobs:
           echo "Keystore file size:"
           ls -lh android/app/release.keystore
 
+      - name: Final Keystore Verification Before Build (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "=== Final verification before build ==="
+          echo "Current directory: $(pwd)"
+          echo ""
+          echo "Checking if key.properties exists:"
+          if [ -f android/key.properties ]; then
+            echo "✓ android/key.properties EXISTS"
+            echo "Contents:"
+            cat android/key.properties
+          else
+            echo "✗ android/key.properties NOT FOUND"
+            echo "Listing android directory:"
+            ls -la android/ || true
+            exit 1
+          fi
+          
+          echo ""
+          echo "Checking if keystore exists:"
+          if [ -f android/app/release.keystore ]; then
+            echo "✓ android/app/release.keystore EXISTS"
+            ls -lh android/app/release.keystore
+          else
+            echo "✗ android/app/release.keystore NOT FOUND"
+            echo "Listing android/app directory:"
+            ls -la android/app/ || true
+            exit 1
+          fi
+          
+          echo ""
+          echo "Verifying file paths from build.gradle.kts perspective:"
+          echo "Root project should be: $(pwd)"
+          echo "android/key.properties should be at: $(pwd)/android/key.properties"
+          if [ -f "$(pwd)/android/key.properties" ]; then
+            echo "✓ File found at expected location"
+          else
+            echo "✗ File NOT found at expected location"
+          fi
+
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
+          echo "=== Starting build ==="
+          echo "Current directory: $(pwd)"
+          echo "Verifying files exist before build:"
+          ls -la android/key.properties || echo "key.properties NOT FOUND"
+          ls -la android/app/release.keystore || echo "keystore NOT FOUND"
+          echo ""
+          echo "Building AAB..."
           flutter build appbundle --release
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}

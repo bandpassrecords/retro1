@@ -19,8 +19,19 @@ val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "
 // Load keystore properties from key.properties file (for release signing)
 val keystorePropertiesFile = rootProject.file("android/key.properties")
 val keystoreProperties = Properties()
+
+// Debug: Log file existence check
+println("[Gradle] Checking for keystore properties file at: ${keystorePropertiesFile.absolutePath}")
+println("[Gradle] File exists: ${keystorePropertiesFile.exists()}")
 if (keystorePropertiesFile.exists()) {
+    println("[Gradle] Loading keystore properties...")
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+    println("[Gradle] Keystore properties loaded successfully")
+    println("[Gradle] storeFile from properties: ${keystoreProperties["storeFile"]}")
+} else {
+    println("[Gradle] WARNING: keystore properties file not found!")
+    println("[Gradle] Current working directory: ${System.getProperty("user.dir")}")
+    println("[Gradle] Root project directory: ${rootProject.projectDir}")
 }
 
 android {
