@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/media_service.dart';
 import '../services/hive_service.dart';
 import '../services/video_editor_service.dart';
+import '../services/notification_service.dart';
 import 'editor_screen.dart';
 import 'photo_edit_daily_screen.dart';
 
@@ -26,9 +28,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registrar - ${DateFormat('dd/MM/yyyy').format(widget.selectedDate)}'),
+        title: Text(l10n.recordFor(DateFormat('dd/MM/yyyy').format(widget.selectedDate))),
       ),
       body: Center(
         child: _isProcessing
@@ -248,19 +251,20 @@ class _CaptureScreenState extends State<CaptureScreen> {
       } else {
         // Se for foto, perguntar se quer editar
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           final shouldEdit = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Photo Added'),
-              content: const Text('Do you want to edit the photo now?'),
+              title: Text(l10n.photoAdded),
+              content: Text(l10n.doYouWantToEdit),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Skip'),
+                  child: Text(l10n.skip),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Edit'),
+                  child: Text(l10n.edit),
                 ),
               ],
             ),
@@ -269,6 +273,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
           if (shouldEdit == true) {
             // Salvar primeiro
             await HiveService.saveEntry(entry);
+            // Cancelar notificações para este dia
+            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
             // Abrir editor de foto
             Navigator.pushReplacement(
               context,
@@ -279,9 +285,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
           } else {
             // Salvar e voltar
             await HiveService.saveEntry(entry);
+            // Cancelar notificações para este dia
+            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
             Navigator.pop(context);
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Entry saved successfully!')),
+              SnackBar(content: Text(l10n.entradaSalvaSucesso)),
             );
           }
         }
@@ -294,21 +303,20 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<bool> _confirmReplace() async {
+    final l10n = AppLocalizations.of(context)!;
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Já existe uma entrada'),
-            content: const Text(
-              'Já existe uma entrada para este dia. Deseja substituir?',
-            ),
+            title: Text(l10n.entryAlreadyExists),
+            content: Text(l10n.entryAlreadyExistsMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Substituir'),
+                child: Text(l10n.replace),
               ),
             ],
           ),

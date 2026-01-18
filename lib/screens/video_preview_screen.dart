@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
+import 'package:retro1/l10n/app_localizations.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/daily_entry.dart';
 import 'photo_edit_daily_screen.dart';
 
@@ -46,8 +48,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       });
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar vídeo: $e')),
+          SnackBar(content: Text(l10n.errorLoadingVideo(e.toString()))),
         );
       }
     }
@@ -79,6 +82,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       appBar: AppBar(
         title: Text(DateFormat('dd/MM/yyyy').format(widget.entry.date)),
         actions: [
+          // Botão de compartilhar para vídeos
+          if (widget.entry.mediaType == 'video')
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: _shareVideo,
+              tooltip: AppLocalizations.of(context)!.share,
+            ),
           if (widget.entry.mediaType == 'photo')
             IconButton(
               icon: const Icon(Icons.edit),
@@ -171,12 +181,44 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             const Icon(Icons.broken_image, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'Image not found',
+              AppLocalizations.of(context)!.imageNotFound,
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               imagePath,
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Verificar se é uma imagem (não um vídeo)
+    final extension = imagePath.toLowerCase();
+    final isImage = extension.endsWith('.jpg') || 
+                    extension.endsWith('.jpeg') || 
+                    extension.endsWith('.png') || 
+                    extension.endsWith('.bmp') || 
+                    extension.endsWith('.webp');
+    
+    // Se não for uma imagem, mostrar erro
+    if (!isImage) {
+      print('[VideoPreview] WARNING: imagePath is not an image: $imagePath');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.broken_image, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.errorLoadingImage,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'File is not an image: $imagePath',
               style: TextStyle(color: Colors.grey[500], fontSize: 12),
               textAlign: TextAlign.center,
             ),
@@ -200,7 +242,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 const Icon(Icons.broken_image, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
                 Text(
-                  'Error loading image',
+                  AppLocalizations.of(context)!.errorLoadingImage,
                   style: TextStyle(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
@@ -234,7 +276,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
             if (!_isPlaying)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -247,5 +289,32 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _shareVideo() async {
+    if (!File(widget.entry.originalPath).existsSync()) {
+      final l10n = AppLocalizations.of(context)!;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorSharing('Video file not found'))),
+        );
+      }
+      return;
+    }
+
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      await Share.shareXFiles(
+        [XFile(widget.entry.originalPath)],
+        text: '${l10n.appTitle} - ${DateFormat('dd/MM/yyyy').format(widget.entry.date)}',
+      );
+    } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorSharing(e.toString()))),
+        );
+      }
+    }
   }
 }

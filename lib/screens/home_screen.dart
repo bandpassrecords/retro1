@@ -42,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshCalendar() {
     if (mounted) {
       setState(() {});
+      // Também forçar refresh do widget do calendário
+      _calendarKey.currentState?.refresh();
     }
   }
 
@@ -145,11 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildStatItem(
-              'Hoje',
+              AppLocalizations.of(context)!.today,
               hasToday ? '✓' : '✗',
               hasToday ? Colors.green : Colors.orange,
             ),
-            _buildStatItem('Total', total.toString(), Colors.blue),
+            _buildStatItem(AppLocalizations.of(context)!.totalEntries, total.toString(), Colors.blue),
             _buildStatItem('${DateTime.now().year}', year.toString(), Colors.purple),
           ],
         ),
@@ -203,12 +205,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleQuickAction(bool hasTodayEntry) async {
     final today = DateTime.now();
     // Sempre abrir a tela de captura (para adicionar ou trocar)
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CaptureScreen(selectedDate: today),
       ),
     );
+    // Atualizar calendário quando voltar
+    _refreshCalendar();
   }
 
   void _onDaySelected(DateTime selectedDay, DailyEntry? entry) {
@@ -244,28 +248,32 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.play_circle),
               title: Text(l10n.view),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => VideoPreviewScreen(entry: entry),
                   ),
                 );
+                // Atualizar calendário quando voltar (pode ter editado a foto)
+                _refreshCalendar();
               },
             ),
             ListTile(
               leading: const Icon(Icons.swap_horiz),
               title: Text(l10n.replace),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
                 // Abrir diretamente a tela de captura para trocar a mídia
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => CaptureScreen(selectedDate: day),
                   ),
                 );
+                // Atualizar calendário quando voltar
+                _refreshCalendar();
               },
             ),
             ListTile(
@@ -291,14 +299,16 @@ class _HomeScreenState extends State<HomeScreen> {
         content: Text(l10n.captureOrImport),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => CaptureScreen(selectedDate: day),
                 ),
               );
+              // Atualizar calendário quando voltar
+              _refreshCalendar();
             },
             child: Text(l10n.yes),
           ),

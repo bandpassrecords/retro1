@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
+import 'dart:async';
 
 class MonthlyCalendar extends StatefulWidget {
   final DateTime? selectedDay;
@@ -32,23 +33,76 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   late ScrollController _scrollController;
   late List<DateTime> _months;
   final Map<int, GlobalKey> _monthKeys = {};
+  Timer? _savePositionTimer;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _generateMonths();
+    
+    // Adicionar listener para salvar posição quando o scroll mudar
+    _scrollController.addListener(_onScrollChanged);
+    
     // Aguardar que o layout esteja pronto antes de fazer scroll
     // Usar múltiplos callbacks para garantir que o layout está completamente renderizado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 100), () {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future.delayed(const Duration(milliseconds: 200), () {
-            _scrollToCurrentMonth();
+            _restoreScrollPosition();
           });
         });
       });
     });
+  }
+
+  void _onScrollChanged() {
+    // Debounce: salvar posição após 500ms sem scroll
+    _savePositionTimer?.cancel();
+    _savePositionTimer = Timer(const Duration(milliseconds: 500), () {
+      _saveScrollPosition();
+    });
+  }
+
+  void _saveScrollPosition() {
+    if (_scrollController.hasClients) {
+      final position = _scrollController.offset;
+      final settings = HiveService.getSettings();
+      if (settings != null) {
+        settings.lastCalendarScrollPosition = position;
+        HiveService.saveSettings(settings);
+      }
+    }
+  }
+
+  void _restoreScrollPosition() {
+    final settings = HiveService.getSettings();
+    if (settings != null && settings.lastCalendarScrollPositionOrDefault > 0) {
+      // Se temos uma posição salva, restaurar ela
+      if (_scrollController.hasClients) {
+        final savedPosition = settings.lastCalendarScrollPositionOrDefault;
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        final positionToRestore = savedPosition.clamp(0.0, maxScroll);
+        
+        // Aguardar um frame adicional para garantir que o layout está pronto
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(positionToRestore);
+          }
+        });
+      } else {
+        // Se o controller ainda não está pronto, tentar novamente
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            _restoreScrollPosition();
+          });
+        });
+      }
+    } else {
+      // Se não há posição salva, ir para o mês atual
+      _scrollToCurrentMonth();
+    }
   }
 
   @override
@@ -66,6 +120,10 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   @override
   void dispose() {
+    _savePositionTimer?.cancel();
+    _scrollController.removeListener(_onScrollChanged);
+    // Salvar posição final antes de descartar
+    _saveScrollPosition();
     _scrollController.dispose();
     super.dispose();
   }
@@ -99,6 +157,13 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   void focusOnToday() {
     final today = DateTime.now();
     _scrollToMonth(today);
+  }
+
+  // Método público para forçar refresh do calendário
+  void refresh() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _scrollToMonth(DateTime month) {
@@ -449,6 +514,20 @@ class _DayCell extends StatelessWidget {
       return _buildPlaceholder();
     }
     
+    // Verificar se é uma imagem (não um vídeo)
+    final extension = thumbnailPath.toLowerCase();
+    final isImage = extension.endsWith('.jpg') || 
+                    extension.endsWith('.jpeg') || 
+                    extension.endsWith('.png') || 
+                    extension.endsWith('.bmp') || 
+                    extension.endsWith('.webp');
+    
+    // Se não for uma imagem, não tentar exibir como Image.file
+    if (!isImage) {
+      print('[MonthlyCalendar] WARNING: thumbnailPath is not an image: $thumbnailPath');
+      return _buildPlaceholder();
+    }
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(7),
       child: Image.file(
@@ -457,6 +536,7 @@ class _DayCell extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) {
+          print('[MonthlyCalendar] Error loading thumbnail: $error');
           return _buildPlaceholder();
         },
       ),

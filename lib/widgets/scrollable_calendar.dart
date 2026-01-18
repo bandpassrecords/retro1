@@ -255,10 +255,25 @@ class _DayTile extends StatelessWidget {
       return _buildPlaceholder(entry);
     }
     
+    // Verificar se é uma imagem (não um vídeo)
+    final extension = thumbnailPath.toLowerCase();
+    final isImage = extension.endsWith('.jpg') || 
+                    extension.endsWith('.jpeg') || 
+                    extension.endsWith('.png') || 
+                    extension.endsWith('.bmp') || 
+                    extension.endsWith('.webp');
+    
+    // Se não for uma imagem, não tentar exibir como Image.file
+    if (!isImage) {
+      print('[ScrollableCalendar] WARNING: thumbnailPath is not an image: $thumbnailPath');
+      return _buildPlaceholder(entry);
+    }
+    
     return Image.file(
       file,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
+        print('[ScrollableCalendar] Error loading thumbnail: $error');
         return _buildPlaceholder(entry);
       },
     );

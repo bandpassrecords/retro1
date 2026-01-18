@@ -94,7 +94,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get playing => 'Reproduzindo...';
 
   @override
-  String get preview1s => 'Preview (1s)';
+  String get preview1s => 'Preview 1s';
 
   @override
   String errorLoadingVideo(String error) {
@@ -258,4 +258,243 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get originalAudio => 'Áudio original';
+
+  @override
+  String get projects => 'Projetos';
+
+  @override
+  String get freeProjects => 'Projetos Livres';
+
+  @override
+  String get noProjectsYet => 'Nenhum projeto ainda';
+
+  @override
+  String get createFirstProject => 'Crie seu primeiro projeto para começar';
+
+  @override
+  String get newProject => 'Novo Projeto';
+
+  @override
+  String get projectName => 'Nome do Projeto';
+
+  @override
+  String get enterProjectName => 'Digite o nome do projeto';
+
+  @override
+  String get description => 'Descrição';
+
+  @override
+  String get descriptionOptional => 'Descrição (opcional)';
+
+  @override
+  String get enterDescription => 'Digite a descrição';
+
+  @override
+  String get create => 'Criar';
+
+  @override
+  String get deleteProject => 'Excluir Projeto';
+
+  @override
+  String deleteProjectConfirm(String name) {
+    return 'Tem certeza que deseja excluir \"$name\"?';
+  }
+
+  @override
+  String get items => 'itens';
+
+  @override
+  String get yesterday => 'Ontem';
+
+  @override
+  String daysAgo(int count) {
+    return '$count dias atrás';
+  }
+
+  @override
+  String get addMedia => 'Adicionar Mídia';
+
+  @override
+  String get deleteItem => 'Excluir Item';
+
+  @override
+  String get deleteItemConfirm => 'Tem certeza que deseja excluir este item?';
+
+  @override
+  String get noMediaItemsYet => 'Nenhum item de mídia ainda';
+
+  @override
+  String errorAddingMedia(String error) {
+    return 'Erro ao adicionar mídia: $error';
+  }
+
+  @override
+  String get renderProjectVideo => 'Renderizar Vídeo do Projeto';
+
+  @override
+  String renderProjectVideoConfirm(int count) {
+    return 'Renderizar todos os $count itens em um vídeo?';
+  }
+
+  @override
+  String get render => 'Renderizar';
+
+  @override
+  String get edited => 'Editado';
+
+  @override
+  String get original => 'Original';
+
+  @override
+  String get photoAdded => 'Foto Adicionada';
+
+  @override
+  String get doYouWantToEdit => 'Deseja editar a foto agora?';
+
+  @override
+  String get skip => 'Pular';
+
+  @override
+  String get editPhoto => 'Editar Foto';
+
+  @override
+  String get editVideo => 'Editar Vídeo';
+
+  @override
+  String get rotate => 'Rotacionar';
+
+  @override
+  String get filter => 'Filtro';
+
+  @override
+  String get animation => 'Animação';
+
+  @override
+  String get speed => 'Velocidade: ';
+
+  @override
+  String get muteAudio => 'Mutear Áudio';
+
+  @override
+  String get save => 'Salvar';
+
+  @override
+  String get editPhotoDaily => 'Editar Foto';
+
+  @override
+  String get record => 'Registrar';
+
+  @override
+  String recordFor(String date) {
+    return 'Registrar - $date';
+  }
+
+  @override
+  String get cancelar => 'Cancelar';
+
+  @override
+  String get substituir => 'Substituir';
+
+  @override
+  String get entradaSalvaSucesso => 'Entrada salva com sucesso!';
+
+  @override
+  String get imageNotFound => 'Imagem não encontrada';
+
+  @override
+  String get errorLoadingImage => 'Erro ao carregar imagem';
+
+  @override
+  String errorRotatingImage(String error) {
+    return 'Erro ao rotacionar imagem: $error';
+  }
+
+  @override
+  String errorApplyingFilter(String error) {
+    return 'Erro ao aplicar filtro: $error';
+  }
+
+  @override
+  String get editsSaved => 'Edições salvas';
+
+  @override
+  String startTime(int ms) {
+    return 'Tempo de Início: ${ms}ms';
+  }
+
+  @override
+  String errorSelectingAudio(String error) {
+    return 'Erro ao selecionar áudio: $error';
+  }
+
+  @override
+  String get languageSpanish => 'Espanhol';
+
+  @override
+  String get languageFrench => 'Francês';
+
+  @override
+  String get languageGerman => 'Alemão';
+
+  @override
+  String get languageItalian => 'Italiano';
+
+  @override
+  String get notifications => 'Notificações';
+
+  @override
+  String get export => 'Exportação';
+
+  @override
+  String get backup => 'Backup';
+
+  @override
+  String get statistics => 'Estatísticas';
+
+  @override
+  String get generateVideosDescription => 'Gerar vídeos compilados';
+
+  @override
+  String get hours => 'horas';
+
+  @override
+  String get reminder => 'Lembrete';
+
+  @override
+  String get reminderChannelDescription => 'Lembretes adicionais';
+
+  @override
+  String get haventRecordedToday => 'Ainda não registrou hoje?';
+
+  @override
+  String get captureMomentNow => 'Que tal capturar um momento agora?';
+
+  @override
+  String get dailyReminder => 'Lembrete Diário';
+
+  @override
+  String get dailyReminderDescription =>
+      'Notificações para lembrar de registrar seu segundo do dia';
+
+  @override
+  String get notificationTitle => 'Retro1';
+
+  @override
+  String get notificationBody =>
+      'Não se esqueça de registrar seu momento de hoje!';
+
+  @override
+  String get appearance => 'Aparência';
+
+  @override
+  String get theme => 'Tema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Escuro';
+
+  @override
+  String get themeSystem => 'Sistema';
 }

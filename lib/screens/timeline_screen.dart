@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
 import 'video_preview_screen.dart';
@@ -22,7 +23,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Timeline'),
+        title: Text(AppLocalizations.of(context)!.timeline),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -31,9 +32,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
               });
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'all', child: Text('Todos')),
-              const PopupMenuItem(value: 'video', child: Text('Apenas Vídeos')),
-              const PopupMenuItem(value: 'photo', child: Text('Apenas Fotos')),
+              PopupMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
+              PopupMenuItem(value: 'video', child: Text(AppLocalizations.of(context)!.videosOnly)),
+              PopupMenuItem(value: 'photo', child: Text(AppLocalizations.of(context)!.photosOnly)),
             ],
             child: const Icon(Icons.filter_list),
           ),
@@ -160,7 +161,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('Editar'),
+              title: Text(AppLocalizations.of(context)!.edit),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -173,7 +174,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.delete),
-              title: const Text('Excluir'),
+              title: Text(AppLocalizations.of(context)!.delete),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(entry);
@@ -189,12 +190,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: const Text('Tem certeza que deseja excluir esta entrada?'),
+        title: Text(AppLocalizations.of(context)!.confirmDeletion),
+        content: Text(AppLocalizations.of(context)!.confirmDeletionMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -202,10 +203,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
               Navigator.pop(context);
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Entrada excluída')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.entryDeleted)),
               );
             },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

@@ -38,6 +38,9 @@ class AppSettings extends HiveObject {
   @HiveField(10)
   bool weeklySummaryEnabled;
 
+  @HiveField(11)
+  double? lastCalendarScrollPosition; // Posição de scroll do calendário
+
   AppSettings({
     this.notificationHour = 20,
     this.notificationMinute = 0,
@@ -50,7 +53,13 @@ class AppSettings extends HiveObject {
     this.showDateOverlay = true,
     this.reminderDelayHours = 3,
     this.weeklySummaryEnabled = true,
+    this.lastCalendarScrollPosition,
   });
+
+  // Getter para lastCalendarScrollPosition com valor padrão
+  double get lastCalendarScrollPositionOrDefault {
+    return lastCalendarScrollPosition ?? 0.0;
+  }
 
   // Getter para TimeOfDay
   TimeOfDay get notificationTime {

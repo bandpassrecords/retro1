@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/project_media_item.dart';
 import '../services/hive_service.dart';
 import '../services/image_editor_service.dart';
@@ -50,8 +51,9 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error rotating image: $e')),
+          SnackBar(content: Text(l10n.errorRotatingImage(e.toString()))),
         );
       }
     } finally {
@@ -82,8 +84,9 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error applying filter: $e')),
+          SnackBar(content: Text(l10n.errorApplyingFilter(e.toString()))),
         );
       }
     } finally {
@@ -107,7 +110,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Photo'),
+        title: Text(AppLocalizations.of(context)!.editPhoto),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),

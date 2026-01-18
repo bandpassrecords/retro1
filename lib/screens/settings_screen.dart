@@ -33,8 +33,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await HiveService.saveSettings(_settings);
     await NotificationService.scheduleNotifications();
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Configurações salvas')),
+        SnackBar(content: Text(l10n.settingsSaved)),
       );
     }
   }
@@ -49,11 +50,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
+          // Aparência
+          _buildSectionHeader(l10n.appearance),
+          ListTile(
+            title: Text(l10n.theme),
+            subtitle: Text(_getThemeName(_settings.themeMode, l10n)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l10n.theme),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RadioListTile<String>(
+                        title: Text(l10n.themeLight),
+                        value: 'light',
+                        groupValue: _settings.themeMode,
+                        onChanged: (value) async {
+                          setState(() {
+                            _settings.themeMode = value!;
+                          });
+                          Navigator.pop(context);
+                          await _saveSettings();
+                          MyApp.updateTheme();
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.themeDark),
+                        value: 'dark',
+                        groupValue: _settings.themeMode,
+                        onChanged: (value) async {
+                          setState(() {
+                            _settings.themeMode = value!;
+                          });
+                          Navigator.pop(context);
+                          await _saveSettings();
+                          MyApp.updateTheme();
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.themeSystem),
+                        value: 'system',
+                        groupValue: _settings.themeMode,
+                        onChanged: (value) async {
+                          setState(() {
+                            _settings.themeMode = value!;
+                          });
+                          Navigator.pop(context);
+                          await _saveSettings();
+                          MyApp.updateTheme();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          
           // Idioma
           _buildSectionHeader(l10n.language),
           ListTile(
             title: Text(l10n.appLanguage),
-            subtitle: Text(_settings.language == 'en' ? l10n.languageEnglish : l10n.languagePortuguese),
+            subtitle: Text(_getLanguageName(_settings.language, l10n)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               showDialog(
@@ -68,13 +129,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: 'en',
                         groupValue: _settings.language,
                         onChanged: (value) async {
-                          setState(() {
-                            _settings.language = value!;
-                          });
                           Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
                           await _saveSettings();
-                          // Atualizar idioma do app
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
                           MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
                         },
                       ),
                       RadioListTile<String>(
@@ -82,13 +150,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: 'pt',
                         groupValue: _settings.language,
                         onChanged: (value) async {
-                          setState(() {
-                            _settings.language = value!;
-                          });
                           Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
                           await _saveSettings();
-                          // Atualizar idioma do app
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
                           MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.languageSpanish),
+                        value: 'es',
+                        groupValue: _settings.language,
+                        onChanged: (value) async {
+                          Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
+                          await _saveSettings();
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
+                          MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.languageFrench),
+                        value: 'fr',
+                        groupValue: _settings.language,
+                        onChanged: (value) async {
+                          Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
+                          await _saveSettings();
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
+                          MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.languageGerman),
+                        value: 'de',
+                        groupValue: _settings.language,
+                        onChanged: (value) async {
+                          Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
+                          await _saveSettings();
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
+                          MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
+                        },
+                      ),
+                      RadioListTile<String>(
+                        title: Text(l10n.languageItalian),
+                        value: 'it',
+                        groupValue: _settings.language,
+                        onChanged: (value) async {
+                          Navigator.pop(context);
+                          // Atualizar e salvar
+                          _settings.language = value!;
+                          await _saveSettings();
+                          // Atualizar idioma do app (isso vai fazer o rebuild)
+                          MyApp.updateLanguage();
+                          // Recarregar configurações do Hive para garantir sincronização
+                          // Aguardar um pouco para o rebuild acontecer
+                          await Future.delayed(const Duration(milliseconds: 50));
+                          if (mounted) {
+                            setState(() {
+                              _settings = HiveService.getSettings();
+                            });
+                          }
                         },
                       ),
                     ],
@@ -99,9 +258,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           
           // Notificações
-          _buildSectionHeader('Notificações'),
+          _buildSectionHeader(l10n.notifications),
           SwitchListTile(
-            title: const Text('Ativar notificações'),
+            title: Text(l10n.enableNotifications),
             value: _settings.notificationsEnabled,
             onChanged: (value) {
               setState(() {
@@ -111,7 +270,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           ListTile(
-            title: const Text('Horário da notificação'),
+            title: Text(l10n.notificationTime),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -144,8 +303,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           ListTile(
-            title: const Text('Lembrete após (horas)'),
-            subtitle: Text('${_settings.reminderDelayHours} horas'),
+            title: Text(l10n.reminderAfter),
+            subtitle: Text('${_settings.reminderDelayHours} ${l10n.hours}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -174,7 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           SwitchListTile(
-            title: const Text('Resumo semanal'),
+            title: Text(l10n.weeklySummary),
             value: _settings.weeklySummaryEnabled,
             onChanged: (value) {
               setState(() {
@@ -212,21 +371,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // Vídeo
-          _buildSectionHeader('Vídeo'),
+          _buildSectionHeader(l10n.video),
           ListTile(
-            title: const Text('Qualidade do vídeo'),
+            title: Text(l10n.videoQuality),
             subtitle: Text(_settings.videoQuality),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Qualidade do vídeo'),
+                  title: Text(l10n.videoQuality),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       RadioListTile<String>(
-                        title: const Text('720p'),
+                        title: Text(l10n.quality720p),
                         value: '720p',
                         groupValue: _settings.videoQuality,
                         onChanged: (value) {
@@ -238,7 +397,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                       RadioListTile<String>(
-                        title: const Text('1080p'),
+                        title: Text(l10n.quality1080p),
                         value: '1080p',
                         groupValue: _settings.videoQuality,
                         onChanged: (value) {
@@ -250,7 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                       RadioListTile<String>(
-                        title: const Text('4K'),
+                        title: Text(l10n.quality4k),
                         value: '4K',
                         groupValue: _settings.videoQuality,
                         onChanged: (value) {
@@ -268,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           SwitchListTile(
-            title: const Text('Mostrar data no vídeo'),
+            title: Text(l10n.showDateInVideo),
             value: _settings.showDateOverlay,
             onChanged: (value) {
               setState(() {
@@ -279,10 +438,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // Exportação
-          _buildSectionHeader('Exportação'),
+          _buildSectionHeader(l10n.export),
           ListTile(
-            title: const Text('Gerar vídeos'),
-            subtitle: const Text('Gerar vídeos compilados'),
+            title: Text(l10n.generateVideos),
+            subtitle: Text(l10n.generateVideosDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
@@ -294,7 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           SwitchListTile(
-            title: const Text('Exportação automática no fim do ano'),
+            title: Text(l10n.autoExportEndOfYear),
             value: _settings.autoExportYearEnd,
             onChanged: (value) {
               setState(() {
@@ -305,9 +464,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // Backup
-          _buildSectionHeader('Backup'),
+          _buildSectionHeader(l10n.backup),
           SwitchListTile(
-            title: const Text('Backup automático'),
+            title: Text(l10n.autoBackup),
             value: _settings.autoBackup,
             onChanged: (value) {
               setState(() {
@@ -318,15 +477,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // Estatísticas
-          _buildSectionHeader('Estatísticas'),
+          _buildSectionHeader(l10n.statistics),
           ListTile(
-            title: const Text('Total de entradas'),
-            subtitle: Text('${HiveService.getTotalEntries()} entradas'),
+            title: Text(l10n.totalEntries),
+            subtitle: Text('${HiveService.getTotalEntries()} ${l10n.entries}'),
           ),
           ListTile(
-            title: const Text('Entradas deste ano'),
+            title: Text(l10n.entriesThisYear),
             subtitle: Text(
-              '${HiveService.getEntriesCountForYear(DateTime.now().year)} entradas',
+              '${HiveService.getEntriesCountForYear(DateTime.now().year)} ${l10n.entries}',
             ),
           ),
         ],
@@ -346,6 +505,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  String _getLanguageName(String languageCode, AppLocalizations l10n) {
+    // Retornar o nome do idioma baseado no código
+    // O l10n já está no idioma correto após o rebuild
+    switch (languageCode) {
+      case 'en':
+        return l10n.languageEnglish;
+      case 'pt':
+        return l10n.languagePortuguese;
+      case 'es':
+        return l10n.languageSpanish;
+      case 'fr':
+        return l10n.languageFrench;
+      case 'de':
+        return l10n.languageGerman;
+      case 'it':
+        return l10n.languageItalian;
+      default:
+        return l10n.languageEnglish;
+    }
+  }
+
+  String _getThemeName(String themeMode, AppLocalizations l10n) {
+    switch (themeMode) {
+      case 'light':
+        return l10n.themeLight;
+      case 'dark':
+        return l10n.themeDark;
+      case 'system':
+      default:
+        return l10n.themeSystem;
+    }
   }
 
   String _getTimezoneInfo() {

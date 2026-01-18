@@ -34,10 +34,18 @@ class MyApp extends StatefulWidget {
 
   // Callback para atualizar idioma
   static VoidCallback? updateLanguageCallback;
+  
+  // Callback para atualizar tema
+  static VoidCallback? updateThemeCallback;
 
   // Método estático para atualizar idioma
   static void updateLanguage() {
     updateLanguageCallback?.call();
+  }
+  
+  // Método estático para atualizar tema
+  static void updateTheme() {
+    updateThemeCallback?.call();
   }
 
   @override
@@ -46,25 +54,41 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en'); // Default to English
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
-    _loadLanguage();
-    // Registrar callback para atualização de idioma
-    MyApp.updateLanguageCallback = _loadLanguage;
+    _loadSettings();
+    // Registrar callback para atualização de idioma e tema
+    MyApp.updateLanguageCallback = _loadSettings;
+    MyApp.updateThemeCallback = _loadSettings;
   }
 
   @override
   void dispose() {
     MyApp.updateLanguageCallback = null;
+    MyApp.updateThemeCallback = null;
     super.dispose();
   }
 
-  void _loadLanguage() {
+  void _loadSettings() {
     final settings = HiveService.getSettings();
     setState(() {
       _locale = Locale(settings.language);
+      // Converter string para ThemeMode
+      switch (settings.themeMode) {
+        case 'light':
+          _themeMode = ThemeMode.light;
+          break;
+        case 'dark':
+          _themeMode = ThemeMode.dark;
+          break;
+        case 'system':
+        default:
+          _themeMode = ThemeMode.system;
+          break;
+      }
     });
   }
 
@@ -82,6 +106,10 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: const [
         Locale('en'), // English (default)
         Locale('pt'), // Portuguese
+        Locale('es'), // Spanish
+        Locale('fr'), // French
+        Locale('de'), // German
+        Locale('it'), // Italian
       ],
       locale: _locale, // Usar idioma das configurações
       theme: ThemeData(
@@ -110,7 +138,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
       ),
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       home: const HomeScreen(),
     );
   }

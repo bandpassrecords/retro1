@@ -5,7 +5,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_it.dart';
 import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
@@ -94,7 +98,11 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
     Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('it'),
     Locale('pt')
   ];
 
@@ -263,7 +271,7 @@ abstract class AppLocalizations {
   /// No description provided for @preview1s.
   ///
   /// In en, this message translates to:
-  /// **'Preview (1s)'**
+  /// **'Preview 1s'**
   String get preview1s;
 
   /// No description provided for @errorLoadingVideo.
@@ -571,6 +579,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original audio'**
   String get originalAudio;
+
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
+
+  /// No description provided for @freeProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Projects'**
+  String get freeProjects;
+
+  /// No description provided for @noProjectsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects yet'**
+  String get noProjectsYet;
+
+  /// No description provided for @createFirstProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first project to get started'**
+  String get createFirstProject;
+
+  /// No description provided for @newProject.
+  ///
+  /// In en, this message translates to:
+  /// **'New Project'**
+  String get newProject;
+
+  /// No description provided for @projectName.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Name'**
+  String get projectName;
+
+  /// No description provided for @enterProjectName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter project name'**
+  String get enterProjectName;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @enterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter description'**
+  String get enterDescription;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @deleteProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Project'**
+  String get deleteProject;
+
+  /// No description provided for @deleteProjectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String deleteProjectConfirm(String name);
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'items'**
+  String get items;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String daysAgo(int count);
+
+  /// No description provided for @addMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Media'**
+  String get addMedia;
+
+  /// No description provided for @deleteItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Item'**
+  String get deleteItem;
+
+  /// No description provided for @deleteItemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this item?'**
+  String get deleteItemConfirm;
+
+  /// No description provided for @noMediaItemsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No media items yet'**
+  String get noMediaItemsYet;
+
+  /// No description provided for @errorAddingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding media: {error}'**
+  String errorAddingMedia(String error);
+
+  /// No description provided for @renderProjectVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Render Project Video'**
+  String get renderProjectVideo;
+
+  /// No description provided for @renderProjectVideoConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Render all {count} items into a video?'**
+  String renderProjectVideoConfirm(int count);
+
+  /// No description provided for @render.
+  ///
+  /// In en, this message translates to:
+  /// **'Render'**
+  String get render;
+
+  /// No description provided for @edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get edited;
+
+  /// No description provided for @original.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get original;
+
+  /// No description provided for @photoAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo Added'**
+  String get photoAdded;
+
+  /// No description provided for @doYouWantToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to edit the photo now?'**
+  String get doYouWantToEdit;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @editPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Photo'**
+  String get editPhoto;
+
+  /// No description provided for @editVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Video'**
+  String get editVideo;
+
+  /// No description provided for @rotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get rotate;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Animation'**
+  String get animation;
+
+  /// No description provided for @speed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed: '**
+  String get speed;
+
+  /// No description provided for @muteAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute Audio'**
+  String get muteAudio;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @editPhotoDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Photo'**
+  String get editPhotoDaily;
+
+  /// No description provided for @record.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get record;
+
+  /// No description provided for @recordFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Record - {date}'**
+  String recordFor(String date);
+
+  /// No description provided for @cancelar.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelar;
+
+  /// No description provided for @substituir.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get substituir;
+
+  /// No description provided for @entradaSalvaSucesso.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry saved successfully!'**
+  String get entradaSalvaSucesso;
+
+  /// No description provided for @imageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Image not found'**
+  String get imageNotFound;
+
+  /// No description provided for @errorLoadingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading image'**
+  String get errorLoadingImage;
+
+  /// No description provided for @errorRotatingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error rotating image: {error}'**
+  String errorRotatingImage(String error);
+
+  /// No description provided for @errorApplyingFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Error applying filter: {error}'**
+  String errorApplyingFilter(String error);
+
+  /// No description provided for @editsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits saved'**
+  String get editsSaved;
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time: {ms}ms'**
+  String startTime(int ms);
+
+  /// No description provided for @errorSelectingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting audio: {error}'**
+  String errorSelectingAudio(String error);
+
+  /// No description provided for @languageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get languageSpanish;
+
+  /// No description provided for @languageFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get languageFrench;
+
+  /// No description provided for @languageGerman.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get languageGerman;
+
+  /// No description provided for @languageItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get languageItalian;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backup;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @generateVideosDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate compiled videos'**
+  String get generateVideosDescription;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hours;
+
+  /// No description provided for @reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get reminder;
+
+  /// No description provided for @reminderChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional reminders'**
+  String get reminderChannelDescription;
+
+  /// No description provided for @haventRecordedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Haven\'t recorded today?'**
+  String get haventRecordedToday;
+
+  /// No description provided for @captureMomentNow.
+  ///
+  /// In en, this message translates to:
+  /// **'How about capturing a moment now?'**
+  String get captureMomentNow;
+
+  /// No description provided for @dailyReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reminder'**
+  String get dailyReminder;
+
+  /// No description provided for @dailyReminderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications to remind you to record your moment of the day'**
+  String get dailyReminderDescription;
+
+  /// No description provided for @notificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro1'**
+  String get notificationTitle;
+
+  /// No description provided for @notificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget to record your moment today!'**
+  String get notificationBody;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
 }
 
 class _AppLocalizationsDelegate
@@ -583,8 +1029,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'pt'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+        'de',
+        'en',
+        'es',
+        'fr',
+        'it',
+        'pt'
+      ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -593,8 +1045,16 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'it':
+      return AppLocalizationsIt();
     case 'pt':
       return AppLocalizationsPt();
   }
