@@ -187,6 +187,57 @@
   "muteAudio": "Audio Stummschalten",
   "save": "Speichern",
   "editPhotoDaily": "Foto Bearbeiten",
+  "record": "Aufnehmen",
+  "recordFor": "Aufnehmen - {date}",
+  "@recordFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "imageNotFound": "Bild nicht gefunden",
+  "errorLoadingImage": "Fehler beim Laden des Bildes",
+  "errorRotatingImage": "Fehler beim Drehen des Bildes: {error}",
+  "@errorRotatingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingFilter": "Fehler beim Anwenden des Filters: {error}",
+  "@errorApplyingFilter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editsSaved": "Änderungen gespeichert",
+  "startTime": "Startzeit: {ms}ms",
+  "speed": "Geschwindigkeit: ",
+  "muteAudio": "Audio Stummschalten",
+  "preview1s": "Vorschau 1s",
+  "@startTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSelectingAudio": "Fehler beim Auswählen des Audios: {error}",
+  "@errorSelectingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSpanish": "Spanisch",
+  "languageFrench": "Französisch",
+  "languageGerman": "Deutsch",
+  "languageItalian": "Italienisch",
   "notifications": "Benachrichtigungen",
   "video": "Video",
   "export": "Export",

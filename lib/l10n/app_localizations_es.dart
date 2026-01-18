@@ -383,11 +383,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editPhotoDaily => 'Editar Foto';
 
   @override
-  String get record => 'Record';
+  String get record => 'Grabar';
 
   @override
   String recordFor(String date) {
-    return 'Record - $date';
+    return 'Grabar - $date';
   }
 
   @override
@@ -400,45 +400,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get entradaSalvaSucesso => 'Entry saved successfully!';
 
   @override
-  String get imageNotFound => 'Image not found';
+  String get imageNotFound => 'Imagen no encontrada';
 
   @override
-  String get errorLoadingImage => 'Error loading image';
+  String get errorLoadingImage => 'Error al cargar imagen';
 
   @override
   String errorRotatingImage(String error) {
-    return 'Error rotating image: $error';
+    return 'Error al rotar imagen: $error';
   }
 
   @override
   String errorApplyingFilter(String error) {
-    return 'Error applying filter: $error';
+    return 'Error al aplicar filtro: $error';
   }
 
   @override
-  String get editsSaved => 'Edits saved';
+  String get editsSaved => 'Ediciones guardadas';
 
   @override
   String startTime(int ms) {
-    return 'Start Time: ${ms}ms';
+    return 'Tiempo de inicio: ${ms}ms';
   }
 
   @override
   String errorSelectingAudio(String error) {
-    return 'Error selecting audio: $error';
+    return 'Error al seleccionar audio: $error';
   }
 
   @override
-  String get languageSpanish => 'Spanish';
+  String get languageSpanish => 'Español';
 
   @override
-  String get languageFrench => 'French';
+  String get languageFrench => 'Francés';
 
   @override
-  String get languageGerman => 'German';
+  String get languageGerman => 'Alemán';
 
   @override
-  String get languageItalian => 'Italian';
+  String get languageItalian => 'Italiano';
 
   @override
   String get notifications => 'Notificaciones';

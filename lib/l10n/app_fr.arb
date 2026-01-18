@@ -187,6 +187,57 @@
   "muteAudio": "Couper l'Audio",
   "save": "Enregistrer",
   "editPhotoDaily": "Modifier la Photo",
+  "record": "Enregistrer",
+  "recordFor": "Enregistrer - {date}",
+  "@recordFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "imageNotFound": "Image introuvable",
+  "errorLoadingImage": "Erreur lors du chargement de l'image",
+  "errorRotatingImage": "Erreur lors de la rotation de l'image: {error}",
+  "@errorRotatingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingFilter": "Erreur lors de l'application du filtre: {error}",
+  "@errorApplyingFilter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editsSaved": "Modifications enregistrées",
+  "startTime": "Heure de début: {ms}ms",
+  "speed": "Vitesse: ",
+  "muteAudio": "Couper l'Audio",
+  "preview1s": "Aperçu 1s",
+  "@startTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSelectingAudio": "Erreur lors de la sélection de l'audio: {error}",
+  "@errorSelectingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSpanish": "Espagnol",
+  "languageFrench": "Français",
+  "languageGerman": "Allemand",
+  "languageItalian": "Italien",
   "notifications": "Notifications",
   "video": "Vidéo",
   "export": "Exportation",

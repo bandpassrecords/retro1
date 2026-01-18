@@ -187,6 +187,57 @@
   "muteAudio": "Disattiva Audio",
   "save": "Salva",
   "editPhotoDaily": "Modifica Foto",
+  "record": "Registra",
+  "recordFor": "Registra - {date}",
+  "@recordFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "imageNotFound": "Immagine non trovata",
+  "errorLoadingImage": "Errore nel caricamento dell'immagine",
+  "errorRotatingImage": "Errore nella rotazione dell'immagine: {error}",
+  "@errorRotatingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingFilter": "Errore nell'applicazione del filtro: {error}",
+  "@errorApplyingFilter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editsSaved": "Modifiche salvate",
+  "startTime": "Tempo di inizio: {ms}ms",
+  "speed": "Velocità: ",
+  "muteAudio": "Disattiva Audio",
+  "preview1s": "Anteprima 1s",
+  "@startTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSelectingAudio": "Errore nella selezione dell'audio: {error}",
+  "@errorSelectingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSpanish": "Spagnolo",
+  "languageFrench": "Francese",
+  "languageGerman": "Tedesco",
+  "languageItalian": "Italiano",
   "notifications": "Notifiche",
   "video": "Video",
   "export": "Esportazione",

@@ -187,6 +187,54 @@
   "muteAudio": "Silenciar Audio",
   "save": "Guardar",
   "editPhotoDaily": "Editar Foto",
+  "record": "Grabar",
+  "recordFor": "Grabar - {date}",
+  "@recordFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "imageNotFound": "Imagen no encontrada",
+  "errorLoadingImage": "Error al cargar imagen",
+  "errorRotatingImage": "Error al rotar imagen: {error}",
+  "@errorRotatingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingFilter": "Error al aplicar filtro: {error}",
+  "@errorApplyingFilter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editsSaved": "Ediciones guardadas",
+  "startTime": "Tiempo de inicio: {ms}ms",
+  "@startTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSelectingAudio": "Error al seleccionar audio: {error}",
+  "@errorSelectingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSpanish": "Español",
+  "languageFrench": "Francés",
+  "languageGerman": "Alemán",
+  "languageItalian": "Italiano",
   "notifications": "Notificaciones",
   "video": "Video",
   "export": "Exportación",

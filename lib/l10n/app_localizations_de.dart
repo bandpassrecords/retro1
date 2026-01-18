@@ -96,7 +96,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get playing => 'Wiedergabe...';
 
   @override
-  String get preview1s => 'Vorschau (1s)';
+  String get preview1s => 'Vorschau 1s';
 
   @override
   String errorLoadingVideo(String error) {
@@ -375,7 +375,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get animation => 'Animation';
 
   @override
-  String get speed => 'Geschwindigkeit';
+  String get speed => 'Geschwindigkeit: ';
 
   @override
   String get muteAudio => 'Audio Stummschalten';
@@ -387,11 +387,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editPhotoDaily => 'Foto Bearbeiten';
 
   @override
-  String get record => 'Record';
+  String get record => 'Aufnehmen';
 
   @override
   String recordFor(String date) {
-    return 'Record - $date';
+    return 'Aufnehmen - $date';
   }
 
   @override
@@ -404,45 +404,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get entradaSalvaSucesso => 'Entry saved successfully!';
 
   @override
-  String get imageNotFound => 'Image not found';
+  String get imageNotFound => 'Bild nicht gefunden';
 
   @override
-  String get errorLoadingImage => 'Error loading image';
+  String get errorLoadingImage => 'Fehler beim Laden des Bildes';
 
   @override
   String errorRotatingImage(String error) {
-    return 'Error rotating image: $error';
+    return 'Fehler beim Drehen des Bildes: $error';
   }
 
   @override
   String errorApplyingFilter(String error) {
-    return 'Error applying filter: $error';
+    return 'Fehler beim Anwenden des Filters: $error';
   }
 
   @override
-  String get editsSaved => 'Edits saved';
+  String get editsSaved => 'Änderungen gespeichert';
 
   @override
   String startTime(int ms) {
-    return 'Start Time: ${ms}ms';
+    return 'Startzeit: ${ms}ms';
   }
 
   @override
   String errorSelectingAudio(String error) {
-    return 'Error selecting audio: $error';
+    return 'Fehler beim Auswählen des Audios: $error';
   }
 
   @override
-  String get languageSpanish => 'Spanish';
+  String get languageSpanish => 'Spanisch';
 
   @override
-  String get languageFrench => 'French';
+  String get languageFrench => 'Französisch';
 
   @override
-  String get languageGerman => 'German';
+  String get languageGerman => 'Deutsch';
 
   @override
-  String get languageItalian => 'Italian';
+  String get languageItalian => 'Italienisch';
 
   @override
   String get notifications => 'Benachrichtigungen';

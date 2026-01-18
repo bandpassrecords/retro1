@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
@@ -239,64 +240,25 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Dias da semana
-        _buildWeekdayHeaders(),
-        
-        // Calendário scrollável
-        Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: _months.length + 1, // +1 para o botão "Load More"
-            itemBuilder: (context, index) {
-              // Se for o último item, mostrar botão "Load More"
-              if (index == _months.length) {
-                return _buildLoadMoreButton();
-              }
-              
-              return _MonthView(
-                key: _monthKeys[index],
-                month: _months[index],
-                selectedDay: widget.selectedDay,
-                onDayTap: widget.onDayTap,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWeekdayHeaders() {
-    final l10n = AppLocalizations.of(context)!;
-    final weekdays = [
-      l10n.mondayShort,
-      l10n.tuesdayShort,
-      l10n.wednesdayShort,
-      l10n.thursdayShort,
-      l10n.fridayShort,
-      l10n.saturdayShort,
-      l10n.sundayShort,
-    ];
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        children: weekdays.map((day) {
-          return Expanded(
-            child: Center(
-              child: Text(
-                day,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
+    return Expanded(
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
+        itemBuilder: (context, index) {
+          // Se for o primeiro item (index 0), mostrar botão "Load More"
+          if (index == 0) {
+            return _buildLoadMoreButton();
+          }
+          
+          // Ajustar index para acessar os meses (index - 1 porque o primeiro é o botão)
+          final monthIndex = index - 1;
+          return _MonthView(
+            key: _monthKeys[monthIndex],
+            month: _months[monthIndex],
+            selectedDay: widget.selectedDay,
+            onDayTap: widget.onDayTap,
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -330,12 +292,29 @@ class _MonthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final firstDayOfMonth = DateTime(month.year, month.month, 1);
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
     
     var firstWeekday = firstDayOfMonth.weekday - 1;
     final daysInMonth = lastDayOfMonth.day;
     final today = DateTime.now();
+    final todayDateOnly = DateTime(today.year, today.month, today.day);
+    
+    // Obter locale do contexto para formatação do mês
+    final locale = Localizations.localeOf(context);
+    final monthName = DateFormat('MMMM yyyy', locale.toString()).format(month);
+    
+    // Dias da semana
+    final weekdays = [
+      l10n.mondayShort,
+      l10n.tuesdayShort,
+      l10n.wednesdayShort,
+      l10n.thursdayShort,
+      l10n.fridayShort,
+      l10n.saturdayShort,
+      l10n.sundayShort,
+    ];
     
     final totalCells = firstWeekday + daysInMonth;
     final weeks = (totalCells / 7).ceil();
@@ -344,6 +323,37 @@ class _MonthView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Column(
         children: [
+          // Título do mês
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              monthName,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          // Cabeçalho dos dias da semana
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: weekdays.map((day) {
+                return Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
           // Grade do calendário
           GridView.builder(
             shrinkWrap: true,
@@ -367,6 +377,13 @@ class _MonthView extends StatelessWidget {
               }
               
               final day = DateTime(month.year, month.month, dayOfMonth);
+              final dayDateOnly = DateTime(day.year, day.month, day.day);
+              
+              // Não mostrar dias futuros
+              if (dayDateOnly.isAfter(todayDateOnly)) {
+                return const SizedBox.shrink();
+              }
+              
               final entry = HiveService.getEntryByDate(day);
               final isSelected = selectedDay != null &&
                   _isSameDay(selectedDay!, day);
