@@ -1,6 +1,6 @@
-# One Second Per Day
+# Retro1
 
-Um aplicativo Flutter inspirado no One Second Everyday, onde você registra 1 segundo por dia e cria timelines visuais incríveis.
+Um aplicativo Flutter onde você registra 1 segundo por dia e cria timelines visuais incríveis.
 
 ## Funcionalidades
 
