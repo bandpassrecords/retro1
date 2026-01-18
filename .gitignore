@@ -3,6 +3,8 @@
 *.log
 *.pyc
 *.swp
+*.swo
+*~
 .DS_Store
 .atom/
 .buildlog/
@@ -15,6 +17,7 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+out/
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -31,6 +34,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+*.lock
 
 # Symbolication related
 app.*.symbols
@@ -42,7 +46,89 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+/android/key.properties
+/android/app/release.keystore
+/android/app/*.jks
+/android/app/*.keystore
+
+# Android build outputs
+/android/app/build/
+/android/build/
+/android/.idea/
+/android/*.iml
 
 # Generated files
 *.g.dart
 *.freezed.dart
+*.mocks.dart
+
+# Coverage
+coverage/
+*.lcov
+
+# Exceptions to above rules.
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/Gemfile.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Test files
+test_driver/
+integration_test/.dart_tool/
+
+# Documentation build
+doc/api/
+
+# FVM (Flutter Version Management)
+.fvm/
+
+# Firebase
+**/google-services.json
+**/GoogleService-Info.plist
+firebase_options.dart
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# App-specific
+*.md.bak
+*.ps1.bak
+*.sh.bak
