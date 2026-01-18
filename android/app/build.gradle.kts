@@ -80,11 +80,21 @@ android {
         release {
             // REQUIRED: Use release signing config - fail if keystore doesn't exist
             if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
+                val releaseSigningConfig = signingConfigs.getByName("release")
+                // Only use release signing if it's properly configured
+                if (releaseSigningConfig.storeFile != null && releaseSigningConfig.storeFile!!.exists()) {
+                    signingConfig = releaseSigningConfig
+                } else {
+                    throw GradleException(
+                        "Release signing config is not properly configured. " +
+                        "Please check android/key.properties and ensure android/app/release.keystore exists."
+                    )
+                }
             } else {
                 throw GradleException(
                     "Release builds require a keystore. " +
-                    "Please create android/key.properties and android/app/release.keystore"
+                    "Please create android/key.properties and android/app/release.keystore. " +
+                    "For CI/CD, ensure ANDROID_KEYSTORE_BASE64 secret is configured."
                 )
             }
             isMinifyEnabled = false

@@ -100,17 +100,49 @@ jobs:
       - name: Setup Android Keystore (Release only)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
+          echo "Setting up Android keystore for release build..."
+          
+          # Check if secrets are available
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 secret is not set!"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_PASSWORD secret is not set!"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ]; then
+            echo "ERROR: ANDROID_KEY_ALIAS secret is not set!"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then
+            echo "ERROR: ANDROID_KEY_PASSWORD secret is not set!"
+            exit 1
+          fi
+          
           # Create keystore directory if it doesn't exist
           mkdir -p android/app
           
           # Decode and save keystore
+          echo "Decoding keystore from base64..."
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
           
-          # Verify keystore was created
+          # Verify keystore was created and has content
           if [ ! -f android/app/release.keystore ]; then
             echo "ERROR: Keystore file was not created!"
             exit 1
           fi
+          
+          KEYSTORE_SIZE=$(stat -f%z android/app/release.keystore 2>/dev/null || stat -c%s android/app/release.keystore 2>/dev/null || echo "0")
+          if [ "$KEYSTORE_SIZE" -eq 0 ]; then
+            echo "ERROR: Keystore file is empty!"
+            exit 1
+          fi
+          
+          echo "✓ Keystore file created successfully (size: $KEYSTORE_SIZE bytes)"
           
           # Create key.properties file
           mkdir -p android
@@ -127,9 +159,12 @@ jobs:
             exit 1
           fi
           
-          echo "Keystore setup completed successfully"
-          echo "Keystore file exists: $(test -f android/app/release.keystore && echo 'YES' || echo 'NO')"
-          echo "key.properties exists: $(test -f android/key.properties && echo 'YES' || echo 'NO')"
+          echo "✓ key.properties file created successfully"
+          echo ""
+          echo "Keystore setup completed successfully!"
+          echo "Keystore location: android/app/release.keystore"
+          echo "Key properties location: android/key.properties"
+          echo "Key alias: ${{ secrets.ANDROID_KEY_ALIAS }}"
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
