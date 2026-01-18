@@ -100,7 +100,19 @@ jobs:
       - name: Setup Android Keystore (Release only)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
+          # Create keystore directory if it doesn't exist
+          mkdir -p android/app
+          
+          # Decode and save keystore
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+          
+          # Verify keystore was created
+          if [ ! -f android/app/release.keystore ]; then
+            echo "ERROR: Keystore file was not created!"
+            exit 1
+          fi
+          
+          # Create key.properties file
           mkdir -p android
           cat > android/key.properties << EOF
           storeFile=release.keystore
@@ -108,6 +120,16 @@ jobs:
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
+          
+          # Verify key.properties was created
+          if [ ! -f android/key.properties ]; then
+            echo "ERROR: key.properties file was not created!"
+            exit 1
+          fi
+          
+          echo "Keystore setup completed successfully"
+          echo "Keystore file exists: $(test -f android/app/release.keystore && echo 'YES' || echo 'NO')"
+          echo "key.properties exists: $(test -f android/key.properties && echo 'YES' || echo 'NO')"
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -142,6 +164,22 @@ jobs:
       - name: Generate Hive Adapters
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Verify Keystore Configuration (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "Verifying keystore configuration..."
+          if [ ! -f android/key.properties ]; then
+            echo "ERROR: android/key.properties not found!"
+            exit 1
+          fi
+          if [ ! -f android/app/release.keystore ]; then
+            echo "ERROR: android/app/release.keystore not found!"
+            exit 1
+          fi
+          echo "✓ Keystore files found"
+          echo "Key.properties contents (without passwords):"
+          grep -v "Password" android/key.properties || true
+
       - name: Build Android App Bundle (AAB) - Release
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
@@ -149,6 +187,23 @@ jobs:
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Verify AAB Signature (Release only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+          if [ ! -f "$AAB_PATH" ]; then
+            echo "ERROR: AAB file not found at $AAB_PATH"
+            exit 1
+          fi
+          
+          echo "Verifying AAB signature..."
+          # Use jarsigner to verify the signature
+          jarsigner -verify -verbose -certs "$AAB_PATH" || {
+            echo "ERROR: AAB signature verification failed!"
+            exit 1
+          }
+          echo "✓ AAB is properly signed"
 
       - name: Build Android APK - PR Test (unsigned)
         if: github.event_name == 'pull_request'

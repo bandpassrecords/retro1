@@ -54,10 +54,20 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String?
-                keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = keystoreProperties["storeFile"]?.let { file(rootProject.file("android/app/${it}")) }
-                storePassword = keystoreProperties["storePassword"] as String?
+                val keystoreFile = keystoreProperties["storeFile"] as String?
+                if (keystoreFile != null) {
+                    val keystorePath = rootProject.file("android/app/$keystoreFile")
+                    if (keystorePath.exists()) {
+                        keyAlias = keystoreProperties["keyAlias"] as String?
+                        keyPassword = keystoreProperties["keyPassword"] as String?
+                        storeFile = keystorePath
+                        storePassword = keystoreProperties["storePassword"] as String?
+                    } else {
+                        throw GradleException("Keystore file not found: ${keystorePath.absolutePath}")
+                    }
+                } else {
+                    throw GradleException("storeFile not specified in key.properties")
+                }
             }
         }
     }
@@ -68,11 +78,14 @@ android {
             isShrinkResources = false
         }
         release {
-            // Use release signing config if keystore exists, otherwise use debug (for local testing)
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
+            // REQUIRED: Use release signing config - fail if keystore doesn't exist
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                throw GradleException(
+                    "Release builds require a keystore. " +
+                    "Please create android/key.properties and android/app/release.keystore"
+                )
             }
             isMinifyEnabled = false
             isShrinkResources = false
