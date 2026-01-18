@@ -17,7 +17,7 @@ val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 // Load keystore properties from key.properties file (for release signing)
-val keystorePropertiesFile = rootProject.file("android/key.properties")
+val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 
 // Debug: Log file existence check
@@ -71,9 +71,9 @@ android {
                     // e.g., "app/release.keystore" means android/app/release.keystore
                     // or "release.keystore" also means android/app/release.keystore
                     val keystorePath = if (keystoreFile.startsWith("app/")) {
-                        rootProject.file("android/$keystoreFile")
+                        rootProject.file("$keystoreFile")
                     } else {
-                        rootProject.file("android/app/$keystoreFile")
+                        rootProject.file("app/$keystoreFile")
                     }
                     
                     if (keystorePath.exists()) {
