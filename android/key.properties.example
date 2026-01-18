@@ -1,0 +1,15 @@
+# Android Keystore Configuration
+# Copy this file to key.properties and fill in your keystore information
+# DO NOT commit key.properties to version control!
+
+# Path to the keystore file (relative to android/ directory)
+storeFile=app/release.keystore
+
+# Keystore password
+storePassword=your_keystore_password_here
+
+# Key alias
+keyAlias=retro1
+
+# Key password (can be same as storePassword)
+keyPassword=your_key_password_here
