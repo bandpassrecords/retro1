@@ -36,9 +36,6 @@ class AppSettings extends HiveObject {
   int reminderDelayHours; // Horas após notificação principal
 
   @HiveField(10)
-  bool weeklySummaryEnabled;
-
-  @HiveField(11)
   double? lastCalendarScrollPosition; // Posição de scroll do calendário
 
   AppSettings({
@@ -52,7 +49,6 @@ class AppSettings extends HiveObject {
     this.autoExportYearEnd = false,
     this.showDateOverlay = true,
     this.reminderDelayHours = 3,
-    this.weeklySummaryEnabled = true,
     this.lastCalendarScrollPosition,
   });
 

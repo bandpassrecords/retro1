@@ -77,6 +77,50 @@
       }
     }
   },
+  "noVideoCaptured": "No se capturó ningún video",
+  "errorCapturingVideo": "Error al capturar video: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "No se capturó ninguna foto",
+  "errorCapturingPhoto": "Error al capturar foto: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "No se seleccionó ningún video",
+  "errorSelectingVideo": "Error al seleccionar video: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "No se seleccionó ninguna foto",
+  "errorSelectingPhoto": "Error al seleccionar foto: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Error al procesar medios: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noEntriesFound": "No se encontraron entradas para este período.",
   "errorGeneratingVideo": "Error al generar video: {error}",
   "@errorGeneratingVideo": {

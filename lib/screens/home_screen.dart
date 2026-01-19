@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
-import '../services/media_service.dart';
 import '../widgets/monthly_calendar.dart';
 import 'capture_screen.dart';
 import 'timeline_screen.dart';
@@ -53,8 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedDay = today;
       _focusedMonth = DateTime(today.year, today.month, 1);
     });
-    // Focar no dia atual no calendário
-    _calendarKey.currentState?.focusOnToday();
+    // Aguardar um frame para garantir que o setState foi processado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Focar no dia atual no calendário
+      _calendarKey.currentState?.focusOnToday();
+    });
   }
 
   @override
@@ -78,8 +79,16 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.today, size: 18),
               label: Text(l10n.today),
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orangeAccent // Cor laranja para tema escuro
+                    : Colors.deepPurple, // Cor roxa para tema claro
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orangeAccent.withValues(alpha: 0.2) // Fundo sutil para tema escuro
+                    : Colors.deepPurple.withValues(alpha: 0.1), // Fundo sutil para tema claro
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
@@ -128,11 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Botão de ação rápida
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildQuickActionButton(hasTodayEntry),
-          ),
+          // Botão de ação rápida (apenas se não houver entrada para hoje)
+          if (!hasTodayEntry)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildQuickActionButton(hasTodayEntry),
+            ),
         ],
       ),
     );
@@ -229,7 +239,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _showDayOptions(selectedDay, entry);
     } else if (_isSameDay(selectedDay, DateTime.now()) ||
         selectedDay.isBefore(DateTime.now())) {
-      _showAddEntryDialog(selectedDay);
+      // Abrir diretamente a tela de captura sem diálogo de confirmação
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CaptureScreen(selectedDate: selectedDay),
+        ),
+      ).then((_) => _refreshCalendar());
     }
   }
 
@@ -286,37 +302,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showAddEntryDialog(DateTime day) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.addEntryFor(DateFormat('dd/MM/yyyy').format(day))),
-        content: Text(l10n.captureOrImport),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CaptureScreen(selectedDate: day),
-                ),
-              );
-              // Atualizar calendário quando voltar
-              _refreshCalendar();
-            },
-            child: Text(l10n.yes),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-        ],
       ),
     );
   }

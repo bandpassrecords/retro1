@@ -20,10 +20,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
   @override
   Widget build(BuildContext context) {
     final entries = _getFilteredEntries();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.timeline),
+        title: Text(l10n.timeline),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -32,9 +33,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
               });
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.all)),
-              PopupMenuItem(value: 'video', child: Text(AppLocalizations.of(context)!.videosOnly)),
-              PopupMenuItem(value: 'photo', child: Text(AppLocalizations.of(context)!.photosOnly)),
+              PopupMenuItem(value: 'all', child: Text(l10n.all)),
+              PopupMenuItem(value: 'video', child: Text(l10n.videosOnly)),
+              PopupMenuItem(value: 'photo', child: Text(l10n.photosOnly)),
             ],
             child: const Icon(Icons.filter_list),
           ),
@@ -55,7 +56,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                         Icon(Icons.calendar_today, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Nenhuma entrada encontrada',
+                          l10n.noEntriesFound,
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -104,6 +105,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   Widget _buildEntryTile(DailyEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
@@ -117,12 +121,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
           ),
         ),
         title: Text(
-          DateFormat('dd/MM/yyyy - EEEE', 'pt').format(entry.date),
+          DateFormat('dd/MM/yyyy - EEEE', locale.toString()).format(entry.date),
         ),
         subtitle: entry.caption != null && entry.caption!.isNotEmpty
             ? Text(entry.caption!)
             : Text(
-                entry.mediaType == 'video' ? 'Vídeo' : 'Foto',
+                entry.mediaType == 'video' ? l10n.video : l10n.photo,
               ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
@@ -153,6 +157,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   void _showEntryOptions(DailyEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -161,7 +166,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.edit),
-              title: Text(AppLocalizations.of(context)!.edit),
+              title: Text(l10n.edit),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -174,7 +179,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.delete),
-              title: Text(AppLocalizations.of(context)!.delete),
+              title: Text(l10n.delete),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(entry);
@@ -187,15 +192,16 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   void _confirmDelete(DailyEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.confirmDeletion),
-        content: Text(AppLocalizations.of(context)!.confirmDeletionMessage),
+        title: Text(l10n.confirmDeletion),
+        content: Text(l10n.confirmDeletionMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -203,7 +209,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
               Navigator.pop(context);
               setState(() {});
             },
-            child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

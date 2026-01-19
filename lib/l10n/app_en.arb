@@ -80,6 +80,50 @@
       }
     }
   },
+  "noVideoCaptured": "No video was captured",
+  "errorCapturingVideo": "Error capturing video: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "No photo was captured",
+  "errorCapturingPhoto": "Error capturing photo: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "No video was selected",
+  "errorSelectingVideo": "Error selecting video: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "No photo was selected",
+  "errorSelectingPhoto": "Error selecting photo: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Error processing media: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noEntriesFound": "No entries found for this period.",
   "errorGeneratingVideo": "Error generating video: {error}",
   "@errorGeneratingVideo": {
@@ -206,8 +250,6 @@
   "edit": "Edit",
   "entryAlreadyExists": "Entry already exists",
   "entryAlreadyExistsMessage": "An entry already exists for this day. Do you want to replace it?",
-  "cancelar": "Cancel",
-  "substituir": "Replace",
   "errorLoadingVideo": "Error loading video: {error}",
   "@errorLoadingVideo": {
     "placeholders": {
@@ -217,7 +259,6 @@
     }
   },
   "editorChooseSecond": "Editor - Choose 1 Second",
-  "entradaSalvaSucesso": "Entry saved successfully!",
   "errorSaving": "Error saving: {error}",
   "@errorSaving": {
     "placeholders": {

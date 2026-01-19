@@ -77,6 +77,50 @@
       }
     }
   },
+  "noVideoCaptured": "Nenhum vídeo foi capturado",
+  "errorCapturingVideo": "Erro ao capturar vídeo: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "Nenhuma foto foi capturada",
+  "errorCapturingPhoto": "Erro ao capturar foto: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "Nenhum vídeo foi selecionado",
+  "errorSelectingVideo": "Erro ao selecionar vídeo: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "Nenhuma foto foi selecionada",
+  "errorSelectingPhoto": "Erro ao selecionar foto: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Erro ao processar mídia: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noEntriesFound": "Nenhuma entrada encontrada para este período.",
   "errorGeneratingVideo": "Erro ao gerar vídeo: {error}",
   "@errorGeneratingVideo": {
@@ -227,7 +271,6 @@
     }
   },
   "erroAoExtrairSegundo": "Erro ao extrair segundo do vídeo",
-  "entradaSalvaSucesso": "Entrada salva com sucesso!",
   "erroAoCarregarVideo": "Erro ao carregar vídeo: {error}",
   "@erroAoCarregarVideo": {
     "placeholders": {
@@ -262,7 +305,6 @@
     }
   },
   "editorChooseSecond": "Editor - Escolha 1 Segundo",
-  "entradaSalvaSucesso": "Entrada salva com sucesso!",
   "errorSaving": "Erro ao salvar: {error}",
   "@errorSaving": {
     "placeholders": {

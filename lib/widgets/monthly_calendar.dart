@@ -107,17 +107,69 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   void _scrollToCurrentMonth() {
     // Como sempre mostramos o mês atual no final da lista, scroll para o final
-    if (_scrollController.hasClients) {
+    // Usar múltiplas tentativas para garantir que o layout esteja pronto
+    void attemptScroll({int retryCount = 0}) {
+      if (retryCount > 10) {
+        // Limite de tentativas para evitar loop infinito
+        return;
+      }
+
+      if (!_scrollController.hasClients) {
+        // Se o controller ainda não está pronto, tentar novamente
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(Duration(milliseconds: 50 * (retryCount + 1)), () {
+            attemptScroll(retryCount: retryCount + 1);
+          });
+        });
+        return;
+      }
+
+      // Aguardar o próximo frame para garantir que o layout está completamente renderizado
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
+        // Aguardar um pouco mais para garantir que todos os itens foram renderizados
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (!_scrollController.hasClients) {
+            attemptScroll(retryCount: retryCount + 1);
+            return;
+          }
+
+          try {
+            final position = _scrollController.position;
+            final maxScroll = position.maxScrollExtent;
+            
+            // Se maxScrollExtent ainda é 0 ou muito pequeno, significa que o layout não está pronto
+            if (maxScroll <= 0 && retryCount < 10) {
+              attemptScroll(retryCount: retryCount + 1);
+              return;
+            }
+
+            // Sempre ir até o final absoluto da lista
+            if (position.pixels < maxScroll) {
+              // Usar jumpTo para ir imediatamente ao final
+              _scrollController.jumpTo(maxScroll);
+              
+              // Verificar novamente após um pequeno delay para garantir que está no final
+              Future.delayed(const Duration(milliseconds: 100), () {
+                if (_scrollController.hasClients) {
+                  final currentPosition = _scrollController.position;
+                  final currentMax = currentPosition.maxScrollExtent;
+                  
+                  // Se ainda não está no final, ir novamente
+                  if (currentPosition.pixels < currentMax) {
+                    _scrollController.jumpTo(currentMax);
+                  }
+                }
+              });
+            }
+          } catch (e) {
+            // Se houver erro, tentar novamente
+            attemptScroll(retryCount: retryCount + 1);
+          }
+        });
       });
     }
+
+    attemptScroll();
   }
   
   // Método público para focar no dia atual (chamado pelo botão Today)
@@ -240,11 +292,10 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
-        itemBuilder: (context, index) {
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
+      itemBuilder: (context, index) {
           // Se for o primeiro item (index 0), mostrar botão "Load More"
           if (index == 0) {
             return _buildLoadMoreButton();
@@ -259,7 +310,6 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
             onDayTap: widget.onDayTap,
           );
         },
-      ),
     );
   }
 

@@ -77,6 +77,50 @@
       }
     }
   },
+  "noVideoCaptured": "Es wurde kein Video aufgenommen",
+  "errorCapturingVideo": "Fehler beim Aufnehmen des Videos: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "Es wurde kein Foto aufgenommen",
+  "errorCapturingPhoto": "Fehler beim Aufnehmen des Fotos: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "Es wurde kein Video ausgewählt",
+  "errorSelectingVideo": "Fehler beim Auswählen des Videos: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "Es wurde kein Foto ausgewählt",
+  "errorSelectingPhoto": "Fehler beim Auswählen des Fotos: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Fehler beim Verarbeiten der Medien: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noEntriesFound": "Keine Einträge für diesen Zeitraum gefunden.",
   "errorGeneratingVideo": "Fehler beim Generieren des Videos: {error}",
   "@errorGeneratingVideo": {

@@ -77,6 +77,50 @@
       }
     }
   },
+  "noVideoCaptured": "Aucune vidéo n'a été capturée",
+  "errorCapturingVideo": "Erreur lors de la capture de la vidéo: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "Aucune photo n'a été capturée",
+  "errorCapturingPhoto": "Erreur lors de la capture de la photo: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "Aucune vidéo n'a été sélectionnée",
+  "errorSelectingVideo": "Erreur lors de la sélection de la vidéo: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "Aucune photo n'a été sélectionnée",
+  "errorSelectingPhoto": "Erreur lors de la sélection de la photo: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Erreur lors du traitement des médias: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noEntriesFound": "Aucune entrée trouvée pour cette période.",
   "errorGeneratingVideo": "Erreur lors de la génération de la vidéo: {error}",
   "@errorGeneratingVideo": {

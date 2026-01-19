@@ -382,6 +382,60 @@ abstract class AppLocalizations {
   /// **'Error sharing: {error}'**
   String errorSharing(String error);
 
+  /// No description provided for @noVideoCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'No video was captured'**
+  String get noVideoCaptured;
+
+  /// No description provided for @errorCapturingVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Error capturing video: {error}'**
+  String errorCapturingVideo(String error);
+
+  /// No description provided for @noPhotoCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo was captured'**
+  String get noPhotoCaptured;
+
+  /// No description provided for @errorCapturingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Error capturing photo: {error}'**
+  String errorCapturingPhoto(String error);
+
+  /// No description provided for @noVideoSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No video was selected'**
+  String get noVideoSelected;
+
+  /// No description provided for @errorSelectingVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting video: {error}'**
+  String errorSelectingVideo(String error);
+
+  /// No description provided for @noPhotoSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo was selected'**
+  String get noPhotoSelected;
+
+  /// No description provided for @errorSelectingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting photo: {error}'**
+  String errorSelectingPhoto(String error);
+
+  /// No description provided for @errorProcessingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error processing media: {error}'**
+  String errorProcessingMedia(String error);
+
   /// No description provided for @noEntriesFound.
   ///
   /// In en, this message translates to:
@@ -819,24 +873,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record - {date}'**
   String recordFor(String date);
-
-  /// No description provided for @cancelar.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancelar;
-
-  /// No description provided for @substituir.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace'**
-  String get substituir;
-
-  /// No description provided for @entradaSalvaSucesso.
-  ///
-  /// In en, this message translates to:
-  /// **'Entry saved successfully!'**
-  String get entradaSalvaSucesso;
 
   /// No description provided for @imageNotFound.
   ///

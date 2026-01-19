@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:retro1/l10n/app_localizations.dart';
 import 'package:retro1/main.dart';
 import '../services/hive_service.dart';
@@ -326,16 +325,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          SwitchListTile(
-            title: Text(l10n.weeklySummary),
-            value: _settings.weeklySummaryEnabled,
-            onChanged: (value) {
-              setState(() {
-                _settings.weeklySummaryEnabled = value;
-              });
-              _saveSettings();
-            },
-          ),
           ListTile(
             title: Text(l10n.testNotification),
             subtitle: Text(l10n.testNotificationDescription),
@@ -413,16 +402,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          SwitchListTile(
-            title: Text(l10n.showDateInVideo),
-            value: _settings.showDateOverlay,
-            onChanged: (value) {
-              setState(() {
-                _settings.showDateOverlay = value;
-              });
-              _saveSettings();
-            },
-          ),
 
           // Exportação
           _buildSectionHeader(l10n.export),
@@ -437,29 +416,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   builder: (context) => const VideoGeneratorScreen(),
                 ),
               );
-            },
-          ),
-          SwitchListTile(
-            title: Text(l10n.autoExportEndOfYear),
-            value: _settings.autoExportYearEnd,
-            onChanged: (value) {
-              setState(() {
-                _settings.autoExportYearEnd = value;
-              });
-              _saveSettings();
-            },
-          ),
-
-          // Backup
-          _buildSectionHeader(l10n.backup),
-          SwitchListTile(
-            title: Text(l10n.autoBackup),
-            value: _settings.autoBackup,
-            onChanged: (value) {
-              setState(() {
-                _settings.autoBackup = value;
-              });
-              _saveSettings();
             },
           ),
 

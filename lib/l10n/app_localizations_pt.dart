@@ -158,6 +158,43 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get noVideoCaptured => 'Nenhum vídeo foi capturado';
+
+  @override
+  String errorCapturingVideo(String error) {
+    return 'Erro ao capturar vídeo: $error';
+  }
+
+  @override
+  String get noPhotoCaptured => 'Nenhuma foto foi capturada';
+
+  @override
+  String errorCapturingPhoto(String error) {
+    return 'Erro ao capturar foto: $error';
+  }
+
+  @override
+  String get noVideoSelected => 'Nenhum vídeo foi selecionado';
+
+  @override
+  String errorSelectingVideo(String error) {
+    return 'Erro ao selecionar vídeo: $error';
+  }
+
+  @override
+  String get noPhotoSelected => 'Nenhuma foto foi selecionada';
+
+  @override
+  String errorSelectingPhoto(String error) {
+    return 'Erro ao selecionar foto: $error';
+  }
+
+  @override
+  String errorProcessingMedia(String error) {
+    return 'Erro ao processar mídia: $error';
+  }
+
+  @override
   String get noEntriesFound => 'Nenhuma entrada encontrada para este período.';
 
   @override
@@ -388,15 +425,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String recordFor(String date) {
     return 'Registrar - $date';
   }
-
-  @override
-  String get cancelar => 'Cancelar';
-
-  @override
-  String get substituir => 'Substituir';
-
-  @override
-  String get entradaSalvaSucesso => 'Entrada salva com sucesso!';
 
   @override
   String get imageNotFound => 'Imagem não encontrada';

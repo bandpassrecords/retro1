@@ -415,68 +415,6 @@ class NotificationService {
     }
   }
 
-  // Enviar notificação de resumo semanal
-  static Future<void> sendWeeklySummary() async {
-    final settings = HiveService.getSettings();
-    if (!settings.weeklySummaryEnabled) {
-      return;
-    }
-
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final entries = HiveService.getEntriesByDateRange(
-      weekStart,
-      now,
-    );
-
-    final completedDays = entries.length;
-    final totalDays = now.weekday;
-
-    const androidDetails = AndroidNotificationDetails(
-      'weekly_summary',
-      'Resumo Semanal',
-      channelDescription: 'Resumos semanais do seu progresso',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-    );
-
-    await _notifications.show(
-      2,
-      'Resumo da Semana',
-      'Você completou $completedDays de $totalDays dias!',
-      details,
-    );
-  }
-
-  // Enviar notificação de conclusão de período
-  static Future<void> sendPeriodCompletionNotification({
-    required String period,
-    required String message,
-  }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'period_completion',
-      'Período Concluído',
-      channelDescription: 'Notificações quando um período é concluído',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-    );
-
-    await _notifications.show(
-      3,
-      'Seu vídeo de $period está pronto!',
-      message,
-      details,
-    );
-  }
-
   // Enviar notificação de teste manualmente
   static Future<void> sendTestNotification() async {
     print('[NotificationService] Sending test notification...');
