@@ -32,12 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _saveSettings() async {
     await HiveService.saveSettings(_settings);
     await NotificationService.scheduleNotifications();
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.settingsSaved)),
-      );
-    }
   }
 
   @override
@@ -349,14 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () async {
               try {
                 await NotificationService.sendTestNotification();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.testNotificationSent),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                // Notificação de teste enviada silenciosamente
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

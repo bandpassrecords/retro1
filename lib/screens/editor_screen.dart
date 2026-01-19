@@ -271,10 +271,6 @@ class _EditorScreenState extends State<EditorScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.entradaSalvaSucesso)),
-        );
       }
     } catch (e) {
       if (mounted) {

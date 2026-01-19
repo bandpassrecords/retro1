@@ -338,9 +338,6 @@ class _HomeScreenState extends State<HomeScreen> {
               HiveService.deleteEntry(entry.id);
               Navigator.pop(context);
               _refreshCalendar();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.entryDeleted)),
-              );
             },
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),

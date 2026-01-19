@@ -202,9 +202,6 @@ class _TimelineScreenState extends State<TimelineScreen> {
               HiveService.deleteEntry(entry.id);
               Navigator.pop(context);
               setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.entryDeleted)),
-              );
             },
             child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
           ),

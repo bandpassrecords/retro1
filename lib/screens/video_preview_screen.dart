@@ -78,9 +78,13 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context);
+    final dateFormat = DateFormat('dd/MM/yyyy', locale.toString());
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(DateFormat('dd/MM/yyyy').format(widget.entry.date)),
+        title: Text(dateFormat.format(widget.entry.date)),
         actions: [
           // Botão de compartilhar para vídeos
           if (widget.entry.mediaType == 'video')
@@ -125,8 +129,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat('EEEE, dd de MMMM de yyyy', 'pt')
-                            .format(widget.entry.date),
+                        DateFormat.yMMMMd(locale.toString()).format(widget.entry.date),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -151,7 +154,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            widget.entry.mediaType == 'video' ? 'Vídeo' : 'Foto',
+                            widget.entry.mediaType == 'video' ? l10n.video : l10n.photo,
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
@@ -304,9 +307,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
     try {
       final l10n = AppLocalizations.of(context)!;
+      final locale = Localizations.localeOf(context);
+      final dateFormat = DateFormat('dd/MM/yyyy', locale.toString());
       await Share.shareXFiles(
         [XFile(widget.entry.originalPath)],
-        text: '${l10n.appTitle} - ${DateFormat('dd/MM/yyyy').format(widget.entry.date)}',
+        text: '${l10n.appTitle} - ${dateFormat.format(widget.entry.date)}',
       );
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;

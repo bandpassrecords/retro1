@@ -120,9 +120,6 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
       
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.editsSaved)),
-        );
         Navigator.pop(context);
       }
     } catch (e) {

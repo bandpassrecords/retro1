@@ -288,10 +288,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
             // Cancelar notificações para este dia
             await NotificationService.checkAndCancelNotificationsForDate(entry.date);
             Navigator.pop(context);
-            final l10n = AppLocalizations.of(context)!;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.entradaSalvaSucesso)),
-            );
           }
         }
       }
