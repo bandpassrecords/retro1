@@ -306,7 +306,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
             await HiveService.saveEntry(entry);
             // Cancelar notificações para este dia
             await NotificationService.checkAndCancelNotificationsForDate(entry.date);
-            Navigator.pop(context);
+            Navigator.pop(context, true); // Retornar true para indicar que foi salvo
           }
         }
       }

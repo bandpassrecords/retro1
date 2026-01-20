@@ -285,7 +285,7 @@ class _EditorScreenState extends State<EditorScreen> {
       await NotificationService.checkAndCancelNotificationsForDate(updatedEntry.date);
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Retornar true para indicar que foi salvo
       }
     } catch (e) {
       if (mounted) {

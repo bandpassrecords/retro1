@@ -215,14 +215,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleQuickAction(bool hasTodayEntry) async {
     final today = DateTime.now();
     // Sempre abrir a tela de captura (para adicionar ou trocar)
-    await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CaptureScreen(selectedDate: today),
       ),
     );
-    // Atualizar calendário quando voltar
-    _refreshCalendar();
+    // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
+    if (result == true || mounted) {
+      _refreshCalendar();
+    }
   }
 
   void _onDaySelected(DateTime selectedDay, DailyEntry? entry) {
@@ -245,7 +247,12 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(
           builder: (context) => CaptureScreen(selectedDate: selectedDay),
         ),
-      ).then((_) => _refreshCalendar());
+      ).then((result) {
+        // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
+        if (result == true || mounted) {
+          _refreshCalendar();
+        }
+      });
     }
   }
 

@@ -269,9 +269,15 @@ class _DayTile extends StatelessWidget {
       return _buildPlaceholder(entry);
     }
     
+    // Usar key com timestamp do arquivo para forçar reload quando o arquivo mudar
+    final fileStat = file.statSync();
+    final cacheKey = ValueKey('${thumbnailPath}_${fileStat.modified.millisecondsSinceEpoch}');
+    
     return Image.file(
       file,
+      key: cacheKey,
       fit: BoxFit.cover,
+      cacheWidth: 200, // Limitar cache para melhor performance
       errorBuilder: (context, error, stackTrace) {
         print('[ScrollableCalendar] Error loading thumbnail: $error');
         return _buildPlaceholder(entry);

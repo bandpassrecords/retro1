@@ -117,6 +117,11 @@ class _PhotoEditDailyScreenState extends State<PhotoEditDailyScreen> {
         
         // Atualizar orientação
         await _checkOrientation();
+        
+        // Forçar rebuild para atualizar a imagem exibida
+        if (mounted) {
+          setState(() {});
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -143,7 +148,7 @@ class _PhotoEditDailyScreenState extends State<PhotoEditDailyScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, true), // Retornar true para indicar que pode ter sido salvo
           ),
         ],
       ),
