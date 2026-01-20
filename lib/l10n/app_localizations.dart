@@ -364,6 +364,24 @@ abstract class AppLocalizations {
   /// **'Video generated successfully!'**
   String get videoGeneratedSuccess;
 
+  /// No description provided for @noEntriesForMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries found for this month.'**
+  String get noEntriesForMonth;
+
+  /// No description provided for @noEntriesForYear.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries found for this year.'**
+  String get noEntriesForYear;
+
+  /// No description provided for @renderedVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro1 Rendered Video'**
+  String get renderedVideo;
+
   /// No description provided for @share.
   ///
   /// In en, this message translates to:
@@ -441,6 +459,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No entries found for this period.'**
   String get noEntriesFound;
+
+  /// No description provided for @noMediaFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No media found'**
+  String get noMediaFound;
+
+  /// No description provided for @noMediaFoundForDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No media found for selected date'**
+  String get noMediaFoundForDate;
+
+  /// No description provided for @permissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get permissionDenied;
+
+  /// No description provided for @errorLoadingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading media: {error}'**
+  String errorLoadingMedia(String error);
+
+  /// No description provided for @errorSelectingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting media: {error}'**
+  String errorSelectingMedia(String error);
+
+  /// No description provided for @removeDateFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove date filter'**
+  String get removeDateFilter;
 
   /// No description provided for @errorGeneratingVideo.
   ///
@@ -861,6 +915,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Photo'**
   String get editPhotoDaily;
+
+  /// No description provided for @convertToLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to Landscape'**
+  String get convertToLandscape;
+
+  /// No description provided for @convertWithCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert with Crop'**
+  String get convertWithCrop;
+
+  /// No description provided for @convertWithoutCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert without Crop (Rotate)'**
+  String get convertWithoutCrop;
+
+  /// No description provided for @imageAlreadyLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Image is already in landscape orientation'**
+  String get imageAlreadyLandscape;
+
+  /// No description provided for @errorConvertingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error converting image: {error}'**
+  String errorConvertingImage(String error);
+
+  /// No description provided for @cropImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Image'**
+  String get cropImage;
 
   /// No description provided for @record.
   ///

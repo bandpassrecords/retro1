@@ -152,10 +152,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
     try {
       final video = await MediaService.pickVideoFromGallery();
+      
       if (video != null && mounted) {
         await _processMedia(video.path, 'video');
       } else if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        if (video == null) {
+          // Usuário cancelou, não mostrar erro
+          setState(() => _isProcessing = false);
+          return;
+        }
         _showError(l10n.noVideoSelected);
       }
     } catch (e) {
@@ -175,10 +181,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
     try {
       final photo = await MediaService.pickPhotoFromGallery();
+      
       if (photo != null && mounted) {
         await _processMedia(photo.path, 'photo');
       } else if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        if (photo == null) {
+          // Usuário cancelou, não mostrar erro
+          setState(() => _isProcessing = false);
+          return;
+        }
         _showError(l10n.noPhotoSelected);
       }
     } catch (e) {

@@ -147,6 +147,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get videoGeneratedSuccess => '¡Video generado con éxito!';
 
   @override
+  String get noEntriesForMonth => 'No se encontraron entradas para este mes.';
+
+  @override
+  String get noEntriesForYear => 'No se encontraron entradas para este año.';
+
+  @override
+  String get renderedVideo => 'Vídeo Renderizado Retro1';
+
+  @override
   String get share => 'Compartir';
 
   @override
@@ -196,6 +205,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noEntriesFound => 'No se encontraron entradas para este período.';
+
+  @override
+  String get noMediaFound => 'No se encontró ninguna media';
+
+  @override
+  String get noMediaFoundForDate =>
+      'No se encontró ninguna media para la fecha seleccionada';
+
+  @override
+  String get permissionDenied => 'Permiso denegado';
+
+  @override
+  String errorLoadingMedia(String error) {
+    return 'Error al cargar media: $error';
+  }
+
+  @override
+  String errorSelectingMedia(String error) {
+    return 'Error al seleccionar media: $error';
+  }
+
+  @override
+  String get removeDateFilter => 'Quitar filtro de fecha';
 
   @override
   String errorGeneratingVideo(String error) {
@@ -418,6 +450,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editPhotoDaily => 'Editar Foto';
+
+  @override
+  String get convertToLandscape => 'Convertir a Paisaje';
+
+  @override
+  String get convertWithCrop => 'Convertir con Recorte';
+
+  @override
+  String get convertWithoutCrop => 'Convertir sin Recorte (Rotar)';
+
+  @override
+  String get imageAlreadyLandscape =>
+      'La imagen ya está en orientación paisaje';
+
+  @override
+  String errorConvertingImage(String error) {
+    return 'Error al convertir imagen: $error';
+  }
+
+  @override
+  String get cropImage => 'Recortar Imagen';
 
   @override
   String get record => 'Grabar';

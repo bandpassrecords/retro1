@@ -64,6 +64,9 @@
   "chooseDates": "Choisir les dates",
   "generatingVideo": "Génération de la vidéo... Cela peut prendre quelques minutes.",
   "videoGeneratedSuccess": "Vidéo générée avec succès!",
+  "noEntriesForMonth": "Aucune entrée trouvée pour ce mois.",
+  "noEntriesForYear": "Aucune entrée trouvée pour cette année.",
+  "renderedVideo": "Vidéo Rendu Retro1",
   "share": "Partager",
   "newButton": "Nouveau",
   "@newButton": {
@@ -122,6 +125,26 @@
     }
   },
   "noEntriesFound": "Aucune entrée trouvée pour cette période.",
+  "noMediaFound": "Aucun média trouvé",
+  "noMediaFoundForDate": "Aucun média trouvé pour la date sélectionnée",
+  "permissionDenied": "Permission refusée",
+  "errorLoadingMedia": "Erreur lors du chargement des médias: {error}",
+  "@errorLoadingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectingMedia": "Erreur lors de la sélection des médias: {error}",
+  "@errorSelectingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeDateFilter": "Retirer le filtre de date",
   "errorGeneratingVideo": "Erreur lors de la génération de la vidéo: {error}",
   "@errorGeneratingVideo": {
     "placeholders": {
@@ -231,6 +254,19 @@
   "muteAudio": "Couper l'Audio",
   "save": "Enregistrer",
   "editPhotoDaily": "Modifier la Photo",
+  "convertToLandscape": "Convertir en Paysage",
+  "convertWithCrop": "Convertir avec Recadrage",
+  "convertWithoutCrop": "Convertir sans Recadrage (Rotation)",
+  "imageAlreadyLandscape": "L'image est déjà en orientation paysage",
+  "errorConvertingImage": "Erreur lors de la conversion de l'image: {error}",
+  "@errorConvertingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropImage": "Recadrer l'Image",
   "record": "Enregistrer",
   "recordFor": "Enregistrer - {date}",
   "@recordFor": {

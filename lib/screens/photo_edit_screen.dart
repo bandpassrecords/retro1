@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/project_media_item.dart';
 import '../services/hive_service.dart';
@@ -17,43 +18,96 @@ class PhotoEditScreen extends StatefulWidget {
 class _PhotoEditScreenState extends State<PhotoEditScreen> {
   late ProjectMediaItem _item;
   bool _isProcessing = false;
-  int _currentRotation = 0;
-  String _currentAnimation = 'none';
-  String? _currentFilter = 'none';
+  bool _isPortrait = false;
 
   @override
   void initState() {
     super.initState();
     _item = widget.mediaItem;
-    _currentRotation = _item.rotation;
-    _currentAnimation = _item.animationType ?? 'none';
-    _currentFilter = _item.filter ?? 'none';
+    _checkOrientation();
   }
 
-  Future<void> _rotateImage(int degrees) async {
+  Future<void> _checkOrientation() async {
+    try {
+      final imagePath = _item.editedPath ?? _item.originalPath;
+      final imageFile = File(imagePath);
+      if (await imageFile.exists()) {
+        final image = await ImageEditorService.getImageDimensions(imagePath);
+        if (image != null) {
+          setState(() {
+            _isPortrait = image['height']! > image['width']!;
+          });
+        }
+      }
+    } catch (e) {
+      print('[PhotoEdit] Error checking orientation: $e');
+    }
+  }
+
+  Future<void> _convertToLandscape({bool useCrop = false}) async {
     setState(() {
       _isProcessing = true;
-      _currentRotation = degrees;
     });
 
     try {
-      final rotatedPath = await ImageEditorService.rotateImage(
-        inputPath: _item.editedPath ?? _item.originalPath,
-        degrees: degrees,
-      );
+      final imagePath = _item.editedPath ?? _item.originalPath;
+      String? processedPath;
 
-      if (rotatedPath != null) {
+      if (useCrop) {
+        // Usar image_cropper para permitir que o usuário escolha a área de crop
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: imagePath,
+          aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: AppLocalizations.of(context)!.cropImage,
+              toolbarColor: Colors.black,
+              toolbarWidgetColor: Colors.white,
+              activeControlsWidgetColor: Colors.orange,
+              initAspectRatio: CropAspectRatioPreset.ratio16x9,
+              lockAspectRatio: true,
+              hideBottomControls: false,
+              showCropGrid: true,
+              statusBarLight: false,
+              navBarLight: false,
+            ),
+            IOSUiSettings(
+              title: AppLocalizations.of(context)!.cropImage,
+            ),
+          ],
+        );
+
+        if (croppedFile != null) {
+          processedPath = croppedFile.path;
+        } else {
+          // Usuário cancelou o crop
+          setState(() {
+            _isProcessing = false;
+          });
+          return;
+        }
+      } else {
+        // Converter sem crop - apenas rotacionar 90 graus
+        processedPath = await ImageEditorService.rotateImage(
+          inputPath: imagePath,
+          degrees: 90,
+        );
+      }
+
+      if (processedPath != null) {
         setState(() {
-          _item.editedPath = rotatedPath;
-          _item.rotation = degrees;
+          _item.editedPath = processedPath;
         });
         await HiveService.saveProjectMediaItem(_item);
+        
+        // Atualizar orientação
+        await _checkOrientation();
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorRotatingImage(e.toString()))),
+          SnackBar(content: Text(l10n.errorConvertingImage(e.toString()))),
         );
       }
     } finally {
@@ -61,56 +115,16 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
         _isProcessing = false;
       });
     }
-  }
-
-  Future<void> _applyFilter(String filter) async {
-    setState(() {
-      _isProcessing = true;
-      _currentFilter = filter;
-    });
-
-    try {
-      final filteredPath = await ImageEditorService.applyFilter(
-        inputPath: _item.editedPath ?? _item.originalPath,
-        filterType: filter,
-      );
-
-      if (filteredPath != null) {
-        setState(() {
-          _item.editedPath = filteredPath;
-          _item.filter = filter;
-        });
-        await HiveService.saveProjectMediaItem(_item);
-      }
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorApplyingFilter(e.toString()))),
-        );
-      }
-    } finally {
-      setState(() {
-        _isProcessing = false;
-      });
-    }
-  }
-
-  Future<void> _setAnimation(String animationType) async {
-    setState(() {
-      _currentAnimation = animationType;
-      _item.animationType = animationType;
-    });
-    await HiveService.saveProjectMediaItem(_item);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final imagePath = _item.editedPath ?? _item.originalPath;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.editPhoto),
+        title: Text(l10n.editPhoto),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
@@ -128,100 +142,61 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
                       child: Image.file(
                         File(imagePath),
                         fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-                // Rotação
-                _buildSection(
-                  title: 'Rotation',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildRotationButton(0, Icons.rotate_right),
-                      _buildRotationButton(90, Icons.rotate_right),
-                      _buildRotationButton(180, Icons.rotate_right),
-                      _buildRotationButton(270, Icons.rotate_right),
-                    ],
+                // Opções apenas se for portrait
+                if (_isPortrait)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.convertToLandscape,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => _convertToLandscape(useCrop: true),
+                          icon: const Icon(Icons.crop),
+                          label: Text(l10n.convertWithCrop),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () => _convertToLandscape(useCrop: false),
+                          icon: const Icon(Icons.rotate_right),
+                          label: Text(l10n.convertWithoutCrop),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      l10n.imageAlreadyLandscape,
+                      style: TextStyle(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-                // Animações
-                _buildSection(
-                  title: 'Animation',
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      _buildAnimationButton('none', 'None'),
-                      _buildAnimationButton('zoom', 'Zoom'),
-                      _buildAnimationButton('pan', 'Pan'),
-                      _buildAnimationButton('ken_burns', 'Ken Burns'),
-                      _buildAnimationButton('fade', 'Fade'),
-                    ],
-                  ),
-                ),
-                // Filtros
-                _buildSection(
-                  title: 'Filters',
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      _buildFilterButton('none', 'Original'),
-                      _buildFilterButton('vintage', 'Vintage'),
-                      _buildFilterButton('blackwhite', 'B&W'),
-                      _buildFilterButton('sepia', 'Sepia'),
-                      _buildFilterButton('bright', 'Bright'),
-                      _buildFilterButton('warm', 'Warm'),
-                      _buildFilterButton('cool', 'Cool'),
-                    ],
-                  ),
-                ),
               ],
             ),
-    );
-  }
-
-  Widget _buildSection({required String title, required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRotationButton(int degrees, IconData icon) {
-    final isSelected = _currentRotation == degrees;
-    return IconButton(
-      icon: Icon(icon),
-      onPressed: () => _rotateImage(degrees),
-      color: isSelected ? Theme.of(context).colorScheme.primary : null,
-      tooltip: '${degrees}°',
-    );
-  }
-
-  Widget _buildAnimationButton(String type, String label) {
-    final isSelected = _currentAnimation == type;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _setAnimation(type),
-    );
-  }
-
-  Widget _buildFilterButton(String filter, String label) {
-    final isSelected = _currentFilter == filter;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _applyFilter(filter),
     );
   }
 }

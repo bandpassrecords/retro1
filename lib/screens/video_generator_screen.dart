@@ -26,7 +26,6 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = HiveService.getSettings();
     final currentYear = DateTime.now().year;
     final currentMonth = DateTime.now().month;
 
@@ -54,24 +53,24 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
             _buildSuccessCard()
           else ...[
             _buildAudioSelectionCard(),
-            _buildSectionHeader('Gerar por Período'),
+            _buildSectionHeader(AppLocalizations.of(context)!.generateByPeriod),
             _buildGenerateButton(
               icon: Icons.calendar_month,
-              title: 'Mês Atual',
-              subtitle: DateFormat('MMMM yyyy', 'pt')
+              title: AppLocalizations.of(context)!.currentMonth,
+              subtitle: DateFormat('MMMM yyyy', Localizations.localeOf(context).toString())
                   .format(DateTime(currentYear, currentMonth)),
               onTap: () => _generateMonthVideo(currentYear, currentMonth),
             ),
             _buildGenerateButton(
               icon: Icons.calendar_today,
-              title: 'Ano Atual',
+              title: AppLocalizations.of(context)!.currentYear,
               subtitle: currentYear.toString(),
               onTap: () => _generateYearVideo(currentYear),
             ),
             _buildGenerateButton(
               icon: Icons.date_range,
-              title: 'Intervalo Customizado',
-              subtitle: 'Escolha as datas',
+              title: AppLocalizations.of(context)!.customRange,
+              subtitle: AppLocalizations.of(context)!.chooseDates,
               onTap: _showCustomRangeDialog,
             ),
           ],
@@ -169,9 +168,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 64),
             const SizedBox(height: 16),
-            const Text(
-              'Vídeo gerado com sucesso!',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.videoGeneratedSuccess,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -278,8 +277,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
   Future<void> _generateMonthVideo(int year, int month) async {
     final entries = HiveService.getEntriesByMonth(year, month);
     if (entries.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _errorMessage = 'Nenhuma entrada encontrada para este mês.';
+        _errorMessage = l10n.noEntriesForMonth;
       });
       return;
     }
@@ -307,12 +307,14 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
           _isVideoInitialized = false;
         });
       } else {
-        throw Exception('Erro ao gerar vídeo');
+        final l10n = AppLocalizations.of(context)!;
+        throw Exception(l10n.errorGeneratingVideo('Unknown error'));
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _errorMessage = 'Erro ao gerar vídeo: $e';
+          _errorMessage = l10n.errorGeneratingVideo(e.toString());
           _isGenerating = false;
         });
       }
@@ -322,8 +324,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
   Future<void> _generateYearVideo(int year) async {
     final entries = HiveService.getEntriesByYear(year);
     if (entries.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _errorMessage = 'Nenhuma entrada encontrada para este ano.';
+        _errorMessage = l10n.noEntriesForYear;
       });
       return;
     }
@@ -350,12 +353,14 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
           _isVideoInitialized = false;
         });
       } else {
-        throw Exception('Erro ao gerar vídeo');
+        final l10n = AppLocalizations.of(context)!;
+        throw Exception(l10n.errorGeneratingVideo('Unknown error'));
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _errorMessage = 'Erro ao gerar vídeo: $e';
+          _errorMessage = l10n.errorGeneratingVideo(e.toString());
           _isGenerating = false;
         });
       }
@@ -383,8 +388,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
 
     final entries = HiveService.getEntriesByDateRange(startDate, endDate);
     if (entries.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _errorMessage = 'Nenhuma entrada encontrada para este período.';
+        _errorMessage = l10n.noEntriesFound;
       });
       return;
     }
@@ -412,12 +418,14 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
           _isVideoInitialized = false;
         });
       } else {
-        throw Exception('Erro ao gerar vídeo');
+        final l10n = AppLocalizations.of(context)!;
+        throw Exception(l10n.errorGeneratingVideo('Unknown error'));
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _errorMessage = 'Erro ao gerar vídeo: $e';
+          _errorMessage = l10n.errorGeneratingVideo(e.toString());
           _isGenerating = false;
         });
       }
@@ -428,9 +436,10 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
     if (_generatedVideoPath == null) return;
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       await Share.shareXFiles(
         [XFile(_generatedVideoPath!)],
-        text: 'Retro1 Rendered Video',
+        text: l10n.renderedVideo,
       );
     } catch (e) {
       if (mounted) {
