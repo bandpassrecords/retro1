@@ -125,95 +125,110 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
         ],
       ),
-      body: _isInitialized && _controller != null
-          ? Column(
-              children: [
-                // Preview do vídeo
-                Expanded(
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
+      body: Stack(
+        children: [
+          _isInitialized && _controller != null
+              ? Column(
+                  children: [
+                    // Preview do vídeo
+                    Expanded(
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: _controller!.value.aspectRatio,
+                          child: VideoPlayer(_controller!),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                // Controles
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Slider para escolher o segundo
-                      Text(
-                        'Posição: ${_formatTime(_selectedStartTimeMs)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Slider(
-                        value: _selectedStartTimeMs.toDouble(),
-                        min: 0,
-                        max: (_videoDuration!.inMilliseconds - 1000)
-                            .clamp(0, double.infinity)
-                            .toDouble(),
-                        divisions: (_videoDuration!.inMilliseconds / 100).floor(),
-                        label: _formatTime(_selectedStartTimeMs),
-                        onChangeStart: (value) {
-                          setState(() {
-                            _isDragging = true;
-                            _selectedStartTimeMs = value.toInt();
-                          });
-                          // Pausar durante o arrasto para evitar conflitos
-                          if (_controller != null && _controller!.value.isPlaying) {
-                            _controller!.pause();
-                          }
-                        },
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStartTimeMs = value.toInt();
-                          });
-                          // Seek com debounce durante o arrasto
-                          _seekToSelectedTime();
-                        },
-                        onChangeEnd: (value) {
-                          setState(() {
-                            _isDragging = false;
-                            _selectedStartTimeMs = value.toInt();
-                          });
-                          // Cancelar debounce e fazer seek imediato
-                          _seekDebounceTimer?.cancel();
-                          _seekToSelectedTime(immediate: true);
-                        },
-                      ),
-
-                      // Botão de preview
-                      ElevatedButton.icon(
-                        onPressed: _playOneSecond,
-                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                        label: Text(_isPlaying ? 'Reproduzindo...' : 'Preview (1s)'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                    // Controles
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // Slider para escolher o segundo
+                          Text(
+                            'Posição: ${_formatTime(_selectedStartTimeMs)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ),
+                          const SizedBox(height: 8),
+                          Slider(
+                            value: _selectedStartTimeMs.toDouble(),
+                            min: 0,
+                            max: (_videoDuration!.inMilliseconds - 1000)
+                                .clamp(0, double.infinity)
+                                .toDouble(),
+                            divisions: (_videoDuration!.inMilliseconds / 100).floor(),
+                            label: _formatTime(_selectedStartTimeMs),
+                            onChangeStart: (value) {
+                              setState(() {
+                                _isDragging = true;
+                                _selectedStartTimeMs = value.toInt();
+                              });
+                              // Pausar durante o arrasto para evitar conflitos
+                              if (_controller != null && _controller!.value.isPlaying) {
+                                _controller!.pause();
+                              }
+                            },
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStartTimeMs = value.toInt();
+                              });
+                              // Seek com debounce durante o arrasto
+                              _seekToSelectedTime();
+                            },
+                            onChangeEnd: (value) {
+                              setState(() {
+                                _isDragging = false;
+                                _selectedStartTimeMs = value.toInt();
+                              });
+                              // Cancelar debounce e fazer seek imediato
+                              _seekDebounceTimer?.cancel();
+                              _seekToSelectedTime(immediate: true);
+                            },
+                          ),
 
-                      const SizedBox(height: 16),
+                          // Botão de preview
+                          ElevatedButton.icon(
+                            onPressed: _playOneSecond,
+                            icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                            label: Text(_isPlaying ? 'Reproduzindo...' : 'Preview (1s)'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
 
-                      // Informações
-                      Text(
-                        'Duração total: ${_formatTime(_videoDuration!.inMilliseconds)}',
-                        style: TextStyle(color: Colors.grey[600]),
+                          const SizedBox(height: 16),
+
+                          // Informações
+                          Text(
+                            'Duração total: ${_formatTime(_videoDuration!.inMilliseconds)}',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                )
+              : const Center(child: CircularProgressIndicator()),
+          
+          // Overlay de carregamento quando está processando
+          if (_isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ],
-            )
-          : const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
