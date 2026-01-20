@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late DateTime _selectedDay;
   late DateTime _focusedMonth;
   final GlobalKey<MonthlyCalendarState> _calendarKey = MonthlyCalendar.createKey();
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -37,7 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _refreshCalendar() {
+  Future<void> _refreshCalendar() async {
+    // Pequeno delay para mostrar o indicador de refresh
+    await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
       setState(() {});
       // Também forçar refresh do widget do calendário
@@ -126,14 +129,55 @@ class _HomeScreenState extends State<HomeScreen> {
           // Estatísticas rápidas
           _buildStatsCard(hasTodayEntry, totalEntries, yearEntries),
           
-          // Calendário mensal com thumbnails
+          // Calendário mensal com thumbnails e pull-to-refresh de baixo para cima
           Expanded(
-            child: MonthlyCalendar(
-              key: _calendarKey,
-              selectedDay: _selectedDay,
-              focusedMonth: _focusedMonth,
-              onDayTap: _onDaySelected,
-              calendarKey: _calendarKey,
+            child: Stack(
+              children: [
+                NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollUpdateNotification) {
+                      final metrics = notification.metrics;
+                      // Detectar quando está no final e puxando para cima
+                      if (metrics.pixels >= metrics.maxScrollExtent - 10 && 
+                          notification.scrollDelta != null &&
+                          notification.scrollDelta! < 0 &&
+                          !_isRefreshing) {
+                        _isRefreshing = true;
+                        setState(() {});
+                        _refreshCalendar().then((_) {
+                          if (mounted) {
+                            setState(() {
+                              _isRefreshing = false;
+                            });
+                          }
+                        });
+                      }
+                    }
+                    return false;
+                  },
+                  child: MonthlyCalendar(
+                    key: _calendarKey,
+                    selectedDay: _selectedDay,
+                    focusedMonth: _focusedMonth,
+                    onDayTap: _onDaySelected,
+                    calendarKey: _calendarKey,
+                  ),
+                ),
+                // Indicador de refresh na parte inferior
+                if (_isRefreshing)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 

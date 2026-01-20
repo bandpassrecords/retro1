@@ -134,6 +134,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get currentYear => 'Anno Corrente';
 
   @override
+  String get selectMonth => 'Seleziona Mese';
+
+  @override
+  String get selectYear => 'Seleziona Anno';
+
+  @override
+  String get year => 'Anno';
+
+  @override
+  String get generate => 'Genera';
+
+  @override
   String get customRange => 'Intervallo Personalizzato';
 
   @override
@@ -154,6 +166,31 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get renderedVideo => 'Video Renderizzato Retro1';
+
+  @override
+  String get renderedVideosHistory => 'Cronologia Video Renderizzati';
+
+  @override
+  String get noRenderedVideos => 'Nessun video renderizzato ancora';
+
+  @override
+  String get confirmDeleteRenderedVideo =>
+      'Sei sicuro di voler eliminare questo video renderizzato?';
+
+  @override
+  String get videoDeleted => 'Video eliminato';
+
+  @override
+  String get videoFileNotFound => 'File video non trovato';
+
+  @override
+  String get fileNotFound => 'File non trovato';
+
+  @override
+  String get calendar => 'Calendario';
+
+  @override
+  String get projects => 'Progetti';
 
   @override
   String get share => 'Condividi';
@@ -327,9 +364,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get originalAudio => 'Audio originale';
-
-  @override
-  String get projects => 'Progetti';
 
   @override
   String get freeProjects => 'Progetti Liberi';

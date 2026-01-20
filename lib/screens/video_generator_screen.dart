@@ -5,9 +5,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../services/video_generator_service.dart';
 import '../services/hive_service.dart';
+import '../models/rendered_video.dart';
+import '../services/video_editor_service.dart';
+import 'rendered_videos_history_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:video_player/video_player.dart';
+import 'package:uuid/uuid.dart';
 
 class VideoGeneratorScreen extends StatefulWidget {
   const VideoGeneratorScreen({super.key});
@@ -32,6 +36,20 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.generateVideos),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RenderedVideosHistoryScreen(),
+                ),
+              );
+            },
+            tooltip: AppLocalizations.of(context)!.renderedVideosHistory,
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -59,13 +77,13 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
               title: AppLocalizations.of(context)!.currentMonth,
               subtitle: DateFormat('MMMM yyyy', Localizations.localeOf(context).toString())
                   .format(DateTime(currentYear, currentMonth)),
-              onTap: () => _generateMonthVideo(currentYear, currentMonth),
+              onTap: () => _showMonthPicker(currentYear, currentMonth),
             ),
             _buildGenerateButton(
               icon: Icons.calendar_today,
               title: AppLocalizations.of(context)!.currentYear,
               subtitle: currentYear.toString(),
-              onTap: () => _generateYearVideo(currentYear),
+              onTap: () => _showYearPicker(currentYear),
             ),
             _buildGenerateButton(
               icon: Icons.date_range,
@@ -301,6 +319,35 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       );
 
       if (path != null && mounted) {
+        // Gerar thumbnail
+        final thumbnailPath = await VideoEditorService.generateThumbnail(
+          videoPath: path,
+          timeMs: 0,
+        );
+        
+        // Obter duração do vídeo
+        final duration = await VideoEditorService.getVideoDuration(path);
+        final durationSeconds = duration?.inSeconds ?? 0;
+        
+        // Salvar vídeo renderizado no histórico
+        final renderedVideo = RenderedVideo(
+          id: const Uuid().v4(),
+          videoPath: path,
+          title: DateFormat('MMMM yyyy', Localizations.localeOf(context).toString())
+              .format(DateTime(year, month, 1)),
+          type: 'calendar',
+          createdAt: DateTime.now(),
+          thumbnailPath: thumbnailPath,
+          durationSeconds: durationSeconds,
+          metadata: {
+            'year': year,
+            'month': month,
+            'quality': settings.videoQuality,
+            'showDateOverlay': settings.showDateOverlay,
+          },
+        );
+        await HiveService.saveRenderedVideo(renderedVideo);
+        
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
@@ -347,6 +394,33 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       );
 
       if (path != null && mounted) {
+        // Gerar thumbnail
+        final thumbnailPath = await VideoEditorService.generateThumbnail(
+          videoPath: path,
+          timeMs: 0,
+        );
+        
+        // Obter duração do vídeo
+        final duration = await VideoEditorService.getVideoDuration(path);
+        final durationSeconds = duration?.inSeconds ?? 0;
+        
+        // Salvar vídeo renderizado no histórico
+        final renderedVideo = RenderedVideo(
+          id: const Uuid().v4(),
+          videoPath: path,
+          title: year.toString(),
+          type: 'calendar',
+          createdAt: DateTime.now(),
+          thumbnailPath: thumbnailPath,
+          durationSeconds: durationSeconds.toInt(),
+          metadata: {
+            'year': year,
+            'quality': settings.videoQuality,
+            'showDateOverlay': settings.showDateOverlay,
+          },
+        );
+        await HiveService.saveRenderedVideo(renderedVideo);
+        
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
@@ -412,6 +486,35 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       );
 
       if (path != null && mounted) {
+        // Gerar thumbnail
+        final thumbnailPath = await VideoEditorService.generateThumbnail(
+          videoPath: path,
+          timeMs: 0,
+        );
+        
+        // Obter duração do vídeo
+        final duration = await VideoEditorService.getVideoDuration(path);
+        final durationSeconds = duration?.inSeconds ?? 0;
+        
+        // Salvar vídeo renderizado no histórico
+        final dateFormat = DateFormat('dd-MM-yyyy', Localizations.localeOf(context).toString());
+        final renderedVideo = RenderedVideo(
+          id: const Uuid().v4(),
+          videoPath: path,
+          title: '${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}',
+          type: 'calendar',
+          createdAt: DateTime.now(),
+          thumbnailPath: thumbnailPath,
+          durationSeconds: durationSeconds.toInt(),
+          metadata: {
+            'startDate': startDate.toIso8601String(),
+            'endDate': endDate.toIso8601String(),
+            'quality': settings.videoQuality,
+            'showDateOverlay': settings.showDateOverlay,
+          },
+        );
+        await HiveService.saveRenderedVideo(renderedVideo);
+        
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
@@ -539,5 +642,264 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
   String _getFileName(String path) {
     final file = File(path);
     return file.path.split('/').last.split('\\').last;
+  }
+
+  Future<void> _showMonthPicker(int defaultYear, int defaultMonth) async {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    int selectedYear = defaultYear;
+    int selectedMonth = defaultMonth;
+
+    final result = await showDialog<Map<String, int>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 400,
+                  maxHeight: 600,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Título
+                      Text(
+                        l10n.selectMonth,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Seletor de ano
+                      ListTile(
+                        title: Text(l10n.year),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: selectedYear > 2020
+                                  ? () {
+                                      setDialogState(() {
+                                        selectedYear--;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                            Text(
+                              selectedYear.toString(),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: selectedYear < now.year
+                                  ? () {
+                                      setDialogState(() {
+                                        selectedYear++;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(),
+                      // Grid de meses
+                      SizedBox(
+                        height: 200, // Altura fixa para o grid
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 2.5,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                          itemCount: 12,
+                          itemBuilder: (context, index) {
+                            final month = index + 1;
+                            final isSelected = month == selectedMonth;
+                            final monthName = DateFormat('MMM', Localizations.localeOf(context).toString())
+                                .format(DateTime(selectedYear, month));
+                            
+                            // Desabilitar meses futuros
+                            final isFuture = selectedYear == now.year && month > now.month;
+                            
+                            return InkWell(
+                              onTap: isFuture ? null : () {
+                                setDialogState(() {
+                                  selectedMonth = month;
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Colors.grey[300]!,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    monthName,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : (isFuture ? Colors.grey[400] : Colors.black),
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Botões
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l10n.cancel),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context, {
+                                'year': selectedYear,
+                                'month': selectedMonth,
+                              });
+                            },
+                            child: Text(l10n.generate),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      _generateMonthVideo(result['year']!, result['month']!);
+    }
+  }
+
+  Future<void> _showYearPicker(int defaultYear) async {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    int selectedYear = defaultYear;
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 300,
+                  maxHeight: 500,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Título
+                      Text(
+                        l10n.selectYear,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Lista de anos disponíveis
+                      Flexible(
+                        child: SizedBox(
+                          height: 200,
+                          child: ListView.builder(
+                            itemCount: now.year - 2020 + 1,
+                            itemBuilder: (context, index) {
+                              final year = now.year - index;
+                              final isSelected = year == selectedYear;
+                              
+                              return ListTile(
+                                title: Text(
+                                  year.toString(),
+                                  style: TextStyle(
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Colors.black,
+                                  ),
+                                ),
+                                trailing: isSelected
+                                    ? Icon(
+                                        Icons.check,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  setDialogState(() {
+                                    selectedYear = year;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Botões
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l10n.cancel),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context, selectedYear);
+                            },
+                            child: Text(l10n.generate),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      _generateYearVideo(result);
+    }
   }
 }

@@ -294,6 +294,7 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(), // Permitir pull-to-refresh mesmo quando não há scroll
       itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
       itemBuilder: (context, index) {
           // Se for o primeiro item (index 0), mostrar botão "Load More"

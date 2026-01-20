@@ -340,6 +340,30 @@ abstract class AppLocalizations {
   /// **'Current Year'**
   String get currentYear;
 
+  /// No description provided for @selectMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Month'**
+  String get selectMonth;
+
+  /// No description provided for @selectYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Year'**
+  String get selectYear;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get generate;
+
   /// No description provided for @customRange.
   ///
   /// In en, this message translates to:
@@ -381,6 +405,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retro1 Rendered Video'**
   String get renderedVideo;
+
+  /// No description provided for @renderedVideosHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Rendered Videos History'**
+  String get renderedVideosHistory;
+
+  /// No description provided for @noRenderedVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'No rendered videos yet'**
+  String get noRenderedVideos;
+
+  /// No description provided for @confirmDeleteRenderedVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this rendered video?'**
+  String get confirmDeleteRenderedVideo;
+
+  /// No description provided for @videoDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Video deleted'**
+  String get videoDeleted;
+
+  /// No description provided for @videoFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Video file not found'**
+  String get videoFileNotFound;
+
+  /// No description provided for @fileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get fileNotFound;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
 
   /// No description provided for @share.
   ///
@@ -687,12 +759,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original audio'**
   String get originalAudio;
-
-  /// No description provided for @projects.
-  ///
-  /// In en, this message translates to:
-  /// **'Projects'**
-  String get projects;
 
   /// No description provided for @freeProjects.
   ///

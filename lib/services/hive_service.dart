@@ -4,18 +4,21 @@ import '../models/daily_entry.dart';
 import '../models/app_settings.dart';
 import '../models/free_project.dart';
 import '../models/project_media_item.dart';
+import '../models/rendered_video.dart';
 
 class HiveService {
   static const String _entriesBoxName = 'daily_entries';
   static const String _settingsBoxName = 'app_settings';
   static const String _projectsBoxName = 'free_projects';
   static const String _projectMediaBoxName = 'project_media_items';
+  static const String _renderedVideosBoxName = 'rendered_videos';
   static const String _settingsKey = 'settings';
 
   static Box<DailyEntry>? _entriesBox;
   static Box<AppSettings>? _settingsBox;
   static Box<FreeProject>? _projectsBox;
   static Box<ProjectMediaItem>? _projectMediaBox;
+  static Box<RenderedVideo>? _renderedVideosBox;
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -33,12 +36,16 @@ class HiveService {
     if (!Hive.isAdapterRegistered(3)) {
       Hive.registerAdapter(ProjectMediaItemAdapter());
     }
+    if (!Hive.isAdapterRegistered(4)) {
+      Hive.registerAdapter(RenderedVideoAdapter());
+    }
 
     // Abrir boxes
     _entriesBox = await Hive.openBox<DailyEntry>(_entriesBoxName);
     _settingsBox = await Hive.openBox<AppSettings>(_settingsBoxName);
     _projectsBox = await Hive.openBox<FreeProject>(_projectsBoxName);
     _projectMediaBox = await Hive.openBox<ProjectMediaItem>(_projectMediaBoxName);
+    _renderedVideosBox = await Hive.openBox<RenderedVideo>(_renderedVideosBoxName);
 
     // Inicializar configurações padrão se não existirem
     if (_settingsBox!.isEmpty) {
@@ -192,6 +199,43 @@ class HiveService {
     await _projectMediaBox!.delete(id);
   }
 
+  // ========== Rendered Videos ==========
+
+  static Future<void> saveRenderedVideo(RenderedVideo video) async {
+    await _renderedVideosBox!.put(video.id, video);
+  }
+
+  static RenderedVideo? getRenderedVideo(String id) {
+    return _renderedVideosBox!.get(id);
+  }
+
+  static List<RenderedVideo> getAllRenderedVideos() {
+    return _renderedVideosBox!.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  static List<RenderedVideo> getRenderedVideosByType(String type) {
+    return _renderedVideosBox!.values
+        .where((video) => video.type == type)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  static List<RenderedVideo> getRenderedVideosByProject(String projectId) {
+    return _renderedVideosBox!.values
+        .where((video) => video.projectId == projectId)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  static Future<void> deleteRenderedVideo(String id) async {
+    await _renderedVideosBox!.delete(id);
+  }
+
+  static int getTotalRenderedVideos() {
+    return _renderedVideosBox!.length;
+  }
+
   static Future<void> addMediaItemToProject(String projectId, String mediaItemId) async {
     final project = getProject(projectId);
     if (project != null) {
@@ -234,5 +278,6 @@ class HiveService {
     await _settingsBox?.close();
     await _projectsBox?.close();
     await _projectMediaBox?.close();
+    await _renderedVideosBox?.close();
   }
 }
