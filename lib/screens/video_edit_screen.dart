@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/project_media_item.dart';
 import '../services/hive_service.dart';
 import '../services/video_editor_service.dart';
@@ -56,8 +57,9 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
       _seekToSelectedTime();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading video: $e')),
+          SnackBar(content: Text(l10n.errorLoadingVideo(e.toString()))),
         );
       }
     }
@@ -82,34 +84,57 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
   }
 
   Future<void> _saveEdits() async {
+    if (_isProcessing) return;
+
     setState(() {
       _isProcessing = true;
     });
 
     try {
+      // Extrair o segundo selecionado (igual ao EditorScreen do calendário)
+      final extractedPath = await VideoEditorService.extractOneSecond(
+        inputPath: _item.originalPath,
+        startTimeMs: _selectedStartTimeMs,
+      );
+
+      if (extractedPath == null) {
+        throw Exception('Erro ao extrair segundo do vídeo');
+      }
+
+      // Gerar thumbnail do vídeo cortado
+      final thumbnailPath = await VideoEditorService.generateThumbnail(
+        videoPath: extractedPath,
+        timeMs: 0,
+      );
+
+      // Atualizar item com o vídeo cortado para 1 segundo
+      _item.originalPath = extractedPath; // Substituir pelo vídeo cortado
       _item.startTimeMs = _selectedStartTimeMs;
+      _item.durationMs = 1000; // Sempre 1 segundo
       _item.playbackSpeed = _playbackSpeed;
       _item.muteAudio = _muteAudio;
       _item.filter = _currentFilter;
+      _item.thumbnailPath = thumbnailPath;
       
       await HiveService.saveProjectMediaItem(_item);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Edits saved')),
-        );
+        final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving: $e')),
+          SnackBar(content: Text(l10n.errorSaving(e.toString()))),
         );
       }
     } finally {
-      setState(() {
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -123,7 +148,7 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Video'),
+        title: Text(AppLocalizations.of(context)!.editVideo),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
@@ -150,7 +175,7 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
                   child: Column(
                     children: [
                       // Slider de tempo
-                      Text('Start Time: ${_selectedStartTimeMs}ms'),
+                      Text(AppLocalizations.of(context)!.startTime(_selectedStartTimeMs)),
                       Slider(
                         value: _selectedStartTimeMs.toDouble(),
                         min: 0,
@@ -165,7 +190,7 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
                       // Velocidade
                       Row(
                         children: [
-                          const Text('Speed: '),
+                          Text(AppLocalizations.of(context)!.speed),
                           Expanded(
                             child: Slider(
                               value: _playbackSpeed,
@@ -185,7 +210,7 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
                       ),
                       // Mute
                       SwitchListTile(
-                        title: const Text('Mute Audio'),
+                        title: Text(AppLocalizations.of(context)!.muteAudio),
                         value: _muteAudio,
                         onChanged: (value) {
                           setState(() {
@@ -197,7 +222,7 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
                       ElevatedButton.icon(
                         onPressed: _playOneSecond,
                         icon: const Icon(Icons.play_arrow),
-                        label: const Text('Preview 1s'),
+                        label: Text(AppLocalizations.of(context)!.preview1s),
                       ),
                     ],
                   ),

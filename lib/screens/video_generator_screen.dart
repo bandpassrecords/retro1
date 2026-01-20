@@ -7,6 +7,7 @@ import '../services/video_generator_service.dart';
 import '../services/hive_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
+import 'package:video_player/video_player.dart';
 
 class VideoGeneratorScreen extends StatefulWidget {
   const VideoGeneratorScreen({super.key});
@@ -20,6 +21,8 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
   String? _generatedVideoPath;
   String? _errorMessage;
   String? _selectedAudioPath;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,20 +32,20 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gerar Vídeos'),
+        title: Text(AppLocalizations.of(context)!.generateVideos),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           if (_isGenerating)
-            const Center(
+            Center(
               child: Padding(
                 padding: EdgeInsets.all(24.0),
                 child: Column(
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
-                    Text('Gerando vídeo... Isso pode levar alguns minutos.'),
+                    Text(AppLocalizations.of(context)!.generatingVideo),
                   ],
                 ),
               ),
@@ -121,7 +124,43 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeVideoPreview() async {
+    if (_generatedVideoPath == null) return;
+
+    try {
+      _videoController?.dispose();
+      _videoController = VideoPlayerController.file(File(_generatedVideoPath!));
+      await _videoController!.initialize();
+      
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+      }
+    } catch (e) {
+      print('[VideoGenerator] Error initializing video preview: $e');
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = false;
+        });
+      }
+    }
+  }
+
   Widget _buildSuccessCard() {
+    // Inicializar vídeo quando o card for exibido
+    if (_generatedVideoPath != null && !_isVideoInitialized && _videoController == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeVideoPreview();
+      });
+    }
+
     return Card(
       color: Colors.green[50],
       child: Padding(
@@ -138,27 +177,99 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            
+            // Preview do vídeo
+            if (_isVideoInitialized && _videoController != null)
+              _buildVideoPreview()
+            else if (_generatedVideoPath != null)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
                   onPressed: _shareVideo,
                   icon: const Icon(Icons.share),
-                  label: const Text('Compartilhar'),
+                  label: Text(AppLocalizations.of(context)!.share),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
+                    _videoController?.dispose();
+                    _videoController = null;
                     setState(() {
                       _generatedVideoPath = null;
                       _errorMessage = null;
+                      _isVideoInitialized = false;
                     });
                   },
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Novo'),
+                  label: Text(AppLocalizations.of(context)!.newButton),
                 ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoPreview() {
+    if (_videoController == null || !_isVideoInitialized) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: AspectRatio(
+          aspectRatio: _videoController!.value.aspectRatio,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              VideoPlayer(_videoController!),
+              // Controles de play/pause
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (_videoController!.value.isPlaying) {
+                      _videoController!.pause();
+                    } else {
+                      _videoController!.play();
+                    }
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Icon(
+                    _videoController!.value.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -193,6 +304,7 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
+          _isVideoInitialized = false;
         });
       } else {
         throw Exception('Erro ao gerar vídeo');
@@ -235,6 +347,7 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
+          _isVideoInitialized = false;
         });
       } else {
         throw Exception('Erro ao gerar vídeo');
@@ -296,6 +409,7 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
         setState(() {
           _generatedVideoPath = path;
           _isGenerating = false;
+          _isVideoInitialized = false;
         });
       } else {
         throw Exception('Erro ao gerar vídeo');
@@ -320,8 +434,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       );
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao compartilhar: $e')),
+          SnackBar(content: Text(l10n.errorSharing(e.toString()))),
         );
       }
     }
@@ -404,8 +519,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao selecionar áudio: $e')),
+          SnackBar(content: Text(l10n.errorSelectingAudio(e.toString()))),
         );
       }
     }

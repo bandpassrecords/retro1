@@ -1,0 +1,313 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Retro1",
+  "timeline": "Chronologie",
+  "settings": "Paramètres",
+  "generateVideos": "Générer des Vidéos",
+  "editTodayEntry": "Modifier l'Entrée d'Aujourd'hui",
+  "recordToday": "Enregistrer Aujourd'hui",
+  "view": "Voir",
+  "edit": "Modifier",
+  "delete": "Supprimer",
+  "cancel": "Annuler",
+  "yes": "Oui",
+  "replace": "Remplacer",
+  "confirmDeletion": "Confirmer la suppression",
+  "confirmDeletionMessage": "Êtes-vous sûr de vouloir supprimer cette entrée?",
+  "entryDeleted": "Entrée supprimée",
+  "entrySaved": "Entrée enregistrée avec succès!",
+  "addEntryFor": "Ajouter une entrée pour {date}",
+  "@addEntryFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "captureOrImport": "Voulez-vous capturer ou importer des médias?",
+  "recordVideo": "Enregistrer une Vidéo",
+  "takePhoto": "Prendre une Photo",
+  "videoFromGallery": "Vidéo de la Galerie",
+  "photoFromGallery": "Photo de la Galerie",
+  "chooseHowToRecord": "Choisissez comment vous voulez enregistrer votre moment:",
+  "entryAlreadyExists": "Une entrée existe déjà",
+  "entryAlreadyExistsMessage": "Une entrée existe déjà pour ce jour. Voulez-vous la remplacer?",
+  "editorChooseSecond": "Éditeur - Choisir 1 Seconde",
+  "playing": "Lecture...",
+  "preview1s": "Aperçu (1s)",
+  "errorLoadingVideo": "Erreur lors du chargement de la vidéo: {error}",
+  "@errorLoadingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaving": "Erreur lors de l'enregistrement: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "video": "Vidéo",
+  "photo": "Photo",
+  "all": "Tous",
+  "videosOnly": "Vidéos Seulement",
+  "photosOnly": "Photos Seulement",
+  "noCaption": "Sans légende",
+  "generateByPeriod": "Générer par Période",
+  "currentMonth": "Mois Actuel",
+  "currentYear": "Année Actuelle",
+  "customRange": "Plage Personnalisée",
+  "chooseDates": "Choisir les dates",
+  "generatingVideo": "Génération de la vidéo... Cela peut prendre quelques minutes.",
+  "videoGeneratedSuccess": "Vidéo générée avec succès!",
+  "share": "Partager",
+  "newButton": "Nouveau",
+  "@newButton": {
+    "description": "Libellé du bouton pour créer une nouvelle vidéo"
+  },
+  "errorSharing": "Erreur lors du partage: {error}",
+  "@errorSharing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoCaptured": "Aucune vidéo n'a été capturée",
+  "errorCapturingVideo": "Erreur lors de la capture de la vidéo: {error}",
+  "@errorCapturingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoCaptured": "Aucune photo n'a été capturée",
+  "errorCapturingPhoto": "Erreur lors de la capture de la photo: {error}",
+  "@errorCapturingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noVideoSelected": "Aucune vidéo n'a été sélectionnée",
+  "errorSelectingVideo": "Erreur lors de la sélection de la vidéo: {error}",
+  "@errorSelectingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noPhotoSelected": "Aucune photo n'a été sélectionnée",
+  "errorSelectingPhoto": "Erreur lors de la sélection de la photo: {error}",
+  "@errorSelectingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorProcessingMedia": "Erreur lors du traitement des médias: {error}",
+  "@errorProcessingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noEntriesFound": "Aucune entrée trouvée pour cette période.",
+  "errorGeneratingVideo": "Erreur lors de la génération de la vidéo: {error}",
+  "@errorGeneratingVideo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enableNotifications": "Activer les notifications",
+  "notificationTime": "Heure de notification",
+  "reminderAfter": "Rappel après (heures)",
+  "weeklySummary": "Résumé hebdomadaire",
+  "videoQuality": "Qualité vidéo",
+  "showDateInVideo": "Afficher la date dans la vidéo",
+  "autoExportEndOfYear": "Exportation automatique en fin d'année",
+  "autoBackup": "Sauvegarde automatique",
+  "totalEntries": "Total des entrées",
+  "entriesThisYear": "Entrées cette année",
+  "entries": "entrées",
+  "settingsSaved": "Paramètres enregistrés",
+  "quality720p": "720p",
+  "quality1080p": "1080p",
+  "quality4k": "4K",
+  "language": "Langue",
+  "languageEnglish": "Anglais",
+  "languagePortuguese": "Portugais",
+  "appLanguage": "Langue de l'application",
+  "testNotification": "Tester la notification",
+  "testNotificationDescription": "Envoyer une notification de test maintenant",
+  "testNotificationSent": "Notification de test envoyée!",
+  "testNotificationError": "Erreur lors de l'envoi de la notification de test",
+  "today": "Aujourd'hui",
+  "useExternalAudio": "Utiliser l'audio externe",
+  "selectAudioFile": "Sélectionner un fichier audio",
+  "audioFileSelected": "Fichier audio sélectionné",
+  "removeAudio": "Supprimer l'audio",
+  "noAudio": "Pas d'audio",
+  "externalAudio": "Audio externe",
+  "originalAudio": "Audio original",
+  "projects": "Projets",
+  "freeProjects": "Projets Libres",
+  "noProjectsYet": "Aucun projet pour le moment",
+  "createFirstProject": "Créez votre premier projet pour commencer",
+  "newProject": "Nouveau Projet",
+  "projectName": "Nom du Projet",
+  "enterProjectName": "Entrez le nom du projet",
+  "description": "Description",
+  "descriptionOptional": "Description (optionnel)",
+  "enterDescription": "Entrez la description",
+  "create": "Créer",
+  "deleteProject": "Supprimer le Projet",
+  "deleteProjectConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\"?",
+  "@deleteProjectConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "items": "éléments",
+  "yesterday": "Hier",
+  "daysAgo": "Il y a {count} jours",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addMedia": "Ajouter des Médias",
+  "takePhoto": "Prendre une Photo",
+  "photoFromGallery": "Photo de la Galerie",
+  "recordVideo": "Enregistrer une Vidéo",
+  "videoFromGallery": "Vidéo de la Galerie",
+  "deleteItem": "Supprimer l'Élément",
+  "deleteItemConfirm": "Êtes-vous sûr de vouloir supprimer cet élément?",
+  "noMediaItemsYet": "Aucun élément média pour le moment",
+  "errorAddingMedia": "Erreur lors de l'ajout de médias: {error}",
+  "@errorAddingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "renderProjectVideo": "Rendre la Vidéo du Projet",
+  "renderProjectVideoConfirm": "Rendre tous les {count} éléments en une vidéo?",
+  "@renderProjectVideoConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "render": "Rendre",
+  "edited": "Modifié",
+  "original": "Original",
+  "photoAdded": "Photo Ajoutée",
+  "doYouWantToEdit": "Voulez-vous modifier la photo maintenant?",
+  "skip": "Passer",
+  "editPhoto": "Modifier la Photo",
+  "editVideo": "Modifier la Vidéo",
+  "rotate": "Tourner",
+  "filter": "Filtre",
+  "animation": "Animation",
+  "speed": "Vitesse",
+  "muteAudio": "Couper l'Audio",
+  "save": "Enregistrer",
+  "editPhotoDaily": "Modifier la Photo",
+  "record": "Enregistrer",
+  "recordFor": "Enregistrer - {date}",
+  "@recordFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "imageNotFound": "Image introuvable",
+  "errorLoadingImage": "Erreur lors du chargement de l'image",
+  "errorRotatingImage": "Erreur lors de la rotation de l'image: {error}",
+  "@errorRotatingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingFilter": "Erreur lors de l'application du filtre: {error}",
+  "@errorApplyingFilter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editsSaved": "Modifications enregistrées",
+  "startTime": "Heure de début: {ms}ms",
+  "speed": "Vitesse: ",
+  "muteAudio": "Couper l'Audio",
+  "preview1s": "Aperçu 1s",
+  "@startTime": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "errorSelectingAudio": "Erreur lors de la sélection de l'audio: {error}",
+  "@errorSelectingAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSpanish": "Espagnol",
+  "languageFrench": "Français",
+  "languageGerman": "Allemand",
+  "languageItalian": "Italien",
+  "notifications": "Notifications",
+  "video": "Vidéo",
+  "export": "Exportation",
+  "backup": "Sauvegarde",
+  "statistics": "Statistiques",
+  "generateVideosDescription": "Générer des vidéos compilées",
+  "hours": "heures",
+  "reminder": "Rappel",
+  "reminderChannelDescription": "Rappels supplémentaires",
+  "haventRecordedToday": "Vous n'avez pas encore enregistré aujourd'hui ?",
+  "captureMomentNow": "Et si vous capturiez un moment maintenant ?",
+  "dailyReminder": "Rappel Quotidien",
+  "dailyReminderDescription": "Notifications pour vous rappeler d'enregistrer votre moment de la journée",
+  "notificationTitle": "Retro1",
+  "notificationBody": "N'oubliez pas d'enregistrer votre moment d'aujourd'hui !",
+  "appearance": "Apparence",
+  "theme": "Thème",
+  "themeLight": "Clair",
+  "themeDark": "Sombre",
+  "themeSystem": "Système",
+  "loadMoreDays": "Charger Plus de Jours",
+  "mondayShort": "Lun",
+  "tuesdayShort": "Mar",
+  "wednesdayShort": "Mer",
+  "thursdayShort": "Jeu",
+  "fridayShort": "Ven",
+  "saturdayShort": "Sam",
+  "sundayShort": "Dim"
+}

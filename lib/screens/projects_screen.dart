@@ -57,20 +57,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _deleteProject(FreeProject project) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Project'),
-        content: Text('Are you sure you want to delete "${project.name}"?'),
+        title: Text(l10n.deleteProject),
+        content: Text(l10n.deleteProjectConfirm(project.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -88,7 +89,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Free Projects'),
+        title: Text(l10n.freeProjects),
       ),
       body: _projects.isEmpty
           ? Center(
@@ -102,7 +103,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No projects yet',
+                    l10n.noProjectsYet,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -110,7 +111,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your first project to get started',
+                    l10n.createFirstProject,
                     style: TextStyle(
                       color: Colors.grey[500],
                     ),
@@ -129,7 +130,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   ),
                   title: Text(project.name),
                   subtitle: Text(
-                    '${project.mediaItemIds.length} items • ${_formatDate(project.updatedAt)}',
+                    '${project.mediaItemIds.length} ${l10n.items} • ${_formatDate(project.updatedAt, l10n)}',
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
@@ -153,16 +154,16 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
-      return 'Today';
+      return l10n.today;
     } else if (difference.inDays == 1) {
-      return 'Yesterday';
+      return l10n.yesterday;
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return l10n.daysAgo(difference.inDays);
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
@@ -187,25 +188,26 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('New Project'),
+      title: Text(l10n.newProject),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Project Name',
-              hintText: 'Enter project name',
+            decoration: InputDecoration(
+              labelText: l10n.projectName,
+              hintText: l10n.enterProjectName,
             ),
             autofocus: true,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _descriptionController,
-            decoration: const InputDecoration(
-              labelText: 'Description (optional)',
-              hintText: 'Enter description',
+            decoration: InputDecoration(
+              labelText: l10n.descriptionOptional,
+              hintText: l10n.enterDescription,
             ),
             maxLines: 3,
           ),
@@ -214,7 +216,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         TextButton(
           onPressed: () {
@@ -230,7 +232,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
               );
             }
           },
-          child: const Text('Create'),
+          child: Text(l10n.create),
         ),
       ],
     );

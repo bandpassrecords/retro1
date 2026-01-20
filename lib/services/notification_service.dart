@@ -176,7 +176,39 @@ class NotificationService {
     // Pode navegar para a tela de captura
   }
 
+  // Verificar e cancelar notificações para dias que já têm entrada
+  // Este método deve ser chamado quando uma entrada é adicionada
+  static Future<void> checkAndCancelNotificationsForDate(DateTime date) async {
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    final hasEntry = HiveService.hasEntryForDate(dateOnly);
+    
+    if (hasEntry) {
+      print('[NotificationService] Entry exists for $dateOnly, canceling notifications for this date');
+      
+      // Calcular o offset do dia (quantos dias a partir de hoje)
+      final today = DateTime.now();
+      final todayOnly = DateTime(today.year, today.month, today.day);
+      final dayOffset = dateOnly.difference(todayOnly).inDays;
+      
+      if (dayOffset >= 0 && dayOffset < 30) {
+        // Cancelar notificação principal (ID 0-29)
+        await _notifications.cancel(dayOffset);
+        // Cancelar notificação de lembrete (ID 100-129)
+        await _notifications.cancel(100 + dayOffset);
+        print('[NotificationService] Canceled notifications for day offset: $dayOffset');
+      }
+    }
+  }
+  
+  // Reagendar notificações após uma entrada ser adicionada
+  static Future<void> rescheduleNotificationsAfterEntryAdded() async {
+    print('[NotificationService] Rescheduling notifications after entry added');
+    // Reagendar todas as notificações para garantir que estão corretas
+    await scheduleNotifications();
+  }
+
   // Agendar notificações baseado nas configurações
+  // Agora verifica se a entrada existe antes de agendar
   static Future<void> scheduleNotifications() async {
     print('[NotificationService] Scheduling notifications...');
     
@@ -206,56 +238,68 @@ class NotificationService {
     final localOffsetHours = localOffset ~/ 3600;
     print('[NotificationService] Local timezone offset: $localOffset seconds ($localOffsetHours hours)');
     
-    // Criar data agendada para hoje no horário especificado
-    // Usar o timezone local configurado
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      time.hour,
-      time.minute,
-    );
-    print('[NotificationService] Scheduled date (initial): $scheduledDate');
-    print('[NotificationService] Scheduled date timezone: ${scheduledDate.timeZoneName}');
-    print('[NotificationService] Scheduled date offset: ${scheduledDate.timeZoneOffset}');
-
-    // Se já passou o horário de hoje, agendar para amanhã
-    if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-      print('[NotificationService] Time already passed, scheduling for tomorrow: $scheduledDate');
-    }
-
-    // Notificação diária principal (recorrente)
-    print('[NotificationService] Scheduling daily notification for: $scheduledDate');
-    await _scheduleDailyNotification(scheduledDate);
-
-    // Lembrete inteligente (se configurado) - também recorrente
-    if (settings.reminderDelayHours > 0) {
-      // Calcular horário do lembrete baseado no horário da notificação principal
-      var reminderDate = tz.TZDateTime(
+    // Agendar notificações para os próximos 30 dias, mas apenas para dias que não têm entrada
+    // Isso garante que notificações só aparecem quando necessário
+    for (int dayOffset = 0; dayOffset < 30; dayOffset++) {
+      final targetDate = now.add(Duration(days: dayOffset));
+      final targetDateOnly = DateTime(targetDate.year, targetDate.month, targetDate.day);
+      
+      // Verificar se já existe entrada para este dia
+      final hasEntry = HiveService.hasEntryForDate(targetDateOnly);
+      
+      if (hasEntry) {
+        print('[NotificationService] Entry exists for ${targetDateOnly}, skipping notification');
+        continue;
+      }
+      
+      // Criar data agendada para este dia no horário especificado
+      var scheduledDate = tz.TZDateTime(
         tz.local,
-        scheduledDate.year,
-        scheduledDate.month,
-        scheduledDate.day,
-        time.hour + settings.reminderDelayHours,
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+        time.hour,
         time.minute,
       );
       
-      // Se passar da meia-noite, ajustar
-      if (reminderDate.hour >= 24) {
-        reminderDate = tz.TZDateTime(
-          tz.local,
-          reminderDate.year,
-          reminderDate.month,
-          reminderDate.day + 1,
-          reminderDate.hour - 24,
-          reminderDate.minute,
-        );
+      // Se já passou o horário de hoje, pular
+      if (dayOffset == 0 && (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now))) {
+        print('[NotificationService] Time already passed for today, skipping');
+        continue;
       }
       
-      print('[NotificationService] Scheduling reminder for: $reminderDate (${settings.reminderDelayHours} hours after main notification)');
-      await _scheduleReminderNotification(reminderDate);
+      print('[NotificationService] Scheduling notification for: $scheduledDate (day ${dayOffset})');
+      await _scheduleNotificationForDate(scheduledDate, dayOffset);
+
+      // Lembrete inteligente (se configurado)
+      if (settings.reminderDelayHours > 0) {
+        var reminderDate = tz.TZDateTime(
+          tz.local,
+          scheduledDate.year,
+          scheduledDate.month,
+          scheduledDate.day,
+          time.hour + settings.reminderDelayHours,
+          time.minute,
+        );
+        
+        if (reminderDate.hour >= 24) {
+          reminderDate = tz.TZDateTime(
+            tz.local,
+            reminderDate.year,
+            reminderDate.month,
+            reminderDate.day + 1,
+            reminderDate.hour - 24,
+            reminderDate.minute,
+          );
+        }
+        
+        // Verificar se ainda não tem entrada no dia do lembrete
+        final reminderDateOnly = DateTime(reminderDate.year, reminderDate.month, reminderDate.day);
+        if (!HiveService.hasEntryForDate(reminderDateOnly)) {
+          print('[NotificationService] Scheduling reminder for: $reminderDate (day ${dayOffset})');
+          await _scheduleReminderNotificationForDate(reminderDate, dayOffset);
+        }
+      }
     }
     
     // Verificar notificações pendentes após agendamento
@@ -269,16 +313,29 @@ class NotificationService {
     print('[NotificationService] Notifications scheduled successfully');
   }
 
-  // Agendar notificação diária recorrente
-  static Future<void> _scheduleDailyNotification(tz.TZDateTime scheduledDate) async {
-    print('[NotificationService] Scheduling daily notification at: $scheduledDate');
-    print('[NotificationService] Scheduled date timezone: ${scheduledDate.timeZoneName}');
-    print('[NotificationService] Scheduled date (ISO): ${scheduledDate.toIso8601String()}');
+  // Agendar notificação para uma data específica (sem recorrência automática)
+  // Usa um ID único baseado no dia para permitir cancelamento individual
+  static Future<void> _scheduleNotificationForDate(tz.TZDateTime scheduledDate, int dayOffset) async {
+    print('[NotificationService] Scheduling notification at: $scheduledDate (day offset: $dayOffset)');
+    
+    // Usar ID único baseado no dia (0-29 para os próximos 30 dias)
+    // ID 0-29 para notificações principais, 100-129 para lembretes
+    final notificationId = dayOffset;
 
-    const androidDetails = AndroidNotificationDetails(
+    // Obter idioma das configurações para traduções
+    final settings = HiveService.getSettings();
+    final language = settings.language;
+    
+    // Traduções baseadas no idioma (fallback para inglês)
+    final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
+    final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
+    final notificationTitle = _getLocalizedString('notificationTitle', language);
+    final notificationBody = _getLocalizedString('notificationBody', language);
+
+    final androidDetails = AndroidNotificationDetails(
       'daily_reminder',
-      'Lembrete Diário',
-      channelDescription: 'Notificações para lembrar de registrar seu segundo do dia',
+      dailyReminderTitle,
+      channelDescription: dailyReminderDescription,
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
@@ -286,149 +343,95 @@ class NotificationService {
       playSound: true,
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
     );
 
     try {
-      // Cancelar notificação anterior com mesmo ID antes de agendar nova
-      await _notifications.cancel(0);
-      
-      // Agendar notificação diária recorrente usando matchDateTimeComponents
-      // Isso fará com que a notificação seja repetida diariamente no mesmo horário
+      // Agendar notificação única (sem matchDateTimeComponents)
       await _notifications.zonedSchedule(
-        0,
-        'Você já registrou seu segundo de hoje?',
-        'Não esqueça de capturar seu momento especial!',
+        notificationId,
+        notificationTitle,
+        notificationBody,
         scheduledDate,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time, // Repetir diariamente no mesmo horário
+        payload: 'check_entry_$dayOffset',
       );
       
-      print('[NotificationService] Daily notification scheduled successfully');
-      print('[NotificationService] Scheduled for: $scheduledDate (${scheduledDate.timeZoneName})');
-      print('[NotificationService] Will repeat daily at ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}');
+      print('[NotificationService] Notification scheduled successfully for day $dayOffset');
     } catch (e, stackTrace) {
-      print('[NotificationService] ERROR scheduling daily notification: $e');
+      print('[NotificationService] ERROR scheduling notification: $e');
       print('[NotificationService] Stack trace: $stackTrace');
-      rethrow;
     }
   }
 
-  // Agendar notificação de lembrete (também recorrente)
-  static Future<void> _scheduleReminderNotification(tz.TZDateTime scheduledDate) async {
-    print('[NotificationService] Scheduling reminder notification at: $scheduledDate');
-    print('[NotificationService] Reminder date timezone: ${scheduledDate.timeZoneName}');
-    print('[NotificationService] Reminder date (ISO): ${scheduledDate.toIso8601String()}');
+  // Agendar notificação de lembrete para uma data específica
+  static Future<void> _scheduleReminderNotificationForDate(tz.TZDateTime scheduledDate, int dayOffset) async {
+    print('[NotificationService] Scheduling reminder notification at: $scheduledDate (day offset: $dayOffset)');
+    
+    // Usar ID único baseado no dia + 100 para lembretes (100-129)
+    final notificationId = 100 + dayOffset;
 
-    const androidDetails = AndroidNotificationDetails(
+    // Obter idioma das configurações para traduções
+    final settings = HiveService.getSettings();
+    final language = settings.language;
+    
+    // Traduções baseadas no idioma
+    final reminderTitle = _getLocalizedString('reminder', language);
+    final reminderDescription = _getLocalizedString('reminderChannelDescription', language);
+    final reminderNotificationTitle = _getLocalizedString('haventRecordedToday', language);
+    final reminderNotificationBody = _getLocalizedString('captureMomentNow', language);
+
+    final androidDetails = AndroidNotificationDetails(
       'reminder',
-      'Lembrete',
-      channelDescription: 'Lembretes adicionais',
+      reminderTitle,
+      channelDescription: reminderDescription,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       enableVibration: true,
       playSound: true,
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
     );
 
     try {
-      // Cancelar notificação anterior com mesmo ID antes de agendar nova
-      await _notifications.cancel(1);
-      
-      // Agendar lembrete também como recorrente diário
       await _notifications.zonedSchedule(
-        1,
-        'Ainda não registrou hoje?',
-        'Que tal capturar um momento agora?',
+        notificationId,
+        reminderNotificationTitle,
+        reminderNotificationBody,
         scheduledDate,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time, // Repetir diariamente no mesmo horário
+        payload: 'reminder_$dayOffset',
       );
       
-      print('[NotificationService] Reminder notification scheduled successfully');
-      print('[NotificationService] Will repeat daily at ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}');
+      print('[NotificationService] Reminder notification scheduled successfully for day $dayOffset');
     } catch (e, stackTrace) {
       print('[NotificationService] ERROR scheduling reminder notification: $e');
       print('[NotificationService] Stack trace: $stackTrace');
     }
   }
 
-  // Enviar notificação de resumo semanal
-  static Future<void> sendWeeklySummary() async {
-    final settings = HiveService.getSettings();
-    if (!settings.weeklySummaryEnabled) {
-      return;
-    }
-
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final entries = HiveService.getEntriesByDateRange(
-      weekStart,
-      now,
-    );
-
-    final completedDays = entries.length;
-    final totalDays = now.weekday;
-
-    const androidDetails = AndroidNotificationDetails(
-      'weekly_summary',
-      'Resumo Semanal',
-      channelDescription: 'Resumos semanais do seu progresso',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-    );
-
-    await _notifications.show(
-      2,
-      'Resumo da Semana',
-      'Você completou $completedDays de $totalDays dias!',
-      details,
-    );
-  }
-
-  // Enviar notificação de conclusão de período
-  static Future<void> sendPeriodCompletionNotification({
-    required String period,
-    required String message,
-  }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'period_completion',
-      'Período Concluído',
-      channelDescription: 'Notificações quando um período é concluído',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const details = NotificationDetails(
-      android: androidDetails,
-    );
-
-    await _notifications.show(
-      3,
-      'Seu vídeo de $period está pronto!',
-      message,
-      details,
-    );
-  }
-
   // Enviar notificação de teste manualmente
   static Future<void> sendTestNotification() async {
     print('[NotificationService] Sending test notification...');
     
-    const androidDetails = AndroidNotificationDetails(
+    // Obter idioma das configurações para traduções
+    final settings = HiveService.getSettings();
+    final language = settings.language;
+    
+    final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
+    final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
+    final testNotificationTitle = _getLocalizedString('testNotificationTitle', language);
+    final testNotificationBody = _getLocalizedString('testNotificationBody', language);
+    
+    final androidDetails = AndroidNotificationDetails(
       'daily_reminder',
-      'Lembrete Diário',
-      channelDescription: 'Notificações para lembrar de registrar seu segundo do dia',
+      dailyReminderTitle,
+      channelDescription: dailyReminderDescription,
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
@@ -436,15 +439,15 @@ class NotificationService {
       playSound: true,
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
     );
 
     try {
       await _notifications.show(
         999, // ID único para notificação de teste
-        'Teste de Notificação',
-        'Esta é uma notificação de teste. Se você está vendo isso, as notificações estão funcionando!',
+        testNotificationTitle,
+        testNotificationBody,
         details,
       );
       print('[NotificationService] Test notification sent successfully');
@@ -471,5 +474,87 @@ class NotificationService {
   // Obter notificações pendentes (útil para debug)
   static Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  // Helper para obter strings traduzidas baseado no idioma
+  static String _getLocalizedString(String key, String language) {
+    // Mapa de traduções para cada idioma
+    final translations = {
+      'en': {
+        'dailyReminder': 'Daily Reminder',
+        'dailyReminderDescription': 'Notifications to remind you to record your moment of the day',
+        'notificationTitle': 'Retro1',
+        'notificationBody': "Don't forget to record your moment today!",
+        'reminder': 'Reminder',
+        'reminderChannelDescription': 'Additional reminders',
+        'haventRecordedToday': "Haven't recorded today?",
+        'captureMomentNow': 'How about capturing a moment now?',
+        'testNotificationTitle': 'Test Notification',
+        'testNotificationBody': 'This is a test notification. If you\'re seeing this, notifications are working!',
+      },
+      'pt': {
+        'dailyReminder': 'Lembrete Diário',
+        'dailyReminderDescription': 'Notificações para lembrar de registrar seu segundo do dia',
+        'notificationTitle': 'Retro1',
+        'notificationBody': 'Não se esqueça de registrar seu momento de hoje!',
+        'reminder': 'Lembrete',
+        'reminderChannelDescription': 'Lembretes adicionais',
+        'haventRecordedToday': 'Ainda não registrou hoje?',
+        'captureMomentNow': 'Que tal capturar um momento agora?',
+        'testNotificationTitle': 'Teste de Notificação',
+        'testNotificationBody': 'Esta é uma notificação de teste. Se você está vendo isso, as notificações estão funcionando!',
+      },
+      'es': {
+        'dailyReminder': 'Recordatorio Diario',
+        'dailyReminderDescription': 'Notificaciones para recordarte de registrar tu momento del día',
+        'notificationTitle': 'Retro1',
+        'notificationBody': '¡No olvides registrar tu momento de hoy!',
+        'reminder': 'Recordatorio',
+        'reminderChannelDescription': 'Recordatorios adicionales',
+        'haventRecordedToday': '¿Aún no has registrado hoy?',
+        'captureMomentNow': '¿Qué tal capturar un momento ahora?',
+        'testNotificationTitle': 'Notificación de Prueba',
+        'testNotificationBody': 'Esta es una notificación de prueba. Si estás viendo esto, ¡las notificaciones están funcionando!',
+      },
+      'fr': {
+        'dailyReminder': 'Rappel Quotidien',
+        'dailyReminderDescription': 'Notifications pour vous rappeler d\'enregistrer votre moment de la journée',
+        'notificationTitle': 'Retro1',
+        'notificationBody': 'N\'oubliez pas d\'enregistrer votre moment d\'aujourd\'hui !',
+        'reminder': 'Rappel',
+        'reminderChannelDescription': 'Rappels supplémentaires',
+        'haventRecordedToday': 'Vous n\'avez pas encore enregistré aujourd\'hui ?',
+        'captureMomentNow': 'Et si vous capturiez un moment maintenant ?',
+        'testNotificationTitle': 'Notification de Test',
+        'testNotificationBody': 'Ceci est une notification de test. Si vous voyez ceci, les notifications fonctionnent !',
+      },
+      'de': {
+        'dailyReminder': 'Tägliche Erinnerung',
+        'dailyReminderDescription': 'Benachrichtigungen, um Sie daran zu erinnern, Ihren Moment des Tages aufzunehmen',
+        'notificationTitle': 'Retro1',
+        'notificationBody': 'Vergessen Sie nicht, Ihren Moment von heute aufzunehmen!',
+        'reminder': 'Erinnerung',
+        'reminderChannelDescription': 'Zusätzliche Erinnerungen',
+        'haventRecordedToday': 'Haben Sie heute noch nicht aufgenommen?',
+        'captureMomentNow': 'Wie wäre es, jetzt einen Moment einzufangen?',
+        'testNotificationTitle': 'Testbenachrichtigung',
+        'testNotificationBody': 'Dies ist eine Testbenachrichtigung. Wenn Sie dies sehen, funktionieren die Benachrichtigungen!',
+      },
+      'it': {
+        'dailyReminder': 'Promemoria Giornaliero',
+        'dailyReminderDescription': 'Notifiche per ricordarti di registrare il tuo momento della giornata',
+        'notificationTitle': 'Retro1',
+        'notificationBody': 'Non dimenticare di registrare il tuo momento di oggi!',
+        'reminder': 'Promemoria',
+        'reminderChannelDescription': 'Promemoria aggiuntivi',
+        'haventRecordedToday': 'Non hai ancora registrato oggi?',
+        'captureMomentNow': 'Che ne dici di catturare un momento ora?',
+        'testNotificationTitle': 'Notifica di Test',
+        'testNotificationBody': 'Questa è una notifica di test. Se stai vedendo questo, le notifiche funzionano!',
+      },
+    };
+
+    // Retornar tradução para o idioma ou fallback para inglês
+    return translations[language]?[key] ?? translations['en']![key]!;
   }
 }

@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
 import '../services/video_editor_service.dart';
+import '../services/notification_service.dart';
 
 class EditorScreen extends StatefulWidget {
   final DailyEntry entry;
@@ -57,8 +59,9 @@ class _EditorScreenState extends State<EditorScreen> {
       _seekToSelectedTime();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar vídeo: $e')),
+          SnackBar(content: Text(l10n.errorLoadingVideo(e.toString()))),
         );
       }
     }
@@ -113,7 +116,7 @@ class _EditorScreenState extends State<EditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editor - Escolha 1 Segundo'),
+        title: Text(AppLocalizations.of(context)!.editorChooseSecond),
         actions: [
           if (_isInitialized)
             IconButton(
@@ -263,18 +266,18 @@ class _EditorScreenState extends State<EditorScreen> {
 
       // Salvar
       await HiveService.saveEntry(updatedEntry);
+      // Cancelar notificações para este dia
+      await NotificationService.checkAndCancelNotificationsForDate(updatedEntry.date);
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Entrada salva com sucesso!')),
-        );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao salvar: $e'),
+            content: Text(l10n.errorSaving(e.toString())),
             backgroundColor: Colors.red,
           ),
         );

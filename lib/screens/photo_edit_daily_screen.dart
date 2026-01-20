@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
 import '../services/image_editor_service.dart';
+import '../services/notification_service.dart';
 
 class PhotoEditDailyScreen extends StatefulWidget {
   final DailyEntry entry;
@@ -61,11 +63,14 @@ class _PhotoEditDailyScreenState extends State<PhotoEditDailyScreen> {
           );
         });
         await HiveService.saveEntry(_entry);
+        // Cancelar notificações para este dia
+        await NotificationService.checkAndCancelNotificationsForDate(_entry.date);
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error rotating image: $e')),
+          SnackBar(content: Text(l10n.errorRotatingImage(e.toString()))),
         );
       }
     } finally {
@@ -108,11 +113,14 @@ class _PhotoEditDailyScreenState extends State<PhotoEditDailyScreen> {
           );
         });
         await HiveService.saveEntry(_entry);
+        // Cancelar notificações para este dia
+        await NotificationService.checkAndCancelNotificationsForDate(_entry.date);
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error applying filter: $e')),
+          SnackBar(content: Text(l10n.errorApplyingFilter(e.toString()))),
         );
       }
     } finally {
@@ -129,7 +137,7 @@ class _PhotoEditDailyScreenState extends State<PhotoEditDailyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Photo'),
+        title: Text(AppLocalizations.of(context)!.editPhotoDaily),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),

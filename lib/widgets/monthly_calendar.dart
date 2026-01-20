@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
+import 'dart:async';
 
 class MonthlyCalendar extends StatefulWidget {
   final DateTime? selectedDay;
@@ -32,21 +33,18 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   late ScrollController _scrollController;
   late List<DateTime> _months;
   final Map<int, GlobalKey> _monthKeys = {};
+  int _monthsToShow = 2; // Começar com 2 meses (últimos ~60 dias)
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _generateMonths();
-    // Aguardar que o layout esteja pronto antes de fazer scroll
-    // Usar múltiplos callbacks para garantir que o layout está completamente renderizado
+    
+    // Garantir que o calendário mostre o dia atual ao abrir
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            _scrollToCurrentMonth();
-          });
-        });
+        _scrollToCurrentMonth();
       });
     });
   }
@@ -72,33 +70,118 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   void _generateMonths() {
     final today = DateTime.now();
-    // Gerar meses: 2 anos atrás até 2 anos à frente
-    final start = DateTime(today.year - 2, 1, 1);
-    final end = DateTime(today.year + 2, 12, 1);
-    
+    // Gerar apenas os últimos N meses (começando com 2 meses = ~60 dias)
+    // Sempre incluir o mês atual e os meses anteriores
     _months = [];
-    var current = DateTime(start.year, start.month, 1);
-    final endDate = DateTime(end.year, end.month, 1);
     
-    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+    // Começar do mês atual e ir para trás
+    var current = DateTime(today.year, today.month, 1);
+    
+    for (int i = 0; i < _monthsToShow; i++) {
       _months.add(DateTime(current.year, current.month, 1));
-      current = DateTime(current.year, current.month + 1, 1);
+      // Ir para o mês anterior
+      if (current.month == 1) {
+        current = DateTime(current.year - 1, 12, 1);
+      } else {
+        current = DateTime(current.year, current.month - 1, 1);
+      }
     }
     
-    // Criar keys para cada mês
+    // Reverter para mostrar do mais antigo para o mais recente (topo para baixo)
+    _months = _months.reversed.toList();
+    
+    // Criar/atualizar keys para cada mês
     for (int i = 0; i < _months.length; i++) {
-      _monthKeys[i] = GlobalKey();
+      if (!_monthKeys.containsKey(i)) {
+        _monthKeys[i] = GlobalKey();
+      }
     }
   }
 
+  void _loadMoreMonths() {
+    setState(() {
+      _monthsToShow += 2; // Carregar mais 2 meses
+      _generateMonths();
+    });
+  }
+
   void _scrollToCurrentMonth() {
-    _scrollToMonth(DateTime.now());
+    // Como sempre mostramos o mês atual no final da lista, scroll para o final
+    // Usar múltiplas tentativas para garantir que o layout esteja pronto
+    void attemptScroll({int retryCount = 0}) {
+      if (retryCount > 10) {
+        // Limite de tentativas para evitar loop infinito
+        return;
+      }
+
+      if (!_scrollController.hasClients) {
+        // Se o controller ainda não está pronto, tentar novamente
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(Duration(milliseconds: 50 * (retryCount + 1)), () {
+            attemptScroll(retryCount: retryCount + 1);
+          });
+        });
+        return;
+      }
+
+      // Aguardar o próximo frame para garantir que o layout está completamente renderizado
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Aguardar um pouco mais para garantir que todos os itens foram renderizados
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (!_scrollController.hasClients) {
+            attemptScroll(retryCount: retryCount + 1);
+            return;
+          }
+
+          try {
+            final position = _scrollController.position;
+            final maxScroll = position.maxScrollExtent;
+            
+            // Se maxScrollExtent ainda é 0 ou muito pequeno, significa que o layout não está pronto
+            if (maxScroll <= 0 && retryCount < 10) {
+              attemptScroll(retryCount: retryCount + 1);
+              return;
+            }
+
+            // Sempre ir até o final absoluto da lista
+            if (position.pixels < maxScroll) {
+              // Usar jumpTo para ir imediatamente ao final
+              _scrollController.jumpTo(maxScroll);
+              
+              // Verificar novamente após um pequeno delay para garantir que está no final
+              Future.delayed(const Duration(milliseconds: 100), () {
+                if (_scrollController.hasClients) {
+                  final currentPosition = _scrollController.position;
+                  final currentMax = currentPosition.maxScrollExtent;
+                  
+                  // Se ainda não está no final, ir novamente
+                  if (currentPosition.pixels < currentMax) {
+                    _scrollController.jumpTo(currentMax);
+                  }
+                }
+              });
+            }
+          } catch (e) {
+            // Se houver erro, tentar novamente
+            attemptScroll(retryCount: retryCount + 1);
+          }
+        });
+      });
+    }
+
+    attemptScroll();
   }
   
   // Método público para focar no dia atual (chamado pelo botão Today)
   void focusOnToday() {
-    final today = DateTime.now();
-    _scrollToMonth(today);
+    _scrollToCurrentMonth();
+  }
+
+  // Método público para forçar refresh do calendário
+  void refresh() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _scrollToMonth(DateTime month) {
@@ -209,50 +292,37 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Dias da semana
-        _buildWeekdayHeaders(),
-        
-        // Calendário scrollável
-        Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: _months.length,
-            itemBuilder: (context, index) {
-              return _MonthView(
-                key: _monthKeys[index],
-                month: _months[index],
-                selectedDay: widget.selectedDay,
-                onDayTap: widget.onDayTap,
-              );
-            },
-          ),
-        ),
-      ],
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
+      itemBuilder: (context, index) {
+          // Se for o primeiro item (index 0), mostrar botão "Load More"
+          if (index == 0) {
+            return _buildLoadMoreButton();
+          }
+          
+          // Ajustar index para acessar os meses (index - 1 porque o primeiro é o botão)
+          final monthIndex = index - 1;
+          return _MonthView(
+            key: _monthKeys[monthIndex],
+            month: _months[monthIndex],
+            selectedDay: widget.selectedDay,
+            onDayTap: widget.onDayTap,
+          );
+        },
     );
   }
 
-  Widget _buildWeekdayHeaders() {
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
+  Widget _buildLoadMoreButton() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        children: weekdays.map((day) {
-          return Expanded(
-            child: Center(
-              child: Text(
-                day,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: _loadMoreMonths,
+          icon: const Icon(Icons.expand_more),
+          label: Text(l10n.loadMoreDays),
+        ),
       ),
     );
   }
@@ -272,12 +342,29 @@ class _MonthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final firstDayOfMonth = DateTime(month.year, month.month, 1);
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
     
     var firstWeekday = firstDayOfMonth.weekday - 1;
     final daysInMonth = lastDayOfMonth.day;
     final today = DateTime.now();
+    final todayDateOnly = DateTime(today.year, today.month, today.day);
+    
+    // Obter locale do contexto para formatação do mês
+    final locale = Localizations.localeOf(context);
+    final monthName = DateFormat('MMMM yyyy', locale.toString()).format(month);
+    
+    // Dias da semana
+    final weekdays = [
+      l10n.mondayShort,
+      l10n.tuesdayShort,
+      l10n.wednesdayShort,
+      l10n.thursdayShort,
+      l10n.fridayShort,
+      l10n.saturdayShort,
+      l10n.sundayShort,
+    ];
     
     final totalCells = firstWeekday + daysInMonth;
     final weeks = (totalCells / 7).ceil();
@@ -290,11 +377,31 @@ class _MonthView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              DateFormat('MMMM yyyy', 'en').format(month),
+              monthName,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+          ),
+          // Cabeçalho dos dias da semana
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: weekdays.map((day) {
+                return Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
           // Grade do calendário
@@ -320,6 +427,13 @@ class _MonthView extends StatelessWidget {
               }
               
               final day = DateTime(month.year, month.month, dayOfMonth);
+              final dayDateOnly = DateTime(day.year, day.month, day.day);
+              
+              // Não mostrar dias futuros
+              if (dayDateOnly.isAfter(todayDateOnly)) {
+                return const SizedBox.shrink();
+              }
+              
               final entry = HiveService.getEntryByDate(day);
               final isSelected = selectedDay != null &&
                   _isSameDay(selectedDay!, day);
@@ -449,6 +563,20 @@ class _DayCell extends StatelessWidget {
       return _buildPlaceholder();
     }
     
+    // Verificar se é uma imagem (não um vídeo)
+    final extension = thumbnailPath.toLowerCase();
+    final isImage = extension.endsWith('.jpg') || 
+                    extension.endsWith('.jpeg') || 
+                    extension.endsWith('.png') || 
+                    extension.endsWith('.bmp') || 
+                    extension.endsWith('.webp');
+    
+    // Se não for uma imagem, não tentar exibir como Image.file
+    if (!isImage) {
+      print('[MonthlyCalendar] WARNING: thumbnailPath is not an image: $thumbnailPath');
+      return _buildPlaceholder();
+    }
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(7),
       child: Image.file(
@@ -457,6 +585,7 @@ class _DayCell extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (context, error, stackTrace) {
+          print('[MonthlyCalendar] Error loading thumbnail: $error');
           return _buildPlaceholder();
         },
       ),

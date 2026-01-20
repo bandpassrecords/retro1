@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/media_service.dart';
 import '../services/hive_service.dart';
 import '../services/video_editor_service.dart';
+import '../services/notification_service.dart';
 import 'editor_screen.dart';
 import 'photo_edit_daily_screen.dart';
 
@@ -26,9 +27,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registrar - ${DateFormat('dd/MM/yyyy').format(widget.selectedDate)}'),
+        title: Text(l10n.recordFor(DateFormat('dd/MM/yyyy').format(widget.selectedDate))),
       ),
       body: Center(
         child: _isProcessing
@@ -36,37 +38,37 @@ class _CaptureScreenState extends State<CaptureScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Escolha como deseja registrar seu momento:',
-                    style: TextStyle(fontSize: 18),
+                  Text(
+                    l10n.chooseHowToRecord,
+                    style: const TextStyle(fontSize: 18),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
                   _buildCaptureOption(
                     icon: Icons.videocam,
-                    label: 'Gravar Vídeo',
-                    color: Colors.red,
+                    label: l10n.recordVideo,
+                    color: Colors.grey[700]!,
                     onTap: () => _captureVideo(),
                   ),
                   const SizedBox(height: 16),
                   _buildCaptureOption(
                     icon: Icons.camera_alt,
-                    label: 'Tirar Foto',
-                    color: Colors.blue,
+                    label: l10n.takePhoto,
+                    color: Colors.grey[700]!,
                     onTap: () => _capturePhoto(),
                   ),
                   const SizedBox(height: 16),
                   _buildCaptureOption(
                     icon: Icons.video_library,
-                    label: 'Vídeo da Galeria',
-                    color: Colors.purple,
+                    label: l10n.videoFromGallery,
+                    color: Colors.grey[700]!,
                     onTap: () => _pickVideoFromGallery(),
                   ),
                   const SizedBox(height: 16),
                   _buildCaptureOption(
                     icon: Icons.photo_library,
-                    label: 'Foto da Galeria',
-                    color: Colors.green,
+                    label: l10n.photoFromGallery,
+                    color: Colors.grey[700]!,
                     onTap: () => _pickPhotoFromGallery(),
                   ),
                 ],
@@ -107,11 +109,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
       if (video != null && mounted) {
         await _processMedia(video.path, 'video');
       } else if (mounted) {
-        _showError('Nenhum vídeo foi capturado');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.noVideoCaptured);
       }
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao capturar vídeo: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.errorCapturingVideo(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -128,11 +132,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
       if (photo != null && mounted) {
         await _processMedia(photo.path, 'photo');
       } else if (mounted) {
-        _showError('Nenhuma foto foi capturada');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.noPhotoCaptured);
       }
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao capturar foto: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.errorCapturingPhoto(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -149,11 +155,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
       if (video != null && mounted) {
         await _processMedia(video.path, 'video');
       } else if (mounted) {
-        _showError('Nenhum vídeo foi selecionado');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.noVideoSelected);
       }
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao selecionar vídeo: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.errorSelectingVideo(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -170,11 +178,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
       if (photo != null && mounted) {
         await _processMedia(photo.path, 'photo');
       } else if (mounted) {
-        _showError('Nenhuma foto foi selecionada');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.noPhotoSelected);
       }
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao selecionar foto: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.errorSelectingPhoto(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -248,19 +258,20 @@ class _CaptureScreenState extends State<CaptureScreen> {
       } else {
         // Se for foto, perguntar se quer editar
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           final shouldEdit = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Photo Added'),
-              content: const Text('Do you want to edit the photo now?'),
+              title: Text(l10n.photoAdded),
+              content: Text(l10n.doYouWantToEdit),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Skip'),
+                  child: Text(l10n.skip),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Edit'),
+                  child: Text(l10n.edit),
                 ),
               ],
             ),
@@ -269,6 +280,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
           if (shouldEdit == true) {
             // Salvar primeiro
             await HiveService.saveEntry(entry);
+            // Cancelar notificações para este dia
+            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
             // Abrir editor de foto
             Navigator.pushReplacement(
               context,
@@ -279,36 +292,35 @@ class _CaptureScreenState extends State<CaptureScreen> {
           } else {
             // Salvar e voltar
             await HiveService.saveEntry(entry);
+            // Cancelar notificações para este dia
+            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Entry saved successfully!')),
-            );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao processar mídia: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showError(l10n.errorProcessingMedia(e.toString()));
       }
     }
   }
 
   Future<bool> _confirmReplace() async {
+    final l10n = AppLocalizations.of(context)!;
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Já existe uma entrada'),
-            content: const Text(
-              'Já existe uma entrada para este dia. Deseja substituir?',
-            ),
+            title: Text(l10n.entryAlreadyExists),
+            content: Text(l10n.entryAlreadyExistsMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Substituir'),
+                child: Text(l10n.replace),
               ),
             ],
           ),
