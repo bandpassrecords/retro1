@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get refresh => 'Refresh';
+
+  @override
   String get generateVideos => 'Generate Videos';
 
   @override
@@ -134,6 +137,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentYear => 'Current Year';
 
   @override
+  String get selectMonth => 'Select Month';
+
+  @override
+  String get selectYear => 'Select Year';
+
+  @override
+  String get year => 'Year';
+
+  @override
+  String get generate => 'Generate';
+
+  @override
   String get customRange => 'Custom Range';
 
   @override
@@ -145,6 +160,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoGeneratedSuccess => 'Video generated successfully!';
+
+  @override
+  String get noEntriesForMonth => 'No entries found for this month.';
+
+  @override
+  String get noEntriesForYear => 'No entries found for this year.';
+
+  @override
+  String get renderedVideo => 'Retro1 Rendered Video';
+
+  @override
+  String get renderedVideosHistory => 'Rendered Videos History';
+
+  @override
+  String get noRenderedVideos => 'No rendered videos yet';
+
+  @override
+  String get confirmDeleteRenderedVideo =>
+      'Are you sure you want to delete this rendered video?';
+
+  @override
+  String get videoDeleted => 'Video deleted';
+
+  @override
+  String get videoFileNotFound => 'Video file not found';
+
+  @override
+  String get fileNotFound => 'File not found';
+
+  @override
+  String get calendar => 'Calendar';
+
+  @override
+  String get projects => 'Projects';
 
   @override
   String get share => 'Share';
@@ -196,6 +245,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEntriesFound => 'No entries found for this period.';
+
+  @override
+  String get noMediaFound => 'No media found';
+
+  @override
+  String get noMediaFoundForDate => 'No media found for selected date';
+
+  @override
+  String get permissionDenied => 'Permission denied';
+
+  @override
+  String errorLoadingMedia(String error) {
+    return 'Error loading media: $error';
+  }
+
+  @override
+  String errorSelectingMedia(String error) {
+    return 'Error selecting media: $error';
+  }
+
+  @override
+  String get removeDateFilter => 'Remove date filter';
 
   @override
   String errorGeneratingVideo(String error) {
@@ -294,9 +365,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get originalAudio => 'Original audio';
-
-  @override
-  String get projects => 'Projects';
 
   @override
   String get freeProjects => 'Free Projects';
@@ -416,6 +484,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editPhotoDaily => 'Edit Photo';
+
+  @override
+  String get convertToLandscape => 'Convert to Landscape';
+
+  @override
+  String get convertWithCrop => 'Convert with Crop';
+
+  @override
+  String get convertWithoutCrop => 'Convert without Crop (Rotate)';
+
+  @override
+  String get imageAlreadyLandscape =>
+      'Image is already in landscape orientation';
+
+  @override
+  String errorConvertingImage(String error) {
+    return 'Error converting image: $error';
+  }
+
+  @override
+  String get cropImage => 'Crop Image';
 
   @override
   String get record => 'Record';

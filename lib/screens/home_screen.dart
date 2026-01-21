@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late DateTime _selectedDay;
   late DateTime _focusedMonth;
   final GlobalKey<MonthlyCalendarState> _calendarKey = MonthlyCalendar.createKey();
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -37,7 +38,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _refreshCalendar() {
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    // Pequeno delay para mostrar o indicador de refresh
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) {
+      setState(() {});
+      // Também forçar refresh do widget do calendário
+      _calendarKey.currentState?.refresh();
+    }
+    
+    if (mounted) {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
+  }
+
+  Future<void> _refreshCalendar() async {
+    // Pequeno delay para mostrar o indicador de refresh
+    await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
       setState(() {});
       // Também forçar refresh do widget do calendário
@@ -71,6 +94,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          // Botão Refresh/Sync
+          IconButton(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: _isRefreshing ? null : _handleRefresh,
+            tooltip: AppLocalizations.of(context)!.refresh,
+          ),
           // Botão Today alinhado à direita
           Padding(
             padding: const EdgeInsets.only(right: 4.0),
@@ -215,14 +252,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleQuickAction(bool hasTodayEntry) async {
     final today = DateTime.now();
     // Sempre abrir a tela de captura (para adicionar ou trocar)
-    await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CaptureScreen(selectedDate: today),
       ),
     );
-    // Atualizar calendário quando voltar
-    _refreshCalendar();
+    // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
+    if (result == true || mounted) {
+      _refreshCalendar();
+    }
   }
 
   void _onDaySelected(DateTime selectedDay, DailyEntry? entry) {
@@ -245,7 +284,12 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(
           builder: (context) => CaptureScreen(selectedDate: selectedDay),
         ),
-      ).then((_) => _refreshCalendar());
+      ).then((result) {
+        // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
+        if (result == true || mounted) {
+          _refreshCalendar();
+        }
+      });
     }
   }
 

@@ -18,6 +18,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings => 'Impostazioni';
 
   @override
+  String get refresh => 'Aggiorna';
+
+  @override
   String get generateVideos => 'Genera Video';
 
   @override
@@ -134,6 +137,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get currentYear => 'Anno Corrente';
 
   @override
+  String get selectMonth => 'Seleziona Mese';
+
+  @override
+  String get selectYear => 'Seleziona Anno';
+
+  @override
+  String get year => 'Anno';
+
+  @override
+  String get generate => 'Genera';
+
+  @override
   String get customRange => 'Intervallo Personalizzato';
 
   @override
@@ -145,6 +160,40 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get videoGeneratedSuccess => 'Video generato con successo!';
+
+  @override
+  String get noEntriesForMonth => 'Nessuna voce trovata per questo mese.';
+
+  @override
+  String get noEntriesForYear => 'Nessuna voce trovata per questo anno.';
+
+  @override
+  String get renderedVideo => 'Video Renderizzato Retro1';
+
+  @override
+  String get renderedVideosHistory => 'Cronologia Video Renderizzati';
+
+  @override
+  String get noRenderedVideos => 'Nessun video renderizzato ancora';
+
+  @override
+  String get confirmDeleteRenderedVideo =>
+      'Sei sicuro di voler eliminare questo video renderizzato?';
+
+  @override
+  String get videoDeleted => 'Video eliminato';
+
+  @override
+  String get videoFileNotFound => 'File video non trovato';
+
+  @override
+  String get fileNotFound => 'File non trovato';
+
+  @override
+  String get calendar => 'Calendario';
+
+  @override
+  String get projects => 'Progetti';
 
   @override
   String get share => 'Condividi';
@@ -196,6 +245,29 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get noEntriesFound => 'Nessuna voce trovata per questo periodo.';
+
+  @override
+  String get noMediaFound => 'Nessun media trovato';
+
+  @override
+  String get noMediaFoundForDate =>
+      'Nessun media trovato per la data selezionata';
+
+  @override
+  String get permissionDenied => 'Permesso negato';
+
+  @override
+  String errorLoadingMedia(String error) {
+    return 'Errore durante il caricamento dei media: $error';
+  }
+
+  @override
+  String errorSelectingMedia(String error) {
+    return 'Errore durante la selezione dei media: $error';
+  }
+
+  @override
+  String get removeDateFilter => 'Rimuovi filtro data';
 
   @override
   String errorGeneratingVideo(String error) {
@@ -295,9 +367,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get originalAudio => 'Audio originale';
-
-  @override
-  String get projects => 'Progetti';
 
   @override
   String get freeProjects => 'Progetti Liberi';
@@ -418,6 +487,27 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get editPhotoDaily => 'Modifica Foto';
+
+  @override
+  String get convertToLandscape => 'Converti in Orizzontale';
+
+  @override
+  String get convertWithCrop => 'Converti con Ritaglio';
+
+  @override
+  String get convertWithoutCrop => 'Converti senza Ritaglio (Ruota)';
+
+  @override
+  String get imageAlreadyLandscape =>
+      'L\'immagine è già in orientamento orizzontale';
+
+  @override
+  String errorConvertingImage(String error) {
+    return 'Errore durante la conversione dell\'immagine: $error';
+  }
+
+  @override
+  String get cropImage => 'Ritaglia Immagine';
 
   @override
   String get record => 'Registra';

@@ -6,6 +6,7 @@ import 'package:retro1/l10n/app_localizations.dart';
 import '../models/free_project.dart';
 import '../models/project_media_item.dart';
 import '../models/daily_entry.dart';
+import '../models/rendered_video.dart';
 import '../services/hive_service.dart';
 import '../services/media_service.dart';
 import '../services/video_editor_service.dart';
@@ -254,6 +255,33 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         });
 
         if (videoPath != null) {
+          // Gerar thumbnail
+          final thumbnailPath = await VideoEditorService.generateThumbnail(
+            videoPath: videoPath,
+            timeMs: 0,
+          );
+          
+          // Obter duração do vídeo
+          final duration = await VideoEditorService.getVideoDuration(videoPath);
+          final durationSeconds = duration?.inSeconds ?? 0;
+          
+          // Salvar vídeo renderizado no histórico
+          final renderedVideo = RenderedVideo(
+            id: const Uuid().v4(),
+            videoPath: videoPath,
+            title: _project!.name,
+            type: 'project',
+            createdAt: DateTime.now(),
+            thumbnailPath: thumbnailPath,
+            durationSeconds: durationSeconds,
+            projectId: _project!.id,
+            metadata: {
+              'projectName': _project!.name,
+              'mediaItemsCount': _mediaItems.length,
+            },
+          );
+          await HiveService.saveRenderedVideo(renderedVideo);
+          
           // Mostrar preview do vídeo gerado
           Navigator.push(
             context,

@@ -3,6 +3,7 @@
   "appTitle": "Retro1",
   "timeline": "Chronologie",
   "settings": "Paramètres",
+  "refresh": "Actualiser",
   "generateVideos": "Générer des Vidéos",
   "editTodayEntry": "Modifier l'Entrée d'Aujourd'hui",
   "recordToday": "Enregistrer Aujourd'hui",
@@ -60,10 +61,24 @@
   "generateByPeriod": "Générer par Période",
   "currentMonth": "Mois Actuel",
   "currentYear": "Année Actuelle",
+  "selectMonth": "Sélectionner le Mois",
+  "selectYear": "Sélectionner l'Année",
+  "year": "Année",
+  "generate": "Générer",
   "customRange": "Plage Personnalisée",
   "chooseDates": "Choisir les dates",
   "generatingVideo": "Génération de la vidéo... Cela peut prendre quelques minutes.",
   "videoGeneratedSuccess": "Vidéo générée avec succès!",
+  "noEntriesForMonth": "Aucune entrée trouvée pour ce mois.",
+  "noEntriesForYear": "Aucune entrée trouvée pour cette année.",
+  "renderedVideo": "Vidéo Rendu Retro1",
+  "renderedVideosHistory": "Historique des Vidéos Rendu",
+  "noRenderedVideos": "Aucune vidéo rendue pour le moment",
+  "confirmDeleteRenderedVideo": "Êtes-vous sûr de vouloir supprimer cette vidéo rendue?",
+  "videoDeleted": "Vidéo supprimée",
+  "videoFileNotFound": "Fichier vidéo introuvable",
+  "fileNotFound": "Fichier introuvable",
+  "calendar": "Calendrier",
   "share": "Partager",
   "newButton": "Nouveau",
   "@newButton": {
@@ -122,6 +137,26 @@
     }
   },
   "noEntriesFound": "Aucune entrée trouvée pour cette période.",
+  "noMediaFound": "Aucun média trouvé",
+  "noMediaFoundForDate": "Aucun média trouvé pour la date sélectionnée",
+  "permissionDenied": "Permission refusée",
+  "errorLoadingMedia": "Erreur lors du chargement des médias: {error}",
+  "@errorLoadingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectingMedia": "Erreur lors de la sélection des médias: {error}",
+  "@errorSelectingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeDateFilter": "Retirer le filtre de date",
   "errorGeneratingVideo": "Erreur lors de la génération de la vidéo: {error}",
   "@errorGeneratingVideo": {
     "placeholders": {
@@ -231,6 +266,19 @@
   "muteAudio": "Couper l'Audio",
   "save": "Enregistrer",
   "editPhotoDaily": "Modifier la Photo",
+  "convertToLandscape": "Convertir en Paysage",
+  "convertWithCrop": "Convertir avec Recadrage",
+  "convertWithoutCrop": "Convertir sans Recadrage (Rotation)",
+  "imageAlreadyLandscape": "L'image est déjà en orientation paysage",
+  "errorConvertingImage": "Erreur lors de la conversion de l'image: {error}",
+  "@errorConvertingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropImage": "Recadrer l'Image",
   "record": "Enregistrer",
   "recordFor": "Enregistrer - {date}",
   "@recordFor": {

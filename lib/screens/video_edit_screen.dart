@@ -152,83 +152,98 @@ class _VideoEditScreenState extends State<VideoEditScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: _saveEdits,
+            onPressed: _isProcessing ? null : _saveEdits,
           ),
         ],
       ),
-      body: !_isInitialized
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Preview
-                Expanded(
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
-                    ),
-                  ),
-                ),
-                // Controles
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Slider de tempo
-                      Text(AppLocalizations.of(context)!.startTime(_selectedStartTimeMs)),
-                      Slider(
-                        value: _selectedStartTimeMs.toDouble(),
-                        min: 0,
-                        max: (_videoDuration!.inMilliseconds - 1000).clamp(0, double.infinity).toDouble(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStartTimeMs = value.toInt();
-                          });
-                          _seekToSelectedTime();
-                        },
+      body: Stack(
+        children: [
+          !_isInitialized
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    // Preview
+                    Expanded(
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: _controller!.value.aspectRatio,
+                          child: VideoPlayer(_controller!),
+                        ),
                       ),
-                      // Velocidade
-                      Row(
+                    ),
+                    // Controles
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
                         children: [
-                          Text(AppLocalizations.of(context)!.speed),
-                          Expanded(
-                            child: Slider(
-                              value: _playbackSpeed,
-                              min: 0.25,
-                              max: 2.0,
-                              divisions: 7,
-                              label: '${_playbackSpeed}x',
-                              onChanged: (value) {
-                                setState(() {
-                                  _playbackSpeed = value;
-                                });
-                              },
-                            ),
+                          // Slider de tempo
+                          Text(AppLocalizations.of(context)!.startTime(_selectedStartTimeMs)),
+                          Slider(
+                            value: _selectedStartTimeMs.toDouble(),
+                            min: 0,
+                            max: (_videoDuration!.inMilliseconds - 1000).clamp(0, double.infinity).toDouble(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStartTimeMs = value.toInt();
+                              });
+                              _seekToSelectedTime();
+                            },
                           ),
-                          Text('${_playbackSpeed}x'),
+                          // Velocidade
+                          Row(
+                            children: [
+                              Text(AppLocalizations.of(context)!.speed),
+                              Expanded(
+                                child: Slider(
+                                  value: _playbackSpeed,
+                                  min: 0.25,
+                                  max: 2.0,
+                                  divisions: 7,
+                                  label: '${_playbackSpeed}x',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _playbackSpeed = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                              Text('${_playbackSpeed}x'),
+                            ],
+                          ),
+                          // Mute
+                          SwitchListTile(
+                            title: Text(AppLocalizations.of(context)!.muteAudio),
+                            value: _muteAudio,
+                            onChanged: (value) {
+                              setState(() {
+                                _muteAudio = value;
+                              });
+                            },
+                          ),
+                          // Botão play
+                          ElevatedButton.icon(
+                            onPressed: _playOneSecond,
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(AppLocalizations.of(context)!.preview1s),
+                          ),
                         ],
                       ),
-                      // Mute
-                      SwitchListTile(
-                        title: Text(AppLocalizations.of(context)!.muteAudio),
-                        value: _muteAudio,
-                        onChanged: (value) {
-                          setState(() {
-                            _muteAudio = value;
-                          });
-                        },
-                      ),
-                      // Botão play
-                      ElevatedButton.icon(
-                        onPressed: _playOneSecond,
-                        icon: const Icon(Icons.play_arrow),
-                        label: Text(AppLocalizations.of(context)!.preview1s),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+          
+          // Overlay de carregamento quando está processando
+          if (_isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
             ),
+        ],
+      ),
     );
   }
 }

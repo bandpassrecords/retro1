@@ -294,6 +294,7 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(), // Permitir pull-to-refresh mesmo quando não há scroll
       itemCount: _months.length + 1, // +1 para o botão "Load More" no topo
       itemBuilder: (context, index) {
           // Se for o primeiro item (index 0), mostrar botão "Load More"
@@ -577,13 +578,19 @@ class _DayCell extends StatelessWidget {
       return _buildPlaceholder();
     }
     
+    // Usar key com timestamp do arquivo para forçar reload quando o arquivo mudar
+    final fileStat = file.statSync();
+    final cacheKey = ValueKey('${thumbnailPath}_${fileStat.modified.millisecondsSinceEpoch}');
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(7),
       child: Image.file(
         file,
+        key: cacheKey,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        cacheWidth: 200, // Limitar cache para melhor performance
         errorBuilder: (context, error, stackTrace) {
           print('[MonthlyCalendar] Error loading thumbnail: $error');
           return _buildPlaceholder();

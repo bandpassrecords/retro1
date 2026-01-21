@@ -10,6 +10,26 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 class ImageEditorService {
   static const _uuid = Uuid();
 
+  // Obter dimensões da imagem
+  static Future<Map<String, int>?> getImageDimensions(String imagePath) async {
+    try {
+      final imageBytes = await File(imagePath).readAsBytes();
+      final image = img.decodeImage(imageBytes);
+      
+      if (image == null) {
+        return null;
+      }
+
+      return {
+        'width': image.width,
+        'height': image.height,
+      };
+    } catch (e) {
+      print('[ImageEditor] Error getting image dimensions: $e');
+      return null;
+    }
+  }
+
   // Rotacionar imagem
   static Future<String?> rotateImage({
     required String inputPath,

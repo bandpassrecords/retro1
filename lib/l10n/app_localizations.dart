@@ -124,6 +124,12 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
   /// No description provided for @generateVideos.
   ///
   /// In en, this message translates to:
@@ -340,6 +346,30 @@ abstract class AppLocalizations {
   /// **'Current Year'**
   String get currentYear;
 
+  /// No description provided for @selectMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Month'**
+  String get selectMonth;
+
+  /// No description provided for @selectYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Year'**
+  String get selectYear;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get generate;
+
   /// No description provided for @customRange.
   ///
   /// In en, this message translates to:
@@ -363,6 +393,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Video generated successfully!'**
   String get videoGeneratedSuccess;
+
+  /// No description provided for @noEntriesForMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries found for this month.'**
+  String get noEntriesForMonth;
+
+  /// No description provided for @noEntriesForYear.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries found for this year.'**
+  String get noEntriesForYear;
+
+  /// No description provided for @renderedVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro1 Rendered Video'**
+  String get renderedVideo;
+
+  /// No description provided for @renderedVideosHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Rendered Videos History'**
+  String get renderedVideosHistory;
+
+  /// No description provided for @noRenderedVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'No rendered videos yet'**
+  String get noRenderedVideos;
+
+  /// No description provided for @confirmDeleteRenderedVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this rendered video?'**
+  String get confirmDeleteRenderedVideo;
+
+  /// No description provided for @videoDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Video deleted'**
+  String get videoDeleted;
+
+  /// No description provided for @videoFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Video file not found'**
+  String get videoFileNotFound;
+
+  /// No description provided for @fileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get fileNotFound;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
 
   /// No description provided for @share.
   ///
@@ -441,6 +537,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No entries found for this period.'**
   String get noEntriesFound;
+
+  /// No description provided for @noMediaFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No media found'**
+  String get noMediaFound;
+
+  /// No description provided for @noMediaFoundForDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No media found for selected date'**
+  String get noMediaFoundForDate;
+
+  /// No description provided for @permissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get permissionDenied;
+
+  /// No description provided for @errorLoadingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading media: {error}'**
+  String errorLoadingMedia(String error);
+
+  /// No description provided for @errorSelectingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting media: {error}'**
+  String errorSelectingMedia(String error);
+
+  /// No description provided for @removeDateFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove date filter'**
+  String get removeDateFilter;
 
   /// No description provided for @errorGeneratingVideo.
   ///
@@ -633,12 +765,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original audio'**
   String get originalAudio;
-
-  /// No description provided for @projects.
-  ///
-  /// In en, this message translates to:
-  /// **'Projects'**
-  String get projects;
 
   /// No description provided for @freeProjects.
   ///
@@ -861,6 +987,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Photo'**
   String get editPhotoDaily;
+
+  /// No description provided for @convertToLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to Landscape'**
+  String get convertToLandscape;
+
+  /// No description provided for @convertWithCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert with Crop'**
+  String get convertWithCrop;
+
+  /// No description provided for @convertWithoutCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert without Crop (Rotate)'**
+  String get convertWithoutCrop;
+
+  /// No description provided for @imageAlreadyLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Image is already in landscape orientation'**
+  String get imageAlreadyLandscape;
+
+  /// No description provided for @errorConvertingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error converting image: {error}'**
+  String errorConvertingImage(String error);
+
+  /// No description provided for @cropImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Image'**
+  String get cropImage;
 
   /// No description provided for @record.
   ///

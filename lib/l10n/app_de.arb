@@ -3,6 +3,7 @@
   "appTitle": "Retro1",
   "timeline": "Zeitleiste",
   "settings": "Einstellungen",
+  "refresh": "Aktualisieren",
   "generateVideos": "Videos Generieren",
   "editTodayEntry": "Eintrag von Heute Bearbeiten",
   "recordToday": "Heute Aufnehmen",
@@ -60,10 +61,24 @@
   "generateByPeriod": "Nach Zeitraum Generieren",
   "currentMonth": "Aktueller Monat",
   "currentYear": "Aktuelles Jahr",
+  "selectMonth": "Monat Auswählen",
+  "selectYear": "Jahr Auswählen",
+  "year": "Jahr",
+  "generate": "Generieren",
   "customRange": "Benutzerdefinierter Bereich",
   "chooseDates": "Daten wählen",
   "generatingVideo": "Video wird generiert... Dies kann einige Minuten dauern.",
   "videoGeneratedSuccess": "Video erfolgreich generiert!",
+  "noEntriesForMonth": "Keine Einträge für diesen Monat gefunden.",
+  "noEntriesForYear": "Keine Einträge für dieses Jahr gefunden.",
+  "renderedVideo": "Retro1 Gerendertes Video",
+  "renderedVideosHistory": "Historie der Gerenderten Videos",
+  "noRenderedVideos": "Noch keine gerenderten Videos",
+  "confirmDeleteRenderedVideo": "Sind Sie sicher, dass Sie dieses gerenderte Video löschen möchten?",
+  "videoDeleted": "Video gelöscht",
+  "videoFileNotFound": "Videodatei nicht gefunden",
+  "fileNotFound": "Datei nicht gefunden",
+  "calendar": "Kalender",
   "share": "Teilen",
   "newButton": "Neu",
   "@newButton": {
@@ -122,6 +137,26 @@
     }
   },
   "noEntriesFound": "Keine Einträge für diesen Zeitraum gefunden.",
+  "noMediaFound": "Keine Medien gefunden",
+  "noMediaFoundForDate": "Keine Medien für das ausgewählte Datum gefunden",
+  "permissionDenied": "Berechtigung verweigert",
+  "errorLoadingMedia": "Fehler beim Laden der Medien: {error}",
+  "@errorLoadingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectingMedia": "Fehler beim Auswählen der Medien: {error}",
+  "@errorSelectingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeDateFilter": "Datumsfilter entfernen",
   "errorGeneratingVideo": "Fehler beim Generieren des Videos: {error}",
   "@errorGeneratingVideo": {
     "placeholders": {
@@ -231,6 +266,19 @@
   "muteAudio": "Audio Stummschalten",
   "save": "Speichern",
   "editPhotoDaily": "Foto Bearbeiten",
+  "convertToLandscape": "Zu Querformat konvertieren",
+  "convertWithCrop": "Mit Zuschnitt konvertieren",
+  "convertWithoutCrop": "Ohne Zuschnitt konvertieren (Drehen)",
+  "imageAlreadyLandscape": "Das Bild ist bereits im Querformat",
+  "errorConvertingImage": "Fehler beim Konvertieren des Bildes: {error}",
+  "@errorConvertingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropImage": "Bild zuschneiden",
   "record": "Aufnehmen",
   "recordFor": "Aufnehmen - {date}",
   "@recordFor": {

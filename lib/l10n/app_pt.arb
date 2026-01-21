@@ -3,6 +3,7 @@
   "appTitle": "Retro1",
   "timeline": "Timeline",
   "settings": "Configurações",
+  "refresh": "Atualizar",
   "generateVideos": "Gerar Vídeos",
   "editTodayEntry": "Editar Entrada de Hoje",
   "recordToday": "Registrar Hoje",
@@ -60,10 +61,24 @@
   "generateByPeriod": "Gerar por Período",
   "currentMonth": "Mês Atual",
   "currentYear": "Ano Atual",
+  "selectMonth": "Selecionar Mês",
+  "selectYear": "Selecionar Ano",
+  "year": "Ano",
+  "generate": "Gerar",
   "customRange": "Intervalo Customizado",
   "chooseDates": "Escolha as datas",
   "generatingVideo": "Gerando vídeo... Isso pode levar alguns minutos.",
   "videoGeneratedSuccess": "Vídeo gerado com sucesso!",
+  "noEntriesForMonth": "Nenhuma entrada encontrada para este mês.",
+  "noEntriesForYear": "Nenhuma entrada encontrada para este ano.",
+  "renderedVideo": "Vídeo Renderizado Retro1",
+  "renderedVideosHistory": "Histórico de Vídeos Renderizados",
+  "noRenderedVideos": "Ainda não há vídeos renderizados",
+  "confirmDeleteRenderedVideo": "Tem certeza que deseja excluir este vídeo renderizado?",
+  "videoDeleted": "Vídeo excluído",
+  "videoFileNotFound": "Arquivo de vídeo não encontrado",
+  "fileNotFound": "Arquivo não encontrado",
+  "calendar": "Calendário",
   "share": "Compartilhar",
   "newButton": "Novo",
   "@newButton": {
@@ -122,6 +137,26 @@
     }
   },
   "noEntriesFound": "Nenhuma entrada encontrada para este período.",
+  "noMediaFound": "Nenhuma mídia encontrada",
+  "noMediaFoundForDate": "Nenhuma mídia encontrada para a data selecionada",
+  "permissionDenied": "Permissão negada",
+  "errorLoadingMedia": "Erro ao carregar mídia: {error}",
+  "@errorLoadingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectingMedia": "Erro ao selecionar mídia: {error}",
+  "@errorSelectingMedia": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeDateFilter": "Remover filtro de data",
   "errorGeneratingVideo": "Erro ao gerar vídeo: {error}",
   "@errorGeneratingVideo": {
     "placeholders": {
@@ -232,6 +267,19 @@
   "muteAudio": "Mutear Áudio",
   "save": "Salvar",
   "editPhotoDaily": "Editar Foto",
+  "convertToLandscape": "Converter para Paisagem",
+  "convertWithCrop": "Converter com Corte",
+  "convertWithoutCrop": "Converter sem Corte (Rotacionar)",
+  "imageAlreadyLandscape": "A imagem já está em orientação paisagem",
+  "errorConvertingImage": "Erro ao converter imagem: {error}",
+  "@errorConvertingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cropImage": "Cortar Imagem",
   "entradaSalva": "Entrada salva com sucesso!",
   "entradaExcluida": "Entrada excluída",
   "erroAoSalvar": "Erro ao salvar: {error}",
