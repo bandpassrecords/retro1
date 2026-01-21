@@ -18,6 +18,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings => 'Configurações';
 
   @override
+  String get refresh => 'Atualizar';
+
+  @override
   String get generateVideos => 'Gerar Vídeos';
 
   @override

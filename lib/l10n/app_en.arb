@@ -6,6 +6,7 @@
   },
   "timeline": "Timeline",
   "settings": "Settings",
+  "refresh": "Refresh",
   "generateVideos": "Generate Videos",
   "editTodayEntry": "Edit Today's Entry",
   "recordToday": "Record Today",

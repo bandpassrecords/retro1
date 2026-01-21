@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get refresh => 'Refresh';
+
+  @override
   String get generateVideos => 'Generate Videos';
 
   @override

@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import '../models/rendered_video.dart';
 import '../services/hive_service.dart';
 import '../services/video_editor_service.dart';
+import 'rendered_video_player_screen.dart';
 
 class RenderedVideosHistoryScreen extends StatefulWidget {
   const RenderedVideosHistoryScreen({super.key});
@@ -271,7 +272,19 @@ class _RenderedVideosHistoryScreenState extends State<RenderedVideosHistoryScree
             ),
           ],
         ),
-        onTap: exists ? () => _shareVideo(video) : null,
+        onTap: exists
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RenderedVideoPlayerScreen(
+                      videoPath: video.videoPath,
+                      title: video.title,
+                    ),
+                  ),
+                );
+              }
+            : null,
       ),
     );
   }

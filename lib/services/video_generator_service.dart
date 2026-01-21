@@ -21,15 +21,18 @@ class VideoGeneratorService {
     String quality = '1080p',
     bool showDateOverlay = true,
     String? externalAudioPath,
+    String? locale,
   }) async {
     final entries = HiveService.getEntriesByMonth(year, month);
     if (entries.isEmpty) {
       return null;
     }
 
+    // Usar locale fornecido ou padrão 'en'
+    final localeToUse = locale ?? 'en';
     return await _generateCompiledVideo(
       entries: entries,
-      title: '${DateFormat('MMMM yyyy', 'pt').format(DateTime(year, month, 1))}',
+      title: '${DateFormat('MMMM yyyy', localeToUse).format(DateTime(year, month, 1))}',
       quality: quality,
       showDateOverlay: showDateOverlay,
       externalAudioPath: externalAudioPath,
@@ -64,6 +67,7 @@ class VideoGeneratorService {
     String quality = '1080p',
     bool showDateOverlay = true,
     String? externalAudioPath,
+    String? locale,
   }) async {
     final entries = HiveService.getEntriesByDateRange(startDate, endDate);
     if (entries.isEmpty) {
@@ -71,7 +75,9 @@ class VideoGeneratorService {
     }
 
     // Usar formato de data sem barras para evitar problemas no nome do arquivo
-    final dateFormat = DateFormat('dd-MM-yyyy', 'pt');
+    // Usar locale fornecido ou padrão 'en'
+    final localeToUse = locale ?? 'en';
+    final dateFormat = DateFormat('dd-MM-yyyy', localeToUse);
     final title = '${dateFormat.format(startDate)}_-_${dateFormat.format(endDate)}';
 
     return await _generateCompiledVideo(

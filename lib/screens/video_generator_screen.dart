@@ -310,12 +310,14 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
 
     try {
       final settings = HiveService.getSettings();
+      final locale = Localizations.localeOf(context).toString();
       final path = await VideoGeneratorService.generateMonthVideo(
         year: year,
         month: month,
         quality: settings.videoQuality,
         showDateOverlay: settings.showDateOverlay,
         externalAudioPath: _selectedAudioPath,
+        locale: locale,
       );
 
       if (path != null && mounted) {
@@ -477,12 +479,14 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
 
     try {
       final settings = HiveService.getSettings();
+      final locale = Localizations.localeOf(context).toString();
       final path = await VideoGeneratorService.generateCustomVideo(
         startDate: startDate,
         endDate: endDate,
         quality: settings.videoQuality,
         showDateOverlay: settings.showDateOverlay,
         externalAudioPath: _selectedAudioPath,
+        locale: locale,
       );
 
       if (path != null && mounted) {
