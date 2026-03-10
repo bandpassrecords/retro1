@@ -640,4 +640,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sundayShort => 'Dom';
+
+  @override
+  String get selectFromGallery => 'Seleziona dalla Galleria';
+
+  @override
+  String get openSettings => 'Apri Impostazioni';
+
+  @override
+  String get errorAccessingFile => 'Impossibile accedere al file';
 }

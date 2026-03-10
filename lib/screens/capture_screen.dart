@@ -9,6 +9,7 @@ import '../services/video_editor_service.dart';
 import '../services/notification_service.dart';
 import 'editor_screen.dart';
 import 'photo_edit_daily_screen.dart';
+import 'custom_gallery_picker_screen.dart';
 
 class CaptureScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -148,60 +149,50 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _pickVideoFromGallery() async {
-    setState(() => _isProcessing = true);
+    final path = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CustomGalleryPickerScreen(
+          initialFilter: GalleryFilter.videos,
+        ),
+      ),
+    );
 
+    if (path == null || !mounted) return;
+
+    setState(() => _isProcessing = true);
     try {
-      final video = await MediaService.pickVideoFromGallery();
-      
-      if (video != null && mounted) {
-        await _processMedia(video.path, 'video');
-      } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        if (video == null) {
-          // Usuário cancelou, não mostrar erro
-          setState(() => _isProcessing = false);
-          return;
-        }
-        _showError(l10n.noVideoSelected);
-      }
+      await _processMedia(path, 'video');
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.errorSelectingVideo(e.toString()));
+        _showError(AppLocalizations.of(context)!.errorSelectingVideo(e.toString()));
       }
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _pickPhotoFromGallery() async {
-    setState(() => _isProcessing = true);
+    final path = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CustomGalleryPickerScreen(
+          initialFilter: GalleryFilter.photos,
+        ),
+      ),
+    );
 
+    if (path == null || !mounted) return;
+
+    setState(() => _isProcessing = true);
     try {
-      final photo = await MediaService.pickPhotoFromGallery();
-      
-      if (photo != null && mounted) {
-        await _processMedia(photo.path, 'photo');
-      } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        if (photo == null) {
-          // Usuário cancelou, não mostrar erro
-          setState(() => _isProcessing = false);
-          return;
-        }
-        _showError(l10n.noPhotoSelected);
-      }
+      await _processMedia(path, 'photo');
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.errorSelectingPhoto(e.toString()));
+        _showError(AppLocalizations.of(context)!.errorSelectingPhoto(e.toString()));
       }
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 

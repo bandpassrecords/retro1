@@ -431,5 +431,8 @@
   "thursdayShort": "Qui",
   "fridayShort": "Sex",
   "saturdayShort": "Sáb",
-  "sundayShort": "Dom"
+  "sundayShort": "Dom",
+  "selectFromGallery": "Selecionar da Galeria",
+  "openSettings": "Abrir Configurações",
+  "errorAccessingFile": "Não foi possível acessar o arquivo"
 }

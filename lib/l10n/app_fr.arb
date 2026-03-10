@@ -357,5 +357,8 @@
   "thursdayShort": "Jeu",
   "fridayShort": "Ven",
   "saturdayShort": "Sam",
-  "sundayShort": "Dim"
+  "sundayShort": "Dim",
+  "selectFromGallery": "Sélectionner depuis la galerie",
+  "openSettings": "Ouvrir les paramètres",
+  "errorAccessingFile": "Impossible d'accéder au fichier"
 }

@@ -1263,6 +1263,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sun'**
   String get sundayShort;
+
+  /// No description provided for @selectFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from Gallery'**
+  String get selectFromGallery;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @errorAccessingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access file'**
+  String get errorAccessingFile;
 }
 
 class _AppLocalizationsDelegate

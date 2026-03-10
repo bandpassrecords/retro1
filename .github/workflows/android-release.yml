@@ -17,7 +17,7 @@ on:
 
 # Variáveis de Configuração
 env:
-  FLUTTER_BASE_VERSION: 3.24.x 
+  FLUTTER_BASE_VERSION: 3.41.3
 
 # 2. Jobs
 jobs:
@@ -41,9 +41,6 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable' 
-
-      - name: Run Flutter Upgrade
-        run: flutter upgrade
 
       - name: Get dependencies
         run: flutter pub get
@@ -90,9 +87,6 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_BASE_VERSION }}
           channel: 'stable'
-
-      - name: Run Flutter Upgrade
-        run: flutter upgrade
 
       - name: Get dependencies
         run: flutter pub get

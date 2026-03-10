@@ -387,5 +387,8 @@
   "thursdayShort": "Thu",
   "fridayShort": "Fri",
   "saturdayShort": "Sat",
-  "sundayShort": "Sun"
+  "sundayShort": "Sun",
+  "selectFromGallery": "Select from Gallery",
+  "openSettings": "Open Settings",
+  "errorAccessingFile": "Could not access file"
 }

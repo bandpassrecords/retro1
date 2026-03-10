@@ -643,4 +643,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sundayShort => 'Dim';
+
+  @override
+  String get selectFromGallery => 'Sélectionner depuis la galerie';
+
+  @override
+  String get openSettings => 'Ouvrir les paramètres';
+
+  @override
+  String get errorAccessingFile => 'Impossible d\'accéder au fichier';
 }

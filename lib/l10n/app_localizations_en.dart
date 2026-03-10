@@ -636,4 +636,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sundayShort => 'Sun';
+
+  @override
+  String get selectFromGallery => 'Select from Gallery';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get errorAccessingFile => 'Could not access file';
 }

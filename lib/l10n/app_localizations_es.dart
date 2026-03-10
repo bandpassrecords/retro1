@@ -639,4 +639,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sundayShort => 'Dom';
+
+  @override
+  String get selectFromGallery => 'Seleccionar de la Galería';
+
+  @override
+  String get openSettings => 'Abrir Configuración';
+
+  @override
+  String get errorAccessingFile => 'No se pudo acceder al archivo';
 }

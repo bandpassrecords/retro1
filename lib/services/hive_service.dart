@@ -1,5 +1,5 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import '../hive_registrar.g.dart';
 import '../models/daily_entry.dart';
 import '../models/app_settings.dart';
 import '../models/free_project.dart';
@@ -24,21 +24,7 @@ class HiveService {
     await Hive.initFlutter();
     
     // Registrar adapters
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(DailyEntryAdapter());
-    }
-    if (!Hive.isAdapterRegistered(1)) {
-      Hive.registerAdapter(AppSettingsAdapter());
-    }
-    if (!Hive.isAdapterRegistered(2)) {
-      Hive.registerAdapter(FreeProjectAdapter());
-    }
-    if (!Hive.isAdapterRegistered(3)) {
-      Hive.registerAdapter(ProjectMediaItemAdapter());
-    }
-    if (!Hive.isAdapterRegistered(4)) {
-      Hive.registerAdapter(RenderedVideoAdapter());
-    }
+    Hive.registerAdapters();
 
     // Abrir boxes
     _entriesBox = await Hive.openBox<DailyEntry>(_entriesBoxName);

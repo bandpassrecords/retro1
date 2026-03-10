@@ -354,5 +354,8 @@
   "thursdayShort": "Jue",
   "fridayShort": "Vie",
   "saturdayShort": "Sáb",
-  "sundayShort": "Dom"
+  "sundayShort": "Dom",
+  "selectFromGallery": "Seleccionar de la Galería",
+  "openSettings": "Abrir Configuración",
+  "errorAccessingFile": "No se pudo acceder al archivo"
 }
