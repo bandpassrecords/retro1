@@ -1,18 +1,19 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 
-enum GalleryFilter { all, videos, photos }
+class GalleryPickerResult {
+  final String path;
+  final String mediaType; // 'video' or 'photo'
+  const GalleryPickerResult({required this.path, required this.mediaType});
+}
 
 class CustomGalleryPickerScreen extends StatefulWidget {
-  final GalleryFilter initialFilter;
-
-  const CustomGalleryPickerScreen({
-    super.key,
-    this.initialFilter = GalleryFilter.all,
-  });
+  const CustomGalleryPickerScreen({super.key});
 
   @override
   State<CustomGalleryPickerScreen> createState() =>
@@ -24,7 +25,6 @@ class _CustomGalleryPickerScreenState
   List<AssetEntity> _assets = [];
   bool _isLoading = true;
   bool _hasPermission = false;
-  late GalleryFilter _currentFilter;
 
   int _currentPage = 0;
   static const int _pageSize = 80;
@@ -35,7 +35,6 @@ class _CustomGalleryPickerScreenState
   @override
   void initState() {
     super.initState();
-    _currentFilter = widget.initialFilter;
     _loadAssets();
     _scrollController.addListener(_onScroll);
   }
@@ -50,17 +49,6 @@ class _CustomGalleryPickerScreenState
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 500) {
       _loadMore();
-    }
-  }
-
-  RequestType get _requestType {
-    switch (_currentFilter) {
-      case GalleryFilter.videos:
-        return RequestType.video;
-      case GalleryFilter.photos:
-        return RequestType.image;
-      case GalleryFilter.all:
-        return RequestType.common;
     }
   }
 
@@ -88,7 +76,7 @@ class _CustomGalleryPickerScreenState
 
   Future<void> _fetchPage(int page) async {
     final albums = await PhotoManager.getAssetPathList(
-      type: _requestType,
+      type: RequestType.common,
       filterOption: FilterOptionGroup(
         orders: [
           const OrderOption(type: OrderOptionType.createDate, asc: false)
@@ -101,8 +89,7 @@ class _CustomGalleryPickerScreenState
       return;
     }
 
-    final recentAlbum = albums.first;
-    final assets = await recentAlbum.getAssetListPaged(
+    final assets = await albums.first.getAssetListPaged(
       page: page,
       size: _pageSize,
     );
@@ -125,49 +112,12 @@ class _CustomGalleryPickerScreenState
     setState(() => _isLoadingMore = false);
   }
 
-  void _setFilter(GalleryFilter filter) {
-    if (filter == _currentFilter) return;
-    setState(() => _currentFilter = filter);
-    _loadAssets();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.selectFromGallery),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: _buildFilterBar(l10n),
-        ),
-      ),
+      appBar: AppBar(title: Text(l10n.selectFromGallery)),
       body: _buildBody(l10n),
-    );
-  }
-
-  Widget _buildFilterBar(AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _filterChip(l10n.all, GalleryFilter.all),
-          const SizedBox(width: 8),
-          _filterChip(l10n.video, GalleryFilter.videos),
-          const SizedBox(width: 8),
-          _filterChip(l10n.photo, GalleryFilter.photos),
-        ],
-      ),
-    );
-  }
-
-  Widget _filterChip(String label, GalleryFilter filter) {
-    final isSelected = _currentFilter == filter;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _setFilter(filter),
     );
   }
 
@@ -183,8 +133,7 @@ class _CustomGalleryPickerScreenState
           children: [
             const Icon(Icons.lock, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text(l10n.permissionDenied,
-                style: const TextStyle(fontSize: 16)),
+            Text(l10n.permissionDenied, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => PhotoManager.openSetting(),
@@ -214,28 +163,265 @@ class _CustomGalleryPickerScreenState
         }
         return _AssetThumbnail(
           asset: _assets[index],
-          onTap: () => _selectAsset(_assets[index]),
+          onTap: () => _onAssetTapped(_assets[index]),
         );
       },
     );
   }
 
-  Future<void> _selectAsset(AssetEntity asset) async {
+  Future<void> _onAssetTapped(AssetEntity asset) async {
+    if (!mounted) return;
+
+    // Show loading while fetching the file from the device
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     final file = await asset.file;
+
+    if (!mounted) return;
+    Navigator.pop(context); // dismiss loading dialog
+
     if (file == null) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorAccessingFile)),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.errorAccessingFile)),
+      );
       return;
     }
-    if (mounted) {
-      Navigator.pop(context, file.path);
+
+    // Show preview — user confirms selection inside the sheet
+    final selected = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _MediaPreviewSheet(asset: asset, file: file),
+    );
+
+    if (selected == true && mounted) {
+      final mediaType =
+          asset.type == AssetType.video ? 'video' : 'photo';
+      Navigator.pop(
+        context,
+        GalleryPickerResult(path: file.path, mediaType: mediaType),
+      );
     }
   }
 }
+
+// ─── Preview bottom sheet ────────────────────────────────────────────────────
+
+class _MediaPreviewSheet extends StatefulWidget {
+  final AssetEntity asset;
+  final File file;
+
+  const _MediaPreviewSheet({required this.asset, required this.file});
+
+  @override
+  State<_MediaPreviewSheet> createState() => _MediaPreviewSheetState();
+}
+
+class _MediaPreviewSheetState extends State<_MediaPreviewSheet> {
+  VideoPlayerController? _videoController;
+  bool _videoReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.asset.type == AssetType.video) {
+      _initVideo();
+    }
+  }
+
+  Future<void> _initVideo() async {
+    final controller = VideoPlayerController.file(widget.file);
+    _videoController = controller;
+    await controller.initialize();
+    await controller.setLooping(true);
+    await controller.play();
+    if (mounted) setState(() => _videoReady = true);
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isVideo = widget.asset.type == AssetType.video;
+    final dateStr =
+        DateFormat('MMMM d, yyyy').format(widget.asset.createDateTime);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.92,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (_, __) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Media content
+            Expanded(
+              child: isVideo ? _buildVideoPreview() : _buildPhotoPreview(),
+            ),
+
+            // Date + action bar
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                  16, 12, 16, MediaQuery.of(context).padding.bottom + 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Metadata row
+                  Row(
+                    children: [
+                      Icon(
+                        isVideo ? Icons.videocam : Icons.photo,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(dateStr,
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.grey[600])),
+                      if (isVideo) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          _formatDuration(widget.asset.duration),
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Seek slider + play/pause for videos
+                  if (isVideo && _videoReady)
+                    ValueListenableBuilder<VideoPlayerValue>(
+                      valueListenable: _videoController!,
+                      builder: (_, value, __) {
+                        final totalMs =
+                            value.duration.inMilliseconds.toDouble();
+                        final posMs = value.position.inMilliseconds
+                            .toDouble()
+                            .clamp(0.0, totalMs > 0 ? totalMs : 1.0);
+
+                        return Column(
+                          children: [
+                            // Slider row with time labels
+                            Row(
+                              children: [
+                                Text(
+                                  _formatMs(posMs.toInt()),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                Expanded(
+                                  child: Slider(
+                                    value: posMs,
+                                    max: totalMs > 0 ? totalMs : 1.0,
+                                    onChanged: (v) => _videoController!
+                                        .seekTo(Duration(
+                                            milliseconds: v.toInt())),
+                                  ),
+                                ),
+                                Text(
+                                  _formatMs(totalMs.toInt()),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                            // Play / pause button
+                            IconButton(
+                              iconSize: 44,
+                              icon: Icon(
+                                value.isPlaying
+                                    ? Icons.pause_circle
+                                    : Icons.play_circle,
+                              ),
+                              onPressed: () => value.isPlaying
+                                  ? _videoController!.pause()
+                                  : _videoController!.play(),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                  if (isVideo && _videoReady) const SizedBox(height: 8),
+
+                  // Select button
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(
+                      isVideo ? 'Select this video' : 'Select this photo',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoPreview() {
+    if (!_videoReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return Center(
+      child: AspectRatio(
+        aspectRatio: _videoController!.value.aspectRatio,
+        child: VideoPlayer(_videoController!),
+      ),
+    );
+  }
+
+  Widget _buildPhotoPreview() {
+    return InteractiveViewer(
+      child: Center(
+        child: Image.file(widget.file, fit: BoxFit.contain),
+      ),
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final m = (seconds ~/ 60).toString();
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  String _formatMs(int ms) {
+    final m = (ms ~/ 60000).toString();
+    final s = ((ms % 60000) ~/ 1000).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+}
+
+// ─── Thumbnail grid cell ─────────────────────────────────────────────────────
 
 class _AssetThumbnail extends StatefulWidget {
   final AssetEntity asset;
@@ -271,8 +457,8 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
 
   @override
   Widget build(BuildContext context) {
-    final date = widget.asset.createDateTime;
-    final dateStr = DateFormat('MMM d').format(date);
+    final dateStr =
+        DateFormat('MMM d').format(widget.asset.createDateTime);
     final isVideo = widget.asset.type == AssetType.video;
 
     return GestureDetector(
@@ -290,13 +476,14 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
               child: const Icon(Icons.broken_image, color: Colors.grey),
             ),
 
-          // Date overlay at bottom
+          // Date overlay
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
               color: Colors.black54,
               child: Text(
                 dateStr,
@@ -310,14 +497,14 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
             ),
           ),
 
-          // Video badge (duration) at top-right
+          // Video duration badge
           if (isVideo)
             Positioned(
               top: 4,
               right: 4,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(4),

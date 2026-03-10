@@ -1264,6 +1264,12 @@ abstract class AppLocalizations {
   /// **'Sun'**
   String get sundayShort;
 
+  /// No description provided for @browseGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Gallery'**
+  String get browseGallery;
+
   /// No description provided for @selectFromGallery.
   ///
   /// In en, this message translates to:
@@ -1281,6 +1287,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not access file'**
   String get errorAccessingFile;
+
+  /// No description provided for @cropVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Video'**
+  String get cropVideo;
+
+  /// No description provided for @cropTo16x9.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop to 16:9'**
+  String get cropTo16x9;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filterOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get filterOriginal;
+
+  /// No description provided for @filterVintage.
+  ///
+  /// In en, this message translates to:
+  /// **'Vintage'**
+  String get filterVintage;
+
+  /// No description provided for @filterBlackWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'B&W'**
+  String get filterBlackWhite;
+
+  /// No description provided for @filterSepia.
+  ///
+  /// In en, this message translates to:
+  /// **'Sepia'**
+  String get filterSepia;
+
+  /// No description provided for @filterBright.
+  ///
+  /// In en, this message translates to:
+  /// **'Bright'**
+  String get filterBright;
+
+  /// No description provided for @filterWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get filterWarm;
+
+  /// No description provided for @filterCool.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool'**
+  String get filterCool;
+
+  /// No description provided for @addText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Text'**
+  String get addText;
+
+  /// No description provided for @enterYourText.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your text'**
+  String get enterYourText;
+
+  /// No description provided for @applyCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyCrop;
+
+  /// No description provided for @positionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Position'**
+  String get positionLabel;
+
+  /// No description provided for @errorApplyingCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Error applying crop: {error}'**
+  String errorApplyingCrop(String error);
+
+  /// No description provided for @errorApplyingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Error applying text: {error}'**
+  String errorApplyingText(String error);
 }
 
 class _AppLocalizationsDelegate

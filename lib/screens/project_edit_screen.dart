@@ -45,7 +45,9 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     });
   }
 
-  Future<void> _addMedia() async {
+  /// Pick and process media, then insert at [insertAtIndex].
+  /// Pass [insertAtIndex] == _mediaItems.length to append at end.
+  Future<void> _addMediaAt(int insertAtIndex) async {
     final l10n = AppLocalizations.of(context)!;
     final source = await showDialog<String>(
       context: context,
@@ -104,85 +106,143 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
           break;
       }
 
-      if (file != null) {
-        // Copiar arquivo para o diretório do app
-        final copiedPath = await MediaService.copyToAppDirectory(file.path);
+      if (file == null) return;
 
-        // Processar mídia ANTES de criar o media item (igual ao calendário)
-        String finalPath = copiedPath;
-        String? videoPathForPhoto; // Armazenar vídeo convertido separadamente para fotos
-        bool isPhoto = mediaType == 'photo';
-        
-        if (isPhoto) {
-          // Converter foto para vídeo de 1 segundo IMEDIATAMENTE (igual ao calendário)
-          final convertedPath = await VideoEditorService.convertPhotoToVideo(
-            photoPath: copiedPath,
-          );
-          if (convertedPath != null) {
-            videoPathForPhoto = convertedPath;
-          }
-        }
+      final copiedPath = await MediaService.copyToAppDirectory(file.path);
+      final bool isPhoto = mediaType == 'photo';
 
-        // Gerar thumbnail
-        String? thumbnailPath;
-        if (mediaType == 'video') {
-          thumbnailPath = await VideoEditorService.generateThumbnail(
-            videoPath: finalPath,
-            timeMs: 0,
-          );
-        } else {
-          // Para fotos, usar a própria foto como thumbnail
-          thumbnailPath = copiedPath;
-        }
-
-        // Criar media item
-        // Para fotos: originalPath = foto original, editedPath = vídeo convertido (será usado na renderização)
-        // Para vídeos: originalPath = vídeo completo (será cortado no editor)
-        final mediaItem = ProjectMediaItem(
-          id: const Uuid().v4(),
-          mediaType: mediaType,
-          originalPath: isPhoto ? copiedPath : finalPath, // Foto original ou vídeo completo
-          editedPath: isPhoto ? videoPathForPhoto : null, // Vídeo convertido para fotos
-          startTimeMs: 0,
-          durationMs: 1000, // Sempre 1 segundo
-          order: _mediaItems.length,
-          createdAt: DateTime.now(),
-          thumbnailPath: thumbnailPath,
+      String? videoPathForPhoto;
+      if (isPhoto) {
+        videoPathForPhoto = await VideoEditorService.convertPhotoToVideo(
+          photoPath: copiedPath,
         );
+      }
 
-        await HiveService.saveProjectMediaItem(mediaItem);
-        await HiveService.addMediaItemToProject(_project!.id, mediaItem.id);
+      String? thumbnailPath;
+      if (mediaType == 'video') {
+        thumbnailPath = await VideoEditorService.generateThumbnail(
+          videoPath: copiedPath,
+          timeMs: 0,
+        );
+      } else {
+        thumbnailPath = copiedPath;
+      }
 
-        _loadProject();
+      final mediaItem = ProjectMediaItem(
+        id: const Uuid().v4(),
+        mediaType: mediaType,
+        originalPath: isPhoto ? copiedPath : copiedPath,
+        editedPath: isPhoto ? videoPathForPhoto : null,
+        startTimeMs: 0,
+        durationMs: 1000,
+        order: insertAtIndex,
+        createdAt: DateTime.now(),
+        thumbnailPath: thumbnailPath,
+      );
 
-        // Abrir editor baseado no tipo
-        if (mounted) {
-          if (isPhoto) {
-            // Para fotos, abrir editor de foto
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PhotoEditScreen(mediaItem: mediaItem),
-              ),
-            ).then((_) => _loadProject());
-          } else {
-            // Para vídeos, abrir editor para escolher o segundo (igual ao calendário)
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VideoEditScreen(mediaItem: mediaItem),
-              ),
-            ).then((_) => _loadProject());
-          }
+      // Insert at the requested position and shift later items
+      await HiveService.saveProjectMediaItem(mediaItem);
+
+      // Add to project and reorder so new item ends up at insertAtIndex
+      final currentIds = List<String>.from(_project!.mediaItemIds);
+      currentIds.insert(insertAtIndex, mediaItem.id);
+      await HiveService.reorderProjectMediaItems(_project!.id, currentIds);
+
+      _loadProject();
+
+      if (mounted) {
+        if (isPhoto) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PhotoEditScreen(mediaItem: mediaItem),
+            ),
+          ).then((_) => _loadProject());
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VideoEditScreen(mediaItem: mediaItem),
+            ),
+          ).then((_) => _loadProject());
         }
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorAddingMedia(e.toString()))),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorAddingMedia(e.toString()))),
         );
       }
+    }
+  }
+
+  void _showItemOptions(ProjectMediaItem item, int index) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Small drag handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: Text(l10n.view),
+              onTap: () {
+                Navigator.pop(context);
+                _openEditor(item);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.arrow_upward),
+              title: const Text('Add before'),
+              onTap: () {
+                Navigator.pop(context);
+                _addMediaAt(index);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.arrow_downward),
+              title: const Text('Add after'),
+              onTap: () {
+                Navigator.pop(context);
+                _addMediaAt(index + 1);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _deleteMediaItem(item);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openEditor(ProjectMediaItem item) {
+    if (item.mediaType == 'photo') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PhotoEditScreen(mediaItem: item)),
+      ).then((_) => _loadProject());
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => VideoEditScreen(mediaItem: item)),
+      ).then((_) => _loadProject());
     }
   }
 
@@ -237,35 +297,23 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
 
     if (confirmed != true) return;
 
-    setState(() {
-      _isGeneratingVideo = true;
-    });
+    setState(() => _isGeneratingVideo = true);
 
     try {
-      // Converter ProjectMediaItem para formato que o VideoGeneratorService pode usar
-      // Criar uma lista temporária de "entries" para o gerador de vídeo
       final videoPath = await VideoGeneratorService.generateProjectVideo(
         mediaItems: _mediaItems,
         projectName: _project!.name,
       );
 
       if (mounted) {
-        setState(() {
-          _isGeneratingVideo = false;
-        });
+        setState(() => _isGeneratingVideo = false);
 
         if (videoPath != null) {
-          // Gerar thumbnail
           final thumbnailPath = await VideoEditorService.generateThumbnail(
             videoPath: videoPath,
             timeMs: 0,
           );
-          
-          // Obter duração do vídeo
           final duration = await VideoEditorService.getVideoDuration(videoPath);
-          final durationSeconds = duration?.inSeconds ?? 0;
-          
-          // Salvar vídeo renderizado no histórico
           final renderedVideo = RenderedVideo(
             id: const Uuid().v4(),
             videoPath: videoPath,
@@ -273,7 +321,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             type: 'project',
             createdAt: DateTime.now(),
             thumbnailPath: thumbnailPath,
-            durationSeconds: durationSeconds,
+            durationSeconds: duration?.inSeconds ?? 0,
             projectId: _project!.id,
             metadata: {
               'projectName': _project!.name,
@@ -281,8 +329,8 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             },
           );
           await HiveService.saveRenderedVideo(renderedVideo);
-          
-          // Mostrar preview do vídeo gerado
+
+          if (!mounted) return;
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -307,13 +355,12 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         }
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
       if (mounted) {
-        setState(() {
-          _isGeneratingVideo = false;
-        });
+        setState(() => _isGeneratingVideo = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorGeneratingVideo(e.toString()))),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.errorGeneratingVideo(e.toString()))),
         );
       }
     }
@@ -322,11 +369,9 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (_project == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -341,13 +386,13 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.video_library),
+                  : const Icon(Icons.movie_creation),
               onPressed: _isGeneratingVideo ? null : _renderProjectVideo,
               tooltip: l10n.renderProjectVideo,
             ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _addMedia,
+            onPressed: () => _addMediaAt(_mediaItems.length),
             tooltip: l10n.addMedia,
           ),
         ],
@@ -359,13 +404,11 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
                 children: [
                   Icon(Icons.add_photo_alternate, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text(
-                    l10n.noMediaItemsYet,
-                    style: const TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
+                  Text(l10n.noMediaItemsYet,
+                      style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                  const SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: _addMedia,
+                    onPressed: () => _addMediaAt(0),
                     icon: const Icon(Icons.add),
                     label: Text(l10n.addMedia),
                   ),
@@ -373,258 +416,115 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
               ),
             )
           : GridView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.zero,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, // Aumentado de 3 para 4 para boxes menores
-                crossAxisSpacing: 6,
-                mainAxisSpacing: 6,
-                childAspectRatio: 1.0,
+                crossAxisCount: 3,
+                crossAxisSpacing: 1,
+                mainAxisSpacing: 1,
+                childAspectRatio: 1,
               ),
               itemCount: _mediaItems.length,
               itemBuilder: (context, index) {
                 final item = _mediaItems[index];
-                return _buildDraggableMediaThumbnail(item, index);
+                return _ProjectMediaCell(
+                  item: item,
+                  index: index,
+                  onTap: () => _showItemOptions(item, index),
+                );
               },
             ),
     );
   }
+}
 
-  Widget _buildDraggableMediaThumbnail(ProjectMediaItem item, int index) {
-    return DragTarget<int>(
-      onWillAccept: (data) => data != null && data != index,
-      onAcceptWithDetails: (details) {
-        _reorderItems(details.data, index);
-      },
-      builder: (context, candidateData, rejectedData) {
-        final isTargeted = candidateData.isNotEmpty;
-        return LongPressDraggable<int>(
-          data: index,
-          feedback: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(8),
-            shadowColor: Colors.blue,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.blue[100],
-                border: Border.all(color: Colors.blue, width: 2),
-              ),
-              child: _buildThumbnailContent(item, index, isDragging: true),
-            ),
-          ),
-          childWhenDragging: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[200],
-            ),
-            child: Opacity(
-              opacity: 0.3,
-              child: _buildThumbnailContent(item, index),
-            ),
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: isTargeted
-                  ? Border.all(color: Colors.blue, width: 3)
-                  : null,
-              color: isTargeted ? Colors.blue[50] : Colors.transparent,
-            ),
-            child: _buildMediaThumbnail(item, index),
-          ),
-        );
-      },
-    );
-  }
+// ── Single media cell ──────────────────────────────────────────────────────
 
-  Future<void> _reorderItems(int oldIndex, int newIndex) async {
-    if (oldIndex == newIndex || oldIndex < 0 || newIndex < 0 || 
-        oldIndex >= _mediaItems.length || newIndex >= _mediaItems.length) {
-      return;
-    }
-    
-    // Calcular o novo índice considerando a remoção
-    int adjustedNewIndex = newIndex;
-    if (oldIndex < newIndex) {
-      adjustedNewIndex = newIndex;
-    }
-    
-    setState(() {
-      final item = _mediaItems.removeAt(oldIndex);
-      _mediaItems.insert(adjustedNewIndex, item);
-    });
-    
-    // Atualizar a ordem de todos os itens e salvar no Hive
-    final newOrder = <String>[];
-    for (int i = 0; i < _mediaItems.length; i++) {
-      _mediaItems[i].order = i;
-      await HiveService.saveProjectMediaItem(_mediaItems[i]);
-      newOrder.add(_mediaItems[i].id);
-    }
-    
-    // Atualizar a ordem no projeto
-    if (_project != null) {
-      await HiveService.reorderProjectMediaItems(_project!.id, newOrder);
-      // Não recarregar o projeto para manter a animação suave
-      // _loadProject(); 
-    }
-  }
+class _ProjectMediaCell extends StatelessWidget {
+  final ProjectMediaItem item;
+  final int index;
+  final VoidCallback onTap;
 
-  Widget _buildMediaThumbnail(ProjectMediaItem item, int index) {
+  const _ProjectMediaCell({
+    required this.item,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (item.mediaType == 'photo') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PhotoEditScreen(mediaItem: item),
-            ),
-          ).then((_) => _loadProject());
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VideoEditScreen(mediaItem: item),
-            ),
-          ).then((_) => _loadProject());
-        }
-      },
-      // Removido onLongPress para permitir drag and drop
-      // O usuário pode deletar através de um menu de contexto ou botão
-      child: _buildThumbnailContent(item, index),
-    );
-  }
-
-  Widget _buildThumbnailContent(ProjectMediaItem item, int index, {bool isDragging = false}) {
-    return Stack(
+      onTap: onTap,
+      child: Stack(
         fit: StackFit.expand,
         children: [
-          // Thumbnail
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: item.thumbnailPath != null && File(item.thumbnailPath!).existsSync()
-                ? _buildThumbnailImage(item.thumbnailPath!, item.mediaType)
-                : _buildPlaceholder(item.mediaType),
-          ),
-          // Overlay com informações
+          _buildThumb(),
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
+              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+              color: Colors.black.withValues(alpha: 0.55),
+              child: Text(
+                '${index + 1}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    item.mediaType == 'photo' ? Icons.image : Icons.videocam,
-                    size: 12,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+                textAlign: TextAlign.center,
               ),
             ),
           ),
-          // Indicador de edição e botão de deletar
           Positioned(
             top: 4,
             right: 4,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (item.hasEdits)
-                  Container(
-                    margin: const EdgeInsets.only(right: 4),
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                GestureDetector(
-                  onTap: () => _deleteMediaItem(item),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.delete,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                item.mediaType == 'video' ? Icons.play_arrow : Icons.image,
+                color: Colors.white,
+                size: 10,
+              ),
             ),
           ),
         ],
+      ),
     );
   }
 
-  Widget _buildThumbnailImage(String thumbnailPath, String mediaType) {
-    final file = File(thumbnailPath);
-    
-    // Verificar se é uma imagem (não um vídeo)
-    final extension = thumbnailPath.toLowerCase();
-    final isImage = extension.endsWith('.jpg') || 
-                    extension.endsWith('.jpeg') || 
-                    extension.endsWith('.png') || 
-                    extension.endsWith('.bmp') || 
-                    extension.endsWith('.webp');
-    
-    // Se não for uma imagem, mostrar placeholder
-    if (!isImage) {
-      print('[ProjectEditScreen] WARNING: thumbnailPath is not an image: $thumbnailPath');
-      return _buildPlaceholder(mediaType);
-    }
-    
+  Widget _buildThumb() {
+    final path = item.thumbnailPath;
+    if (path == null) return _placeholder();
+    final file = File(path);
+    if (!file.existsSync()) return _placeholder();
+    final ext = path.toLowerCase();
+    final isImage = ext.endsWith('.jpg') ||
+        ext.endsWith('.jpeg') ||
+        ext.endsWith('.png') ||
+        ext.endsWith('.webp');
+    if (!isImage) return _placeholder();
     return Image.file(
       file,
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        print('[ProjectEditScreen] Error loading thumbnail: $error');
-        return _buildPlaceholder(mediaType);
-      },
+      cacheWidth: 300,
+      errorBuilder: (_, __, ___) => _placeholder(),
     );
   }
 
-  Widget _buildPlaceholder(String mediaType) {
-    return Container(
-      color: Colors.grey[300],
-      child: Icon(
-        mediaType == 'photo' ? Icons.image : Icons.videocam,
-        size: 40,
-        color: Colors.grey[600],
+  Widget _placeholder() {
+    return ColoredBox(
+      color: Colors.grey[900]!,
+      child: Center(
+        child: Icon(
+          item.mediaType == 'video' ? Icons.videocam : Icons.camera_alt,
+          color: Colors.grey[600],
+          size: 24,
+        ),
       ),
     );
   }

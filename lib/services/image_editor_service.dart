@@ -198,6 +198,64 @@ class ImageEditorService {
     }
   }
 
+  // Adicionar texto à imagem usando o pacote image (sem dependência de libfreetype)
+  static Future<String?> addTextToImage({
+    required String inputPath,
+    required String text,
+  }) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final outputDir = Directory(path.join(appDir.path, 'edited_images'));
+      if (!await outputDir.exists()) {
+        await outputDir.create(recursive: true);
+      }
+
+      final fileName = 'text_${_uuid.v4()}.jpg';
+      final finalOutputPath = path.join(outputDir.path, fileName);
+
+      final imageBytes = await File(inputPath).readAsBytes();
+      final image = img.decodeImage(imageBytes);
+      if (image == null) return null;
+
+      // Choose largest available built-in font
+      final font = img.arial48;
+
+      // Estimate text width (arial48 chars are ~28px wide on average)
+      final approxTextWidth = text.length * 28;
+      final x = ((image.width - approxTextWidth) / 2).round().clamp(8, image.width - 8);
+      final y = (image.height - 80).clamp(8, image.height - 60);
+
+      // Draw semi-transparent dark bar behind text
+      img.fillRect(
+        image,
+        x1: 0,
+        y1: y - 14,
+        x2: image.width,
+        y2: y + 58,
+        color: img.ColorRgba8(0, 0, 0, 140),
+      );
+
+      // Draw text in white
+      img.drawString(
+        image,
+        text,
+        font: font,
+        x: x,
+        y: y,
+        color: img.ColorRgb8(255, 255, 255),
+      );
+
+      final outputBytes = img.encodeJpg(image, quality: 95);
+      await File(finalOutputPath).writeAsBytes(outputBytes);
+
+      print('[ImageEditor] Text added: $finalOutputPath');
+      return finalOutputPath;
+    } catch (e) {
+      print('[ImageEditor] Error adding text: $e');
+      return null;
+    }
+  }
+
   // Converter foto para vídeo com animação
   static Future<String?> convertPhotoToVideoWithAnimation({
     required String inputPath,

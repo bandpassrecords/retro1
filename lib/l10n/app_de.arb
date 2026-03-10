@@ -358,7 +358,39 @@
   "fridayShort": "Fr",
   "saturdayShort": "Sa",
   "sundayShort": "So",
+  "browseGallery": "Galerie durchsuchen",
   "selectFromGallery": "Aus Galerie auswählen",
   "openSettings": "Einstellungen öffnen",
-  "errorAccessingFile": "Datei konnte nicht geöffnet werden"
+  "errorAccessingFile": "Datei konnte nicht geöffnet werden",
+  "cropVideo": "Video zuschneiden",
+  "cropTo16x9": "Auf 16:9 zuschneiden",
+  "done": "Fertig",
+  "filters": "Filter",
+  "filterOriginal": "Original",
+  "filterVintage": "Vintage",
+  "filterBlackWhite": "S&W",
+  "filterSepia": "Sepia",
+  "filterBright": "Hell",
+  "filterWarm": "Warm",
+  "filterCool": "Kühl",
+  "addText": "Text hinzufügen",
+  "enterYourText": "Text eingeben",
+  "applyCrop": "Anwenden",
+  "positionLabel": "Position",
+  "errorApplyingCrop": "Fehler beim Zuschneiden: {error}",
+  "@errorApplyingCrop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingText": "Fehler beim Anwenden des Textes: {error}",
+  "@errorApplyingText": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

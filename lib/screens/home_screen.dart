@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:quick_actions/quick_actions.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
-import '../widgets/monthly_calendar.dart';
+import '../widgets/thumbnail_grid.dart';
 import 'capture_screen.dart';
-import 'timeline_screen.dart';
 import 'settings_screen.dart';
 import 'video_preview_screen.dart';
 import 'projects_screen.dart';
+import 'video_generator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,284 +18,153 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late DateTime _selectedDay;
-  late DateTime _focusedMonth;
-  final GlobalKey<MonthlyCalendarState> _calendarKey = MonthlyCalendar.createKey();
-  bool _isRefreshing = false;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _selectedDay = now;
-    _focusedMonth = DateTime(now.year, now.month, 1); // Garantir que começa no primeiro dia do mês atual
-    _checkTodayEntry();
+    _setupQuickActions();
   }
 
-  void _checkTodayEntry() {
-    final today = DateTime.now();
-    if (!HiveService.hasEntryForDate(today)) {
-      // Pode mostrar um banner ou notificação
-    }
-  }
-
-  Future<void> _handleRefresh() async {
-    setState(() {
-      _isRefreshing = true;
-    });
-    
-    // Pequeno delay para mostrar o indicador de refresh
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) {
-      setState(() {});
-      // Também forçar refresh do widget do calendário
-      _calendarKey.currentState?.refresh();
-    }
-    
-    if (mounted) {
-      setState(() {
-        _isRefreshing = false;
+  void _setupQuickActions() {
+    const QuickActions quickActions = QuickActions();
+    quickActions.initialize((shortcutType) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // Switch to timeline tab and open capture
+        setState(() => _selectedIndex = 0);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CaptureScreen(
+              selectedDate: DateTime.now(),
+              autoAction: shortcutType,
+            ),
+          ),
+        );
       });
-    }
-  }
-
-  Future<void> _refreshCalendar() async {
-    // Pequeno delay para mostrar o indicador de refresh
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) {
-      setState(() {});
-      // Também forçar refresh do widget do calendário
-      _calendarKey.currentState?.refresh();
-    }
-  }
-
-  void _goToToday() {
-    final today = DateTime.now();
-    setState(() {
-      _selectedDay = today;
-      _focusedMonth = DateTime(today.year, today.month, 1);
     });
-    // Aguardar um frame para garantir que o setState foi processado
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Focar no dia atual no calendário
-      _calendarKey.currentState?.focusOnToday();
-    });
+    quickActions.setShortcutItems(<ShortcutItem>[
+      const ShortcutItem(
+        type: 'record_video',
+        localizedTitle: 'Record Video',
+        icon: 'ic_shortcut_video',
+      ),
+      const ShortcutItem(
+        type: 'take_photo',
+        localizedTitle: 'Take Photo',
+        icon: 'ic_shortcut_photo',
+      ),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
-    final hasTodayEntry = HiveService.hasEntryForDate(today);
-    final totalEntries = HiveService.getTotalEntries();
-    final yearEntries = HiveService.getEntriesCountForYear(today.year);
-
     final l10n = AppLocalizations.of(context)!;
-    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.appTitle),
-        actions: [
-          // Botão Refresh/Sync
-          IconButton(
-            icon: _isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Icon(Icons.sync),
-            onPressed: _isRefreshing ? null : _handleRefresh,
-            tooltip: AppLocalizations.of(context)!.refresh,
-          ),
-          // Botão Today alinhado à direita
-          Padding(
-            padding: const EdgeInsets.only(right: 4.0),
-            child: TextButton.icon(
-              onPressed: _goToToday,
-              icon: const Icon(Icons.today, size: 18),
-              label: Text(l10n.today),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.orangeAccent // Cor laranja para tema escuro
-                    : Colors.deepPurple, // Cor roxa para tema claro
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.orangeAccent.withValues(alpha: 0.2) // Fundo sutil para tema escuro
-                    : Colors.deepPurple.withValues(alpha: 0.1), // Fundo sutil para tema claro
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.folder),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProjectsScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TimelineScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: const [
+          _TimelineTab(),
+          ProjectsScreen(),
+          VideoGeneratorScreen(),
+          SettingsScreen(),
         ],
       ),
-      body: Column(
-        children: [
-          // Estatísticas rápidas
-          _buildStatsCard(hasTodayEntry, totalEntries, yearEntries),
-          
-          // Calendário mensal com thumbnails
-          Expanded(
-            child: MonthlyCalendar(
-              key: _calendarKey,
-              selectedDay: _selectedDay,
-              focusedMonth: _focusedMonth,
-              onDayTap: _onDaySelected,
-              calendarKey: _calendarKey,
-            ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.photo_library_outlined),
+            selectedIcon: Icon(Icons.photo_library),
+            label: 'Timeline',
           ),
-
-          // Botão de ação rápida (apenas se não houver entrada para hoje)
-          if (!hasTodayEntry)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildQuickActionButton(hasTodayEntry),
-            ),
+          NavigationDestination(
+            icon: const Icon(Icons.folder_outlined),
+            selectedIcon: const Icon(Icons.folder),
+            label: l10n.freeProjects,
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.movie_creation_outlined),
+            selectedIcon: Icon(Icons.movie_creation),
+            label: 'Generate',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n.settings,
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildStatsCard(bool hasToday, int total, int year) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildStatItem(
-              AppLocalizations.of(context)!.today,
-              hasToday ? '✓' : '✗',
-              hasToday ? Colors.green : Colors.orange,
-            ),
-            _buildStatItem(AppLocalizations.of(context)!.totalEntries, total.toString(), Colors.blue),
-            _buildStatItem('${DateTime.now().year}', year.toString(), Colors.purple),
-          ],
-        ),
-      ),
-    );
+// ── Timeline tab ───────────────────────────────────────────────────────────
+
+class _TimelineTab extends StatefulWidget {
+  const _TimelineTab();
+
+  @override
+  State<_TimelineTab> createState() => _TimelineTabState();
+}
+
+class _TimelineTabState extends State<_TimelineTab> {
+  final GlobalKey<ThumbnailGridState> _gridKey = GlobalKey<ThumbnailGridState>();
+  bool _isRefreshing = false;
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isRefreshing = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) {
+      setState(() {});
+      _gridKey.currentState?.refresh();
+    }
+    if (mounted) setState(() => _isRefreshing = false);
   }
 
-  Widget _buildStatItem(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
+  Future<void> _refreshGrid() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) {
+      setState(() {});
+      _gridKey.currentState?.refresh();
+    }
   }
 
-  Widget _buildQuickActionButton(bool hasTodayEntry) {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () => _handleQuickAction(hasTodayEntry),
-        icon: Icon(hasTodayEntry ? Icons.swap_horiz : Icons.camera_alt),
-        label: Text(hasTodayEntry ? l10n.replace : l10n.recordToday),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+  void _goToToday() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _gridKey.currentState?.scrollToToday();
+    });
   }
 
-  void _handleQuickAction(bool hasTodayEntry) async {
-    final today = DateTime.now();
-    // Sempre abrir a tela de captura (para adicionar ou trocar)
+  void _openCapture(DateTime day) async {
     final result = await Navigator.push(
       context,
+      MaterialPageRoute(builder: (context) => CaptureScreen(selectedDate: day)),
+    );
+    if (result == true || mounted) _refreshGrid();
+  }
+
+  void _openEntry(DateTime day, DailyEntry entry) async {
+    final entries = HiveService.getAllEntries();
+    final index = entries.indexWhere((e) => e.id == entry.id);
+    await Navigator.push(
+      context,
       MaterialPageRoute(
-        builder: (context) => CaptureScreen(selectedDate: today),
+        builder: (context) => VideoPreviewScreen(
+          entry: entry,
+          allEntries: entries,
+          initialIndex: index < 0 ? 0 : index,
+          onReplaceEntry: (e) => _openCapture(e.date),
+          onDeleteEntry: (e) async {
+            await HiveService.deleteEntry(e.id);
+            _refreshGrid();
+          },
+        ),
       ),
     );
-    // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
-    if (result == true || mounted) {
-      _refreshCalendar();
-    }
-  }
-
-  void _onDaySelected(DateTime selectedDay, DailyEntry? entry) {
-    setState(() {
-      _selectedDay = selectedDay;
-      // Atualizar mês focado se necessário
-      if (selectedDay.year != _focusedMonth.year ||
-          selectedDay.month != _focusedMonth.month) {
-        _focusedMonth = DateTime(selectedDay.year, selectedDay.month, 1);
-      }
-    });
-
-    if (entry != null) {
-      _showDayOptions(selectedDay, entry);
-    } else if (_isSameDay(selectedDay, DateTime.now()) ||
-        selectedDay.isBefore(DateTime.now())) {
-      // Abrir diretamente a tela de captura sem diálogo de confirmação
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CaptureScreen(selectedDate: selectedDay),
-        ),
-      ).then((result) {
-        // Atualizar calendário quando voltar (sempre, mas especialmente se foi salvo)
-        if (result == true || mounted) {
-          _refreshCalendar();
-        }
-      });
-    }
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+    _refreshGrid();
   }
 
   void _showDayOptions(DateTime day, DailyEntry entry) {
@@ -308,16 +178,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.play_circle),
               title: Text(l10n.view),
-              onTap: () async {
+              onTap: () {
                 Navigator.pop(context);
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VideoPreviewScreen(entry: entry),
-                  ),
-                );
-                // Atualizar calendário quando voltar (pode ter editado a foto)
-                _refreshCalendar();
+                _openEntry(day, entry);
               },
             ),
             ListTile(
@@ -325,15 +188,13 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(l10n.replace),
               onTap: () async {
                 Navigator.pop(context);
-                // Abrir diretamente a tela de captura para trocar a mídia
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => CaptureScreen(selectedDate: day),
                   ),
                 );
-                // Atualizar calendário quando voltar
-                _refreshCalendar();
+                _refreshGrid();
               },
             ),
             ListTile(
@@ -366,11 +227,88 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               HiveService.deleteEntry(entry.id);
               Navigator.pop(context);
-              _refreshCalendar();
+              _refreshGrid();
             },
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final hasTodayEntry = HiveService.hasEntryForDate(today);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: _isRefreshing ? null : _handleRefresh,
+            tooltip: l10n.refresh,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: _goToToday,
+              icon: const Icon(Icons.today, size: 18),
+              label: Text(l10n.today),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orangeAccent
+                    : Colors.deepPurple,
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orangeAccent.withValues(alpha: 0.2)
+                    : Colors.deepPurple.withValues(alpha: 0.1),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ThumbnailGrid(
+              key: _gridKey,
+              onEntryTap: (day, entry) => _openEntry(day, entry),
+              onEntryLongPress: (day, entry) => _showDayOptions(day, entry),
+              onEmptyDayTap: (day) => _openCapture(day),
+            ),
+          ),
+          if (!hasTodayEntry)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildQuickActionButton(l10n),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(AppLocalizations l10n) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: () => _openCapture(DateTime.now()),
+        icon: const Icon(Icons.camera_alt),
+        label: Text(l10n.recordToday),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }

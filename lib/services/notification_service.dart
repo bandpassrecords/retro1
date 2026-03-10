@@ -355,7 +355,7 @@ class NotificationService {
         notificationBody,
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexact,
         payload: 'check_entry_$dayOffset',
       );
       
@@ -404,7 +404,7 @@ class NotificationService {
         reminderNotificationBody,
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexact,
         payload: 'reminder_$dayOffset',
       );
       

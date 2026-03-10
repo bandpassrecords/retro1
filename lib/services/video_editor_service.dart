@@ -232,6 +232,65 @@ class VideoEditorService {
     }
   }
 
+  // Cortar vídeo para proporção 16:9
+  // videoWidth / videoHeight come from VideoPlayerController.value.size
+  static Future<String?> cropVideoTo16x9({
+    required String inputPath,
+    required int videoWidth,
+    required int videoHeight,
+    required double position, // 0.0 (top/left) to 1.0 (bottom/right)
+  }) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final outputDir = Directory(path.join(appDir.path, 'clips'));
+      if (!await outputDir.exists()) {
+        await outputDir.create(recursive: true);
+      }
+
+      final finalOutputPath = path.join(outputDir.path, '${_uuid.v4()}.mp4');
+
+      // Compute crop rectangle in Dart (avoids FFmpeg expression evaluation issues).
+      // All dimensions are rounded to the nearest even number for H.264 compatibility.
+      final String cropFilter;
+      final double ar = videoWidth / videoHeight;
+      if (ar < 16 / 9) {
+        // Portrait: take full width, crop height to 16:9
+        final cropH = ((videoWidth * 9 / 16) ~/ 2) * 2;
+        final maxY = videoHeight - cropH;
+        final y = ((maxY * position) ~/ 2) * 2;
+        cropFilter =
+            'crop=$videoWidth:$cropH:0:$y,scale=1920:1080:flags=lanczos';
+      } else {
+        // Landscape wider than 16:9: take full height, crop width to 16:9
+        final cropW = ((videoHeight * 16 / 9) ~/ 2) * 2;
+        final maxX = videoWidth - cropW;
+        final x = ((maxX * position) ~/ 2) * 2;
+        cropFilter =
+            'crop=$cropW:$videoHeight:$x:0,scale=1920:1080:flags=lanczos';
+      }
+
+      final command = '-i "$inputPath" '
+          '-vf "$cropFilter" '
+          '-c:v libx264 -preset fast -crf 23 '
+          '-c:a copy '
+          '-y "$finalOutputPath"';
+
+      final session = await FFmpegKit.execute(command);
+      final returnCode = await session.getReturnCode();
+
+      if (ReturnCode.isSuccess(returnCode)) {
+        return finalOutputPath;
+      } else {
+        final logs = await session.getLogs();
+        print('FFmpeg crop error: ${logs.map((e) => e.getMessage()).join('\n')}');
+        return null;
+      }
+    } catch (e) {
+      print('Error cropping video: $e');
+      return null;
+    }
+  }
+
   // Gerar thumbnail do vídeo
   static Future<String?> generateThumbnail({
     required String videoPath,

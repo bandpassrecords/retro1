@@ -642,6 +642,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sundayShort => 'Dom';
 
   @override
+  String get browseGallery => 'Sfoglia Galleria';
+
+  @override
   String get selectFromGallery => 'Seleziona dalla Galleria';
 
   @override
@@ -649,4 +652,59 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get errorAccessingFile => 'Impossibile accedere al file';
+
+  @override
+  String get cropVideo => 'Ritaglia Video';
+
+  @override
+  String get cropTo16x9 => 'Ritaglia a 16:9';
+
+  @override
+  String get done => 'Fatto';
+
+  @override
+  String get filters => 'Filtri';
+
+  @override
+  String get filterOriginal => 'Originale';
+
+  @override
+  String get filterVintage => 'Vintage';
+
+  @override
+  String get filterBlackWhite => 'B/N';
+
+  @override
+  String get filterSepia => 'Seppia';
+
+  @override
+  String get filterBright => 'Luminoso';
+
+  @override
+  String get filterWarm => 'Caldo';
+
+  @override
+  String get filterCool => 'Freddo';
+
+  @override
+  String get addText => 'Aggiungi testo';
+
+  @override
+  String get enterYourText => 'Inserisci il tuo testo';
+
+  @override
+  String get applyCrop => 'Applica';
+
+  @override
+  String get positionLabel => 'Posizione';
+
+  @override
+  String errorApplyingCrop(String error) {
+    return 'Errore ritaglio: $error';
+  }
+
+  @override
+  String errorApplyingText(String error) {
+    return 'Errore testo: $error';
+  }
 }

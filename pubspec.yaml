@@ -36,6 +36,9 @@ dependencies:
   cached_network_image: ^3.3.0
   flutter_slidable: ^3.0.1
 
+  # App shortcuts
+  quick_actions: ^1.0.0
+
   # Utilitários
   uuid: ^4.2.1
   shared_preferences: ^2.2.2

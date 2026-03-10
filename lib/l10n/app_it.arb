@@ -358,7 +358,39 @@
   "fridayShort": "Ven",
   "saturdayShort": "Sab",
   "sundayShort": "Dom",
+  "browseGallery": "Sfoglia Galleria",
   "selectFromGallery": "Seleziona dalla Galleria",
   "openSettings": "Apri Impostazioni",
-  "errorAccessingFile": "Impossibile accedere al file"
+  "errorAccessingFile": "Impossibile accedere al file",
+  "cropVideo": "Ritaglia Video",
+  "cropTo16x9": "Ritaglia a 16:9",
+  "done": "Fatto",
+  "filters": "Filtri",
+  "filterOriginal": "Originale",
+  "filterVintage": "Vintage",
+  "filterBlackWhite": "B/N",
+  "filterSepia": "Seppia",
+  "filterBright": "Luminoso",
+  "filterWarm": "Caldo",
+  "filterCool": "Freddo",
+  "addText": "Aggiungi testo",
+  "enterYourText": "Inserisci il tuo testo",
+  "applyCrop": "Applica",
+  "positionLabel": "Posizione",
+  "errorApplyingCrop": "Errore ritaglio: {error}",
+  "@errorApplyingCrop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingText": "Errore testo: {error}",
+  "@errorApplyingText": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

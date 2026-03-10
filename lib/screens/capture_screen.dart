@@ -14,9 +14,14 @@ import 'custom_gallery_picker_screen.dart';
 class CaptureScreen extends StatefulWidget {
   final DateTime selectedDate;
 
+  /// When set, automatically triggers that action on open (used by quick actions).
+  /// Values: 'record_video', 'take_photo'
+  final String? autoAction;
+
   const CaptureScreen({
     super.key,
     required this.selectedDate,
+    this.autoAction,
   });
 
   @override
@@ -27,11 +32,27 @@ class _CaptureScreenState extends State<CaptureScreen> {
   bool _isProcessing = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.autoAction != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        switch (widget.autoAction) {
+          case 'record_video':
+            _captureVideo();
+          case 'take_photo':
+            _capturePhoto();
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.recordFor(DateFormat('dd/MM/yyyy').format(widget.selectedDate))),
+        title: Text(
+            l10n.recordFor(DateFormat('dd/MM/yyyy').format(widget.selectedDate))),
       ),
       body: Center(
         child: _isProcessing
@@ -49,28 +70,21 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     icon: Icons.videocam,
                     label: l10n.recordVideo,
                     color: Colors.grey[700]!,
-                    onTap: () => _captureVideo(),
+                    onTap: _captureVideo,
                   ),
                   const SizedBox(height: 16),
                   _buildCaptureOption(
                     icon: Icons.camera_alt,
                     label: l10n.takePhoto,
                     color: Colors.grey[700]!,
-                    onTap: () => _capturePhoto(),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildCaptureOption(
-                    icon: Icons.video_library,
-                    label: l10n.videoFromGallery,
-                    color: Colors.grey[700]!,
-                    onTap: () => _pickVideoFromGallery(),
+                    onTap: _capturePhoto,
                   ),
                   const SizedBox(height: 16),
                   _buildCaptureOption(
                     icon: Icons.photo_library,
-                    label: l10n.photoFromGallery,
+                    label: l10n.browseGallery,
                     color: Colors.grey[700]!,
-                    onTap: () => _pickPhotoFromGallery(),
+                    onTap: _pickFromGallery,
                   ),
                 ],
               ),
@@ -104,92 +118,56 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   Future<void> _captureVideo() async {
     setState(() => _isProcessing = true);
-
     try {
       final video = await MediaService.captureVideo();
       if (video != null && mounted) {
         await _processMedia(video.path, 'video');
       } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.noVideoCaptured);
+        _showError(AppLocalizations.of(context)!.noVideoCaptured);
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.errorCapturingVideo(e.toString()));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
-
-  Future<void> _capturePhoto() async {
-    setState(() => _isProcessing = true);
-
-    try {
-      final photo = await MediaService.capturePhoto();
-      if (photo != null && mounted) {
-        await _processMedia(photo.path, 'photo');
-      } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.noPhotoCaptured);
-      }
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.errorCapturingPhoto(e.toString()));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
-
-  Future<void> _pickVideoFromGallery() async {
-    final path = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CustomGalleryPickerScreen(
-          initialFilter: GalleryFilter.videos,
-        ),
-      ),
-    );
-
-    if (path == null || !mounted) return;
-
-    setState(() => _isProcessing = true);
-    try {
-      await _processMedia(path, 'video');
-    } catch (e) {
-      if (mounted) {
-        _showError(AppLocalizations.of(context)!.errorSelectingVideo(e.toString()));
+        _showError(AppLocalizations.of(context)!.errorCapturingVideo(e.toString()));
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
-  Future<void> _pickPhotoFromGallery() async {
-    final path = await Navigator.push<String>(
+  Future<void> _capturePhoto() async {
+    setState(() => _isProcessing = true);
+    try {
+      final photo = await MediaService.capturePhoto();
+      if (photo != null && mounted) {
+        await _processMedia(photo.path, 'photo');
+      } else if (mounted) {
+        _showError(AppLocalizations.of(context)!.noPhotoCaptured);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError(AppLocalizations.of(context)!.errorCapturingPhoto(e.toString()));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final result = await Navigator.push<GalleryPickerResult>(
       context,
       MaterialPageRoute(
-        builder: (_) => const CustomGalleryPickerScreen(
-          initialFilter: GalleryFilter.photos,
-        ),
+        builder: (_) => const CustomGalleryPickerScreen(),
       ),
     );
 
-    if (path == null || !mounted) return;
+    if (result == null || !mounted) return;
 
     setState(() => _isProcessing = true);
     try {
-      await _processMedia(path, 'photo');
+      await _processMedia(result.path, result.mediaType);
     } catch (e) {
       if (mounted) {
-        _showError(AppLocalizations.of(context)!.errorSelectingPhoto(e.toString()));
+        _showError(AppLocalizations.of(context)!.errorSelectingMedia(e.toString()));
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -198,32 +176,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   Future<void> _processMedia(String mediaPath, String mediaType) async {
     try {
-      // Verificar se já existe entrada para este dia
+      // Check if entry already exists for this day
       final existingEntry = HiveService.getEntryByDate(widget.selectedDate);
       if (existingEntry != null) {
         final shouldReplace = await _confirmReplace();
-        if (!shouldReplace) {
-          return;
-        }
-        // Deletar entrada antiga
+        if (!shouldReplace) return;
         await HiveService.deleteEntry(existingEntry.id);
       }
 
-      // Copiar arquivo para diretório do app
       final copiedPath = await MediaService.copyToAppDirectory(mediaPath);
 
-      // Se for foto, converter para vídeo de 1 segundo
       String finalPath = copiedPath;
       if (mediaType == 'photo') {
         final convertedPath = await VideoEditorService.convertPhotoToVideo(
           photoPath: copiedPath,
         );
-        if (convertedPath != null) {
-          finalPath = convertedPath;
-        }
+        if (convertedPath != null) finalPath = convertedPath;
       }
 
-      // Gerar thumbnail
       String? thumbnailPath;
       if (mediaType == 'video') {
         thumbnailPath = await VideoEditorService.generateThumbnail(
@@ -231,10 +201,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
           timeMs: 0,
         );
       } else {
-        thumbnailPath = copiedPath; // Para fotos, usar a foto como thumbnail
+        thumbnailPath = copiedPath;
       }
 
-      // Criar entrada
       final entry = DailyEntry(
         id: const Uuid().v4(),
         date: widget.selectedDate,
@@ -248,63 +217,30 @@ class _CaptureScreenState extends State<CaptureScreen> {
         hasAudio: mediaType == 'video',
       );
 
-      // Se for vídeo, abrir editor para escolher o segundo
-      if (mediaType == 'video') {
-        if (mounted) {
+      await HiveService.saveEntry(entry);
+      await NotificationService.checkAndCancelNotificationsForDate(entry.date);
+
+      if (mounted) {
+        if (mediaType == 'video') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => EditorScreen(entry: entry, isNewEntry: true),
+              builder: (context) =>
+                  EditorScreen(entry: entry, isNewEntry: true),
             ),
           );
-        }
-      } else {
-        // Se for foto, perguntar se quer editar
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          final shouldEdit = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(l10n.photoAdded),
-              content: Text(l10n.doYouWantToEdit),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(l10n.skip),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(l10n.edit),
-                ),
-              ],
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PhotoEditDailyScreen(entry: entry),
             ),
           );
-
-          if (shouldEdit == true) {
-            // Salvar primeiro
-            await HiveService.saveEntry(entry);
-            // Cancelar notificações para este dia
-            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
-            // Abrir editor de foto
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PhotoEditDailyScreen(entry: entry),
-              ),
-            );
-          } else {
-            // Salvar e voltar
-            await HiveService.saveEntry(entry);
-            // Cancelar notificações para este dia
-            await NotificationService.checkAndCancelNotificationsForDate(entry.date);
-            Navigator.pop(context, true); // Retornar true para indicar que foi salvo
-          }
         }
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        _showError(l10n.errorProcessingMedia(e.toString()));
+        _showError(AppLocalizations.of(context)!.errorProcessingMedia(e.toString()));
       }
     }
   }
@@ -333,10 +269,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 }

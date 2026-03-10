@@ -645,6 +645,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sundayShort => 'Dim';
 
   @override
+  String get browseGallery => 'Parcourir la galerie';
+
+  @override
   String get selectFromGallery => 'Sélectionner depuis la galerie';
 
   @override
@@ -652,4 +655,59 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorAccessingFile => 'Impossible d\'accéder au fichier';
+
+  @override
+  String get cropVideo => 'Recadrer la vidéo';
+
+  @override
+  String get cropTo16x9 => 'Recadrer en 16:9';
+
+  @override
+  String get done => 'Terminé';
+
+  @override
+  String get filters => 'Filtres';
+
+  @override
+  String get filterOriginal => 'Original';
+
+  @override
+  String get filterVintage => 'Vintage';
+
+  @override
+  String get filterBlackWhite => 'N&B';
+
+  @override
+  String get filterSepia => 'Sépia';
+
+  @override
+  String get filterBright => 'Lumineux';
+
+  @override
+  String get filterWarm => 'Chaud';
+
+  @override
+  String get filterCool => 'Froid';
+
+  @override
+  String get addText => 'Ajouter du texte';
+
+  @override
+  String get enterYourText => 'Entrez votre texte';
+
+  @override
+  String get applyCrop => 'Appliquer';
+
+  @override
+  String get positionLabel => 'Position';
+
+  @override
+  String errorApplyingCrop(String error) {
+    return 'Erreur de recadrage : $error';
+  }
+
+  @override
+  String errorApplyingText(String error) {
+    return 'Erreur d\'application du texte : $error';
+  }
 }

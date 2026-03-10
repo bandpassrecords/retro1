@@ -355,7 +355,39 @@
   "fridayShort": "Vie",
   "saturdayShort": "Sáb",
   "sundayShort": "Dom",
+  "browseGallery": "Explorar Galería",
   "selectFromGallery": "Seleccionar de la Galería",
   "openSettings": "Abrir Configuración",
-  "errorAccessingFile": "No se pudo acceder al archivo"
+  "errorAccessingFile": "No se pudo acceder al archivo",
+  "cropVideo": "Recortar Video",
+  "cropTo16x9": "Recortar a 16:9",
+  "done": "Listo",
+  "filters": "Filtros",
+  "filterOriginal": "Original",
+  "filterVintage": "Vintage",
+  "filterBlackWhite": "B/N",
+  "filterSepia": "Sepia",
+  "filterBright": "Brillante",
+  "filterWarm": "Cálido",
+  "filterCool": "Frío",
+  "addText": "Agregar Texto",
+  "enterYourText": "Ingresa tu texto",
+  "applyCrop": "Aplicar",
+  "positionLabel": "Posición",
+  "errorApplyingCrop": "Error al recortar: {error}",
+  "@errorApplyingCrop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingText": "Error al aplicar texto: {error}",
+  "@errorApplyingText": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

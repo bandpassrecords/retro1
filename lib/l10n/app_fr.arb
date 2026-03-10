@@ -358,7 +358,39 @@
   "fridayShort": "Ven",
   "saturdayShort": "Sam",
   "sundayShort": "Dim",
+  "browseGallery": "Parcourir la galerie",
   "selectFromGallery": "Sélectionner depuis la galerie",
   "openSettings": "Ouvrir les paramètres",
-  "errorAccessingFile": "Impossible d'accéder au fichier"
+  "errorAccessingFile": "Impossible d'accéder au fichier",
+  "cropVideo": "Recadrer la vidéo",
+  "cropTo16x9": "Recadrer en 16:9",
+  "done": "Terminé",
+  "filters": "Filtres",
+  "filterOriginal": "Original",
+  "filterVintage": "Vintage",
+  "filterBlackWhite": "N&B",
+  "filterSepia": "Sépia",
+  "filterBright": "Lumineux",
+  "filterWarm": "Chaud",
+  "filterCool": "Froid",
+  "addText": "Ajouter du texte",
+  "enterYourText": "Entrez votre texte",
+  "applyCrop": "Appliquer",
+  "positionLabel": "Position",
+  "errorApplyingCrop": "Erreur de recadrage : {error}",
+  "@errorApplyingCrop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingText": "Erreur d'application du texte : {error}",
+  "@errorApplyingText": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

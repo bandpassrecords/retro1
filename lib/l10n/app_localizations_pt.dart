@@ -640,6 +640,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sundayShort => 'Dom';
 
   @override
+  String get browseGallery => 'Navegar na Galeria';
+
+  @override
   String get selectFromGallery => 'Selecionar da Galeria';
 
   @override
@@ -647,4 +650,59 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get errorAccessingFile => 'Não foi possível acessar o arquivo';
+
+  @override
+  String get cropVideo => 'Cortar Vídeo';
+
+  @override
+  String get cropTo16x9 => 'Cortar para 16:9';
+
+  @override
+  String get done => 'Concluído';
+
+  @override
+  String get filters => 'Filtros';
+
+  @override
+  String get filterOriginal => 'Original';
+
+  @override
+  String get filterVintage => 'Vintage';
+
+  @override
+  String get filterBlackWhite => 'P&B';
+
+  @override
+  String get filterSepia => 'Sépia';
+
+  @override
+  String get filterBright => 'Brilhante';
+
+  @override
+  String get filterWarm => 'Quente';
+
+  @override
+  String get filterCool => 'Frio';
+
+  @override
+  String get addText => 'Adicionar Texto';
+
+  @override
+  String get enterYourText => 'Digite seu texto';
+
+  @override
+  String get applyCrop => 'Aplicar';
+
+  @override
+  String get positionLabel => 'Posição';
+
+  @override
+  String errorApplyingCrop(String error) {
+    return 'Erro ao aplicar corte: $error';
+  }
+
+  @override
+  String errorApplyingText(String error) {
+    return 'Erro ao aplicar texto: $error';
+  }
 }

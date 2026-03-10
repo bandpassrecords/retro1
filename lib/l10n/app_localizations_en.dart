@@ -638,6 +638,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sundayShort => 'Sun';
 
   @override
+  String get browseGallery => 'Browse Gallery';
+
+  @override
   String get selectFromGallery => 'Select from Gallery';
 
   @override
@@ -645,4 +648,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorAccessingFile => 'Could not access file';
+
+  @override
+  String get cropVideo => 'Crop Video';
+
+  @override
+  String get cropTo16x9 => 'Crop to 16:9';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get filterOriginal => 'Original';
+
+  @override
+  String get filterVintage => 'Vintage';
+
+  @override
+  String get filterBlackWhite => 'B&W';
+
+  @override
+  String get filterSepia => 'Sepia';
+
+  @override
+  String get filterBright => 'Bright';
+
+  @override
+  String get filterWarm => 'Warm';
+
+  @override
+  String get filterCool => 'Cool';
+
+  @override
+  String get addText => 'Add Text';
+
+  @override
+  String get enterYourText => 'Enter your text';
+
+  @override
+  String get applyCrop => 'Apply';
+
+  @override
+  String get positionLabel => 'Position';
+
+  @override
+  String errorApplyingCrop(String error) {
+    return 'Error applying crop: $error';
+  }
+
+  @override
+  String errorApplyingText(String error) {
+    return 'Error applying text: $error';
+  }
 }

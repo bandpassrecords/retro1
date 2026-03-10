@@ -388,7 +388,39 @@
   "fridayShort": "Fri",
   "saturdayShort": "Sat",
   "sundayShort": "Sun",
+  "browseGallery": "Browse Gallery",
   "selectFromGallery": "Select from Gallery",
   "openSettings": "Open Settings",
-  "errorAccessingFile": "Could not access file"
+  "errorAccessingFile": "Could not access file",
+  "cropVideo": "Crop Video",
+  "cropTo16x9": "Crop to 16:9",
+  "done": "Done",
+  "filters": "Filters",
+  "filterOriginal": "Original",
+  "filterVintage": "Vintage",
+  "filterBlackWhite": "B&W",
+  "filterSepia": "Sepia",
+  "filterBright": "Bright",
+  "filterWarm": "Warm",
+  "filterCool": "Cool",
+  "addText": "Add Text",
+  "enterYourText": "Enter your text",
+  "applyCrop": "Apply",
+  "positionLabel": "Position",
+  "errorApplyingCrop": "Error applying crop: {error}",
+  "@errorApplyingCrop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApplyingText": "Error applying text: {error}",
+  "@errorApplyingText": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

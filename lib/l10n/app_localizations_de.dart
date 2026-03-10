@@ -645,6 +645,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sundayShort => 'So';
 
   @override
+  String get browseGallery => 'Galerie durchsuchen';
+
+  @override
   String get selectFromGallery => 'Aus Galerie auswählen';
 
   @override
@@ -652,4 +655,59 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get errorAccessingFile => 'Datei konnte nicht geöffnet werden';
+
+  @override
+  String get cropVideo => 'Video zuschneiden';
+
+  @override
+  String get cropTo16x9 => 'Auf 16:9 zuschneiden';
+
+  @override
+  String get done => 'Fertig';
+
+  @override
+  String get filters => 'Filter';
+
+  @override
+  String get filterOriginal => 'Original';
+
+  @override
+  String get filterVintage => 'Vintage';
+
+  @override
+  String get filterBlackWhite => 'S&W';
+
+  @override
+  String get filterSepia => 'Sepia';
+
+  @override
+  String get filterBright => 'Hell';
+
+  @override
+  String get filterWarm => 'Warm';
+
+  @override
+  String get filterCool => 'Kühl';
+
+  @override
+  String get addText => 'Text hinzufügen';
+
+  @override
+  String get enterYourText => 'Text eingeben';
+
+  @override
+  String get applyCrop => 'Anwenden';
+
+  @override
+  String get positionLabel => 'Position';
+
+  @override
+  String errorApplyingCrop(String error) {
+    return 'Fehler beim Zuschneiden: $error';
+  }
+
+  @override
+  String errorApplyingText(String error) {
+    return 'Fehler beim Anwenden des Textes: $error';
+  }
 }
