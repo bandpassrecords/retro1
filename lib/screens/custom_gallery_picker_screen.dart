@@ -5,6 +5,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
+import '../services/timeline_prefs.dart';
 
 class GalleryPickerResult {
   final String path;
@@ -148,11 +149,13 @@ class _CustomGalleryPickerScreenState
       return Center(child: Text(l10n.noMediaFound));
     }
 
-    return GridView.builder(
+    return ValueListenableBuilder<String?>(
+      valueListenable: ThumbnailSizePrefs.notifier,
+      builder: (context, _, __) => GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(2),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ThumbnailSizePrefs.crossAxisCount,
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),
@@ -166,6 +169,7 @@ class _CustomGalleryPickerScreenState
           onTap: () => _onAssetTapped(_assets[index]),
         );
       },
+    ),
     );
   }
 

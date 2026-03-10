@@ -5,6 +5,7 @@ import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/media_service.dart';
 import '../services/hive_service.dart';
+import '../services/timeline_prefs.dart';
 import '../services/video_editor_service.dart';
 import '../services/notification_service.dart';
 import 'editor_screen.dart';
@@ -153,12 +154,18 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _pickFromGallery() async {
-    final result = await Navigator.push<GalleryPickerResult>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CustomGalleryPickerScreen(),
-      ),
-    );
+    GalleryPickerResult? result;
+
+    if (MediaPickerPrefs.current == MediaPickerPrefs.systemPicker) {
+      result = await _pickWithSystemPicker();
+    } else {
+      result = await Navigator.push<GalleryPickerResult>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const CustomGalleryPickerScreen(),
+        ),
+      );
+    }
 
     if (result == null || !mounted) return;
 
@@ -171,6 +178,47 @@ class _CaptureScreenState extends State<CaptureScreen> {
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<GalleryPickerResult?> _pickWithSystemPicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    // Ask the user whether they want a photo or a video, then open the
+    // native Android / iOS picker (Google Photos on Android).
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: Text(l10n.videoFromGallery),
+              onTap: () => Navigator.pop(ctx, 'video'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: Text(l10n.photoFromGallery),
+              onTap: () => Navigator.pop(ctx, 'photo'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null) return null;
+
+    try {
+      if (choice == 'video') {
+        final file = await MediaService.pickVideoFromGallery();
+        if (file == null) return null;
+        return GalleryPickerResult(path: file.path, mediaType: 'video');
+      } else {
+        final file = await MediaService.pickPhotoFromGallery();
+        if (file == null) return null;
+        return GalleryPickerResult(path: file.path, mediaType: 'photo');
+      }
+    } catch (_) {
+      return null;
     }
   }
 

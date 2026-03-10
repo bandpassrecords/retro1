@@ -382,6 +382,19 @@
       }
     }
   },
+  "timelineViewTitle": "Vista de la Línea de Tiempo",
+  "calendarView": "Calendario",
+  "gridView": "Cuadrícula",
+  "mediaPickerTitle": "Selector de Medios",
+  "customPicker": "Galería In-App",
+  "customPickerDescription": "Explora tus medios dentro de la aplicación",
+  "systemPicker": "Selector del Sistema",
+  "systemPickerDescription": "Usa el selector de medios oficial de Android/iOS",
+  "thumbnailSizeTitle": "Tamaño de Miniaturas",
+  "smallThumbnails": "Pequeño",
+  "largeThumbnails": "Grande",
+  "addBefore": "Agregar antes",
+  "addAfter": "Agregar después",
   "errorApplyingText": "Error al aplicar texto: {error}",
   "@errorApplyingText": {
     "placeholders": {

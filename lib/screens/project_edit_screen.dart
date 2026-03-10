@@ -9,6 +9,7 @@ import '../models/daily_entry.dart';
 import '../models/rendered_video.dart';
 import '../services/hive_service.dart';
 import '../services/media_service.dart';
+import '../services/timeline_prefs.dart';
 import '../services/video_editor_service.dart';
 import '../services/video_generator_service.dart';
 import 'photo_edit_screen.dart';
@@ -204,7 +205,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.arrow_upward),
-              title: const Text('Add before'),
+              title: Text(l10n.addBefore),
               onTap: () {
                 Navigator.pop(context);
                 _addMediaAt(index);
@@ -212,7 +213,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.arrow_downward),
-              title: const Text('Add after'),
+              title: Text(l10n.addAfter),
               onTap: () {
                 Navigator.pop(context);
                 _addMediaAt(index + 1);
@@ -570,10 +571,15 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
   Widget build(BuildContext context) {
     final itemCount = widget.items.length + 1; // +1 for "+" cell
 
-    return GridView.builder(
+    return ValueListenableBuilder<String?>(
+      valueListenable: ThumbnailSizePrefs.notifier,
+      builder: (context, _, __) {
+        final cols = ThumbnailSizePrefs.crossAxisCount;
+        final cellSize = MediaQuery.of(context).size.width / cols - 1;
+        return GridView.builder(
       padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cols,
         crossAxisSpacing: 1,
         mainAxisSpacing: 1,
         childAspectRatio: 1,
@@ -615,8 +621,8 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
                 _hoverIndex = null;
               }),
               feedback: SizedBox(
-                width: MediaQuery.of(context).size.width / 3 - 1,
-                height: MediaQuery.of(context).size.width / 3 - 1,
+                width: cellSize,
+                height: cellSize,
                 child: Opacity(
                   opacity: 0.85,
                   child: _ProjectMediaCell(item: item, index: index, onTap: () {}),
@@ -647,6 +653,8 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
               ),
             );
           },
+        );
+      },
         );
       },
     );

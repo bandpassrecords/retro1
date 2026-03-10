@@ -9,6 +9,7 @@ import 'dart:async';
 class MonthlyCalendar extends StatefulWidget {
   final DateTime? selectedDay;
   final Function(DateTime day, DailyEntry? entry) onDayTap;
+  final Function(DateTime day, DailyEntry entry)? onDayLongPress;
   final DateTime focusedMonth;
   final GlobalKey<MonthlyCalendarState>? calendarKey;
 
@@ -16,6 +17,7 @@ class MonthlyCalendar extends StatefulWidget {
     super.key,
     this.selectedDay,
     required this.onDayTap,
+    this.onDayLongPress,
     required this.focusedMonth,
     this.calendarKey,
   });
@@ -309,6 +311,7 @@ class MonthlyCalendarState extends State<MonthlyCalendar> {
             month: _months[monthIndex],
             selectedDay: widget.selectedDay,
             onDayTap: widget.onDayTap,
+            onDayLongPress: widget.onDayLongPress,
           );
         },
     );
@@ -333,12 +336,14 @@ class _MonthView extends StatelessWidget {
   final DateTime month;
   final DateTime? selectedDay;
   final Function(DateTime day, DailyEntry? entry) onDayTap;
+  final Function(DateTime day, DailyEntry entry)? onDayLongPress;
 
   const _MonthView({
     super.key,
     required this.month,
     this.selectedDay,
     required this.onDayTap,
+    this.onDayLongPress,
   });
 
   @override
@@ -447,6 +452,9 @@ class _MonthView extends StatelessWidget {
                 isSelected: isSelected,
                 isToday: isToday,
                 onTap: () => onDayTap(day, entry),
+                onLongPress: entry != null && onDayLongPress != null
+                    ? () => onDayLongPress!(day, entry)
+                    : null,
               );
             },
           ),
@@ -467,6 +475,7 @@ class _DayCell extends StatelessWidget {
   final bool isSelected;
   final bool isToday;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _DayCell({
     required this.day,
@@ -475,12 +484,14 @@ class _DayCell extends StatelessWidget {
     required this.isSelected,
     required this.isToday,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),

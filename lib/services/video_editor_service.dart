@@ -271,8 +271,9 @@ class VideoEditorService {
 
       final command = '-i "$inputPath" '
           '-vf "$cropFilter" '
+          '-map 0:v:0 -map 0:a? '
           '-c:v libx264 -preset fast -crf 23 '
-          '-c:a copy '
+          '-c:a aac '
           '-y "$finalOutputPath"';
 
       final session = await FFmpegKit.execute(command);

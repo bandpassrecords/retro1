@@ -11,21 +11,34 @@ class MediaService {
 
   // Solicitar permissões
   static Future<bool> requestPermissions() async {
-    final cameraStatus = await Permission.camera.status;
-    final storageStatus = await Permission.storage.status;
-    final photosStatus = await Permission.photos.status;
+    final cameraResult = await Permission.camera.request();
+    if (!cameraResult.isGranted) return false;
 
-    if (cameraStatus.isDenied || storageStatus.isDenied || photosStatus.isDenied) {
-      final cameraResult = await Permission.camera.request();
-      final storageResult = await Permission.storage.request();
+    if (Platform.isAndroid) {
+      // Android 13+ uses READ_MEDIA_IMAGES + READ_MEDIA_VIDEO separately.
+      // Older Android uses READ_EXTERNAL_STORAGE (Permission.storage).
+      // Request all three; at least one media permission must be accessible.
+      final results = await [
+        Permission.storage,
+        Permission.photos,
+        Permission.videos,
+      ].request();
+      final storageOk = results[Permission.storage]?.isGranted ?? false;
+      final photosOk = _isMediaAccessible(results[Permission.photos]);
+      final videosOk = _isMediaAccessible(results[Permission.videos]);
+      return storageOk || photosOk || videosOk;
+    } else if (Platform.isIOS) {
+      // iOS may grant limited (selected photos) access — treat as granted.
       final photosResult = await Permission.photos.request();
-
-      return cameraResult.isGranted &&
-          (storageResult.isGranted || photosResult.isGranted);
+      return _isMediaAccessible(photosResult);
     }
+    return true;
+  }
 
-    return cameraStatus.isGranted &&
-        (storageStatus.isGranted || photosStatus.isGranted);
+  // PermissionStatus.granted OR .limited both count as accessible.
+  static bool _isMediaAccessible(PermissionStatus? status) {
+    if (status == null) return false;
+    return status.isGranted || status.isLimited;
   }
 
   // Capturar vídeo da câmera

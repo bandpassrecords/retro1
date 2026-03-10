@@ -3,6 +3,8 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
+import '../services/timeline_prefs.dart';
+import '../widgets/monthly_calendar.dart';
 import '../widgets/thumbnail_grid.dart';
 import 'capture_screen.dart';
 import 'settings_screen.dart';
@@ -75,20 +77,20 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.photo_library_outlined),
-            selectedIcon: Icon(Icons.photo_library),
-            label: 'Timeline',
+          NavigationDestination(
+            icon: const Icon(Icons.photo_library_outlined),
+            selectedIcon: const Icon(Icons.photo_library),
+            label: l10n.timeline,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder),
-            label: 'Projects',
+          NavigationDestination(
+            icon: const Icon(Icons.folder_outlined),
+            selectedIcon: const Icon(Icons.folder),
+            label: l10n.projects,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.movie_creation_outlined),
-            selectedIcon: Icon(Icons.movie_creation),
-            label: 'Generate',
+          NavigationDestination(
+            icon: const Icon(Icons.movie_creation_outlined),
+            selectedIcon: const Icon(Icons.movie_creation),
+            label: l10n.generate,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),
@@ -112,7 +114,9 @@ class _TimelineTab extends StatefulWidget {
 
 class _TimelineTabState extends State<_TimelineTab> {
   final GlobalKey<ThumbnailGridState> _gridKey = GlobalKey<ThumbnailGridState>();
+  final GlobalKey<MonthlyCalendarState> _calendarKey = GlobalKey<MonthlyCalendarState>();
   bool _isRefreshing = false;
+  DateTime? _calendarSelectedDay;
 
   Future<void> _handleRefresh() async {
     setState(() => _isRefreshing = true);
@@ -120,6 +124,7 @@ class _TimelineTabState extends State<_TimelineTab> {
     if (mounted) {
       setState(() {});
       _gridKey.currentState?.refresh();
+      _calendarKey.currentState?.refresh();
     }
     if (mounted) setState(() => _isRefreshing = false);
   }
@@ -129,12 +134,17 @@ class _TimelineTabState extends State<_TimelineTab> {
     if (mounted) {
       setState(() {});
       _gridKey.currentState?.refresh();
+      _calendarKey.currentState?.refresh();
     }
   }
 
   void _goToToday() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _gridKey.currentState?.scrollToToday();
+      if (TimelinePrefs.current == TimelinePrefs.gridView) {
+        _gridKey.currentState?.scrollToToday();
+      } else {
+        _calendarKey.currentState?.focusOnToday();
+      }
     });
   }
 
@@ -277,11 +287,32 @@ class _TimelineTabState extends State<_TimelineTab> {
           ),
         ],
       ),
-      body: ThumbnailGrid(
-        key: _gridKey,
-        onEntryTap: (day, entry) => _openEntry(day, entry),
-        onEntryLongPress: (day, entry) => _showDayOptions(day, entry),
-        onEmptyDayTap: (day) => _openCapture(day),
+      body: ValueListenableBuilder<String?>(
+        valueListenable: TimelinePrefs.notifier,
+        builder: (context, view, _) {
+          if ((view ?? TimelinePrefs.calendarView) == TimelinePrefs.gridView) {
+            return ThumbnailGrid(
+              key: _gridKey,
+              onEntryTap: (day, entry) => _openEntry(day, entry),
+              onEntryLongPress: (day, entry) => _showDayOptions(day, entry),
+              onEmptyDayTap: (day) => _openCapture(day),
+            );
+          }
+          return MonthlyCalendar(
+            key: _calendarKey,
+            selectedDay: _calendarSelectedDay,
+            focusedMonth: today,
+            onDayTap: (day, entry) {
+              setState(() => _calendarSelectedDay = day);
+              if (entry != null) {
+                _showDayOptions(day, entry);
+              } else {
+                _openCapture(day);
+              }
+            },
+            onDayLongPress: (day, entry) => _showDayOptions(day, entry),
+          );
+        },
       ),
       floatingActionButton: hasTodayEntry
           ? null

@@ -700,6 +700,46 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get timelineViewTitle => 'Timeline View';
+
+  @override
+  String get calendarView => 'Calendar';
+
+  @override
+  String get gridView => 'Grid';
+
+  @override
+  String get mediaPickerTitle => 'Media Picker';
+
+  @override
+  String get customPicker => 'In-App Gallery';
+
+  @override
+  String get customPickerDescription => 'Browse your media inside the app';
+
+  @override
+  String get systemPicker => 'System Picker';
+
+  @override
+  String get systemPickerDescription =>
+      'Use the official Android/iOS media picker';
+
+  @override
+  String get thumbnailSizeTitle => 'Thumbnail Size';
+
+  @override
+  String get smallThumbnails => 'Small';
+
+  @override
+  String get largeThumbnails => 'Large';
+
+  @override
+  String get addBefore => 'Add before';
+
+  @override
+  String get addAfter => 'Add after';
+
+  @override
   String errorApplyingText(String error) {
     return 'Error applying text: $error';
   }

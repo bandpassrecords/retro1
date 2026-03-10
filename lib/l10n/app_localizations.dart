@@ -1384,6 +1384,84 @@ abstract class AppLocalizations {
   /// **'Error applying crop: {error}'**
   String errorApplyingCrop(String error);
 
+  /// No description provided for @timelineViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline View'**
+  String get timelineViewTitle;
+
+  /// No description provided for @calendarView.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendarView;
+
+  /// No description provided for @gridView.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get gridView;
+
+  /// No description provided for @mediaPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Media Picker'**
+  String get mediaPickerTitle;
+
+  /// No description provided for @customPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'In-App Gallery'**
+  String get customPicker;
+
+  /// No description provided for @customPickerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse your media inside the app'**
+  String get customPickerDescription;
+
+  /// No description provided for @systemPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'System Picker'**
+  String get systemPicker;
+
+  /// No description provided for @systemPickerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the official Android/iOS media picker'**
+  String get systemPickerDescription;
+
+  /// No description provided for @thumbnailSizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thumbnail Size'**
+  String get thumbnailSizeTitle;
+
+  /// No description provided for @smallThumbnails.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get smallThumbnails;
+
+  /// No description provided for @largeThumbnails.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get largeThumbnails;
+
+  /// No description provided for @addBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add before'**
+  String get addBefore;
+
+  /// No description provided for @addAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Add after'**
+  String get addAfter;
+
   /// No description provided for @errorApplyingText.
   ///
   /// In en, this message translates to:

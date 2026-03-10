@@ -3,6 +3,7 @@ import 'package:retro1/l10n/app_localizations.dart';
 import 'package:retro1/main.dart';
 import '../services/hive_service.dart';
 import '../services/notification_service.dart';
+import '../services/timeline_prefs.dart';
 import '../models/app_settings.dart';
 import 'video_generator_screen.dart';
 
@@ -103,6 +104,146 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           
+          // Vista da timeline
+          ValueListenableBuilder<String?>(
+            valueListenable: TimelinePrefs.notifier,
+            builder: (context, view, _) {
+              final current = view ?? TimelinePrefs.calendarView;
+              return ListTile(
+                title: Text(l10n.timelineViewTitle),
+                subtitle: Text(current == TimelinePrefs.gridView
+                    ? l10n.gridView
+                    : l10n.calendarView),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.timelineViewTitle),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<String>(
+                            title: Text(l10n.calendarView),
+                            value: TimelinePrefs.calendarView,
+                            groupValue: TimelinePrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              TimelinePrefs.set(value!);
+                            },
+                          ),
+                          RadioListTile<String>(
+                            title: Text(l10n.gridView),
+                            value: TimelinePrefs.gridView,
+                            groupValue: TimelinePrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              TimelinePrefs.set(value!);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
+          // Seletor de mídia
+          ValueListenableBuilder<String?>(
+            valueListenable: MediaPickerPrefs.notifier,
+            builder: (context, style, _) {
+              final current = style ?? MediaPickerPrefs.customPicker;
+              return ListTile(
+                title: Text(l10n.mediaPickerTitle),
+                subtitle: Text(current == MediaPickerPrefs.systemPicker
+                    ? l10n.systemPicker
+                    : l10n.customPicker),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.mediaPickerTitle),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<String>(
+                            title: Text(l10n.customPicker),
+                            subtitle: Text(l10n.customPickerDescription),
+                            value: MediaPickerPrefs.customPicker,
+                            groupValue: MediaPickerPrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              MediaPickerPrefs.set(value!);
+                            },
+                          ),
+                          RadioListTile<String>(
+                            title: Text(l10n.systemPicker),
+                            subtitle: Text(l10n.systemPickerDescription),
+                            value: MediaPickerPrefs.systemPicker,
+                            groupValue: MediaPickerPrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              MediaPickerPrefs.set(value!);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
+          // Tamanho das miniaturas
+          ValueListenableBuilder<String?>(
+            valueListenable: ThumbnailSizePrefs.notifier,
+            builder: (context, size, _) {
+              final current = size ?? ThumbnailSizePrefs.small;
+              return ListTile(
+                title: Text(l10n.thumbnailSizeTitle),
+                subtitle: Text(current == ThumbnailSizePrefs.large
+                    ? l10n.largeThumbnails
+                    : l10n.smallThumbnails),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.thumbnailSizeTitle),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<String>(
+                            title: Text(l10n.smallThumbnails),
+                            value: ThumbnailSizePrefs.small,
+                            groupValue: ThumbnailSizePrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              ThumbnailSizePrefs.set(value!);
+                            },
+                          ),
+                          RadioListTile<String>(
+                            title: Text(l10n.largeThumbnails),
+                            value: ThumbnailSizePrefs.large,
+                            groupValue: ThumbnailSizePrefs.current,
+                            onChanged: (value) {
+                              Navigator.pop(context);
+                              ThumbnailSizePrefs.set(value!);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+
           // Idioma
           _buildSectionHeader(l10n.language),
           ListTile(

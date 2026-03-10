@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../models/daily_entry.dart';
 import '../services/hive_service.dart';
+import '../services/timeline_prefs.dart';
 
 /// Full-screen grid of days from the first recorded entry through today.
 /// Filled days show a thumbnail; empty days show a tappable placeholder.
@@ -96,11 +98,13 @@ class ThumbnailGridState extends State<ThumbnailGrid> {
     // Total items = load-more button (1) + day cells
     final itemCount = days.length + 1;
 
-    return GridView.builder(
+    return ValueListenableBuilder<String?>(
+      valueListenable: ThumbnailSizePrefs.notifier,
+      builder: (context, _, __) => GridView.builder(
       controller: _scrollController,
       padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ThumbnailSizePrefs.crossAxisCount,
         crossAxisSpacing: 1,
         mainAxisSpacing: 1,
         childAspectRatio: 1,
@@ -129,6 +133,7 @@ class ThumbnailGridState extends State<ThumbnailGrid> {
           );
         }
       },
+    ),
     );
   }
 }
@@ -300,15 +305,15 @@ class _LoadMoreButton extends StatelessWidget {
       onTap: onTap,
       child: ColoredBox(
         color: Colors.grey[850]!,
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.keyboard_arrow_up, color: Colors.white70, size: 20),
-              SizedBox(height: 2),
+              const Icon(Icons.keyboard_arrow_up, color: Colors.white70, size: 20),
+              const SizedBox(height: 2),
               Text(
-                'Load more',
-                style: TextStyle(
+                AppLocalizations.of(context)!.loadMoreDays,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,

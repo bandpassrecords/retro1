@@ -6,6 +6,7 @@ import 'package:retro1/l10n/app_localizations.dart' show AppLocalizations;
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/hive_service.dart';
+import 'services/timeline_prefs.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,12 @@ void main() async {
   
   // Inicializar Hive
   await HiveService.init();
-  
+
+  // Inicializar preferências de visualização
+  await TimelinePrefs.init();
+  await ThumbnailSizePrefs.init();
+  await MediaPickerPrefs.init();
+
   // Inicializar notificações
   await NotificationService.init();
   

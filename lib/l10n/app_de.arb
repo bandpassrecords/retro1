@@ -385,6 +385,19 @@
       }
     }
   },
+  "timelineViewTitle": "Zeitstrahl-Ansicht",
+  "calendarView": "Kalender",
+  "gridView": "Raster",
+  "mediaPickerTitle": "Medienauswahl",
+  "customPicker": "In-App-Galerie",
+  "customPickerDescription": "Medien direkt in der App durchsuchen",
+  "systemPicker": "System-Auswahl",
+  "systemPickerDescription": "Offiziellen Android/iOS-Medienauswähler verwenden",
+  "thumbnailSizeTitle": "Miniaturbildgröße",
+  "smallThumbnails": "Klein",
+  "largeThumbnails": "Groß",
+  "addBefore": "Vorher hinzufügen",
+  "addAfter": "Danach hinzufügen",
   "errorApplyingText": "Fehler beim Anwenden des Textes: {error}",
   "@errorApplyingText": {
     "placeholders": {

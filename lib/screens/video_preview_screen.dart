@@ -34,13 +34,19 @@ class VideoPreviewScreen extends StatefulWidget {
   State<VideoPreviewScreen> createState() => _VideoPreviewScreenState();
 }
 
-class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
+class _VideoPreviewScreenState extends State<VideoPreviewScreen>
+    with SingleTickerProviderStateMixin {
   late List<DailyEntry> _entries;
   late int _currentIndex;
 
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _isPhoto = false;
+
+  // Swipe animation
+  late AnimationController _slideController;
+  double _dragOffset = 0.0;
+  bool _isAnimating = false;
 
   DailyEntry get _current => _entries[_currentIndex];
 
@@ -49,8 +55,12 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     super.initState();
     _entries = widget.allEntries ?? [widget.entry];
     _currentIndex = widget.initialIndex.clamp(0, _entries.length - 1);
+    _slideController = AnimationController(vsync: this);
+    _slideController.addListener(_onSlideControllerUpdate);
     _loadEntry();
   }
+
+  void _onSlideControllerUpdate() => setState(() {});
 
   void _loadEntry() {
     _controller?.dispose();
@@ -91,6 +101,8 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
   @override
   void dispose() {
+    _slideController.removeListener(_onSlideControllerUpdate);
+    _slideController.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -106,27 +118,94 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     });
   }
 
-  void _goToPrev() {
-    if (_currentIndex > 0) {
-      setState(() => _currentIndex--);
-      _loadEntry();
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (_isAnimating) return;
+    final atStart = _currentIndex == 0;
+    final atEnd = _currentIndex == _entries.length - 1;
+    var delta = details.delta.dy;
+    // Add resistance when swiping past the first or last entry
+    if ((atEnd && delta < 0) || (atStart && delta > 0)) {
+      delta *= 0.2;
     }
+    setState(() => _dragOffset += delta);
   }
 
-  void _goToNext() {
-    if (_currentIndex < _entries.length - 1) {
-      setState(() => _currentIndex++);
-      _loadEntry();
-    }
-  }
-
-  void _handleHorizontalDragEnd(DragEndDetails details) {
+  void _onVerticalDragEnd(DragEndDetails details) {
+    if (_isAnimating) return;
     final velocity = details.primaryVelocity ?? 0;
-    if (velocity > 300) {
-      _goToPrev(); // swipe right → older
-    } else if (velocity < -300) {
-      _goToNext(); // swipe left → newer
+    final screenH = MediaQuery.sizeOf(context).height;
+    final threshold = screenH * 0.25;
+
+    final goNext = (velocity < -500 || _dragOffset < -threshold) &&
+        _currentIndex < _entries.length - 1;
+    final goPrev = (velocity > 500 || _dragOffset > threshold) &&
+        _currentIndex > 0;
+
+    if (goNext) {
+      _completeSlide(goNext: true);
+    } else if (goPrev) {
+      _completeSlide(goNext: false);
+    } else {
+      _snapBack();
     }
+  }
+
+  void _completeSlide({required bool goNext}) {
+    _isAnimating = true;
+    final screenH = MediaQuery.sizeOf(context).height;
+    final slideOutTarget = goNext ? -screenH : screenH;
+
+    // Phase 1: slide current content off screen
+    _slideController.duration = const Duration(milliseconds: 180);
+    final phase1 = Tween<double>(begin: _dragOffset, end: slideOutTarget)
+        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeIn));
+
+    void p1Listener() => _dragOffset = phase1.value;
+    _slideController.addListener(p1Listener);
+    _slideController.forward(from: 0).whenComplete(() {
+      _slideController.removeListener(p1Listener);
+
+      // Load new entry; position off screen on the opposite side
+      setState(() {
+        if (goNext) _currentIndex++;
+        else _currentIndex--;
+        _dragOffset = -slideOutTarget;
+      });
+      _loadEntry();
+
+      // Phase 2: slide new content in from opposite side
+      _slideController.duration = const Duration(milliseconds: 250);
+      final phase2 = Tween<double>(begin: _dragOffset, end: 0.0)
+          .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+
+      void p2Listener() => _dragOffset = phase2.value;
+      _slideController.addListener(p2Listener);
+      _slideController.forward(from: 0).whenComplete(() {
+        _slideController.removeListener(p2Listener);
+        setState(() {
+          _dragOffset = 0.0;
+          _isAnimating = false;
+        });
+      });
+    });
+  }
+
+  void _snapBack() {
+    _isAnimating = true;
+    _slideController.duration = const Duration(milliseconds: 350);
+    final anim = Tween<double>(begin: _dragOffset, end: 0.0).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
+    );
+
+    void listener() => _dragOffset = anim.value;
+    _slideController.addListener(listener);
+    _slideController.forward(from: 0).whenComplete(() {
+      _slideController.removeListener(listener);
+      setState(() {
+        _dragOffset = 0.0;
+        _isAnimating = false;
+      });
+    });
   }
 
   Future<void> _replace() async {
@@ -242,8 +321,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         ],
       ),
       body: GestureDetector(
-        onHorizontalDragEnd: _handleHorizontalDragEnd,
-        child: _isInitialized
+        onVerticalDragUpdate: _isAnimating ? null : _onVerticalDragUpdate,
+        onVerticalDragEnd: _isAnimating ? null : _onVerticalDragEnd,
+        child: Transform.translate(
+          offset: Offset(0, _dragOffset),
+          child: _isInitialized
             ? Column(
                 children: [
                   Expanded(
@@ -302,6 +384,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                 ],
               )
             : const Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
   }

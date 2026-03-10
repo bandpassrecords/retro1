@@ -704,6 +704,47 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get timelineViewTitle => 'Vista della Timeline';
+
+  @override
+  String get calendarView => 'Calendario';
+
+  @override
+  String get gridView => 'Griglia';
+
+  @override
+  String get mediaPickerTitle => 'Selettore Multimediale';
+
+  @override
+  String get customPicker => 'Galleria In-App';
+
+  @override
+  String get customPickerDescription =>
+      'Sfoglia i tuoi media all\'interno dell\'app';
+
+  @override
+  String get systemPicker => 'Selettore di Sistema';
+
+  @override
+  String get systemPickerDescription =>
+      'Usa il selettore multimediale ufficiale Android/iOS';
+
+  @override
+  String get thumbnailSizeTitle => 'Dimensione Miniature';
+
+  @override
+  String get smallThumbnails => 'Piccolo';
+
+  @override
+  String get largeThumbnails => 'Grande';
+
+  @override
+  String get addBefore => 'Aggiungi prima';
+
+  @override
+  String get addAfter => 'Aggiungi dopo';
+
+  @override
   String errorApplyingText(String error) {
     return 'Errore testo: $error';
   }

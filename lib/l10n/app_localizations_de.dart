@@ -707,6 +707,46 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get timelineViewTitle => 'Zeitstrahl-Ansicht';
+
+  @override
+  String get calendarView => 'Kalender';
+
+  @override
+  String get gridView => 'Raster';
+
+  @override
+  String get mediaPickerTitle => 'Medienauswahl';
+
+  @override
+  String get customPicker => 'In-App-Galerie';
+
+  @override
+  String get customPickerDescription => 'Medien direkt in der App durchsuchen';
+
+  @override
+  String get systemPicker => 'System-Auswahl';
+
+  @override
+  String get systemPickerDescription =>
+      'Offiziellen Android/iOS-Medienauswähler verwenden';
+
+  @override
+  String get thumbnailSizeTitle => 'Miniaturbildgröße';
+
+  @override
+  String get smallThumbnails => 'Klein';
+
+  @override
+  String get largeThumbnails => 'Groß';
+
+  @override
+  String get addBefore => 'Vorher hinzufügen';
+
+  @override
+  String get addAfter => 'Danach hinzufügen';
+
+  @override
   String errorApplyingText(String error) {
     return 'Fehler beim Anwenden des Textes: $error';
   }

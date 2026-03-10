@@ -125,12 +125,6 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.editPhoto),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
       ),
       body: _isProcessing
           ? const Center(child: CircularProgressIndicator())
@@ -195,6 +189,16 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: Text(l10n.done),
+                  ),
+                ),
               ],
             ),
     );
