@@ -366,6 +366,19 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     }
   }
 
+  Future<void> _onReorder(int oldIndex, int newIndex) async {
+    if (_project == null) return;
+    final items = List<ProjectMediaItem>.from(_mediaItems);
+    final item = items.removeAt(oldIndex);
+    final insertAt = newIndex.clamp(0, items.length);
+    items.insert(insertAt, item);
+    setState(() => _mediaItems = items);
+    await HiveService.reorderProjectMediaItems(
+      _project!.id,
+      items.map((e) => e.id).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -377,62 +390,40 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_project!.name),
-        actions: [
-          if (_mediaItems.isNotEmpty)
-            IconButton(
-              icon: _isGeneratingVideo
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.movie_creation),
-              onPressed: _isGeneratingVideo ? null : _renderProjectVideo,
-              tooltip: l10n.renderProjectVideo,
-            ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _addMediaAt(_mediaItems.length),
-            tooltip: l10n.addMedia,
-          ),
-        ],
       ),
-      body: _mediaItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_photo_alternate, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(l10n.noMediaItemsYet,
-                      style: const TextStyle(fontSize: 18, color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _addMediaAt(0),
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.addMedia),
+      body: _ProjectDragGrid(
+        items: _mediaItems,
+        onTap: (item, index) => _showItemOptions(item, index),
+        onAddTap: () => _addMediaAt(_mediaItems.length),
+        onReorder: _onReorder,
+      ),
+      bottomNavigationBar: _mediaItems.isNotEmpty
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isGeneratingVideo ? null : _renderProjectVideo,
+                    icon: _isGeneratingVideo
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.movie_creation),
+                    label: Text(l10n.renderProjectVideo),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
-                ],
+                ),
               ),
             )
-          : GridView.builder(
-              padding: EdgeInsets.zero,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 1,
-                childAspectRatio: 1,
-              ),
-              itemCount: _mediaItems.length,
-              itemBuilder: (context, index) {
-                final item = _mediaItems[index];
-                return _ProjectMediaCell(
-                  item: item,
-                  index: index,
-                  onTap: () => _showItemOptions(item, index),
-                );
-              },
-            ),
+          : null,
     );
   }
 }
@@ -445,6 +436,7 @@ class _ProjectMediaCell extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ProjectMediaCell({
+    super.key,
     required this.item,
     required this.index,
     required this.onTap,
@@ -526,6 +518,137 @@ class _ProjectMediaCell extends StatelessWidget {
           size: 24,
         ),
       ),
+    );
+  }
+}
+
+// ── Add placeholder cell ────────────────────────────────────────────────────
+
+class _AddPlaceholderCell extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddPlaceholderCell({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ColoredBox(
+        color: Colors.grey[900]!,
+        child: Center(
+          child: Icon(Icons.add, color: Colors.grey[600], size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Drag-and-drop grid ──────────────────────────────────────────────────────
+
+class _ProjectDragGrid extends StatefulWidget {
+  final List<ProjectMediaItem> items;
+  final void Function(ProjectMediaItem item, int index) onTap;
+  final VoidCallback onAddTap;
+  final void Function(int oldIndex, int newIndex) onReorder;
+
+  const _ProjectDragGrid({
+    required this.items,
+    required this.onTap,
+    required this.onAddTap,
+    required this.onReorder,
+  });
+
+  @override
+  State<_ProjectDragGrid> createState() => _ProjectDragGridState();
+}
+
+class _ProjectDragGridState extends State<_ProjectDragGrid> {
+  int? _draggingIndex;
+  int? _hoverIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemCount = widget.items.length + 1; // +1 for "+" cell
+
+    return GridView.builder(
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 1,
+        mainAxisSpacing: 1,
+        childAspectRatio: 1,
+      ),
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        // "+" placeholder — not draggable
+        if (index == widget.items.length) {
+          return _AddPlaceholderCell(
+            key: const ValueKey('__add__'),
+            onTap: widget.onAddTap,
+          );
+        }
+
+        final item = widget.items[index];
+        final isDragging = _draggingIndex == index;
+        final isHovered = _hoverIndex == index && _draggingIndex != null && _draggingIndex != index;
+
+        return DragTarget<int>(
+          key: ValueKey(item.id),
+          onWillAcceptWithDetails: (details) => details.data != index,
+          onAcceptWithDetails: (details) {
+            setState(() => _hoverIndex = null);
+            widget.onReorder(details.data, index);
+          },
+          onMove: (_) => setState(() => _hoverIndex = index),
+          onLeave: (_) => setState(() => _hoverIndex = null),
+          builder: (context, candidateData, rejectedData) {
+            return LongPressDraggable<int>(
+              data: index,
+              delay: const Duration(milliseconds: 300),
+              onDragStarted: () => setState(() => _draggingIndex = index),
+              onDragEnd: (_) => setState(() {
+                _draggingIndex = null;
+                _hoverIndex = null;
+              }),
+              onDraggableCanceled: (_, __) => setState(() {
+                _draggingIndex = null;
+                _hoverIndex = null;
+              }),
+              feedback: SizedBox(
+                width: MediaQuery.of(context).size.width / 3 - 1,
+                height: MediaQuery.of(context).size.width / 3 - 1,
+                child: Opacity(
+                  opacity: 0.85,
+                  child: _ProjectMediaCell(item: item, index: index, onTap: () {}),
+                ),
+              ),
+              childWhenDragging: ColoredBox(
+                color: Colors.grey[850]!,
+                child: Center(
+                  child: Icon(Icons.drag_indicator, color: Colors.grey[700], size: 24),
+                ),
+              ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: isHovered
+                    ? BoxDecoration(
+                        border: Border.all(color: Colors.deepPurpleAccent, width: 2),
+                      )
+                    : null,
+                child: Opacity(
+                  opacity: isDragging ? 0.4 : 1.0,
+                  child: _ProjectMediaCell(
+                    key: ValueKey('cell_${item.id}'),
+                    item: item,
+                    index: index,
+                    onTap: () => widget.onTap(item, index),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

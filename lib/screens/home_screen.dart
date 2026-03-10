@@ -80,10 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: Icon(Icons.photo_library),
             label: 'Timeline',
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.folder_outlined),
-            selectedIcon: const Icon(Icons.folder),
-            label: l10n.freeProjects,
+          const NavigationDestination(
+            icon: Icon(Icons.folder_outlined),
+            selectedIcon: Icon(Icons.folder),
+            label: 'Projects',
           ),
           const NavigationDestination(
             icon: Icon(Icons.movie_creation_outlined),
@@ -244,6 +244,7 @@ class _TimelineTabState extends State<_TimelineTab> {
 
     return Scaffold(
       appBar: AppBar(
+        title: Image.asset('assets/icons/app_icon.png', height: 32),
         actions: [
           IconButton(
             icon: _isRefreshing
@@ -276,40 +277,22 @@ class _TimelineTabState extends State<_TimelineTab> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ThumbnailGrid(
-              key: _gridKey,
-              onEntryTap: (day, entry) => _openEntry(day, entry),
-              onEntryLongPress: (day, entry) => _showDayOptions(day, entry),
-              onEmptyDayTap: (day) => _openCapture(day),
-            ),
-          ),
-          if (!hasTodayEntry)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildQuickActionButton(l10n),
-            ),
-        ],
+      body: ThumbnailGrid(
+        key: _gridKey,
+        onEntryTap: (day, entry) => _openEntry(day, entry),
+        onEntryLongPress: (day, entry) => _showDayOptions(day, entry),
+        onEmptyDayTap: (day) => _openCapture(day),
       ),
-    );
-  }
-
-  Widget _buildQuickActionButton(AppLocalizations l10n) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () => _openCapture(DateTime.now()),
-        icon: const Icon(Icons.camera_alt),
-        label: Text(l10n.recordToday),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
+      floatingActionButton: hasTodayEntry
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _openCapture(DateTime.now()),
+              tooltip: l10n.recordToday,
+              backgroundColor: const Color(0xFF66BB6A),
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
