@@ -61,8 +61,12 @@ class _CustomGalleryPickerScreenState
       _hasMore = true;
     });
 
+    // Clear cached album data so new media is always visible
+    await PhotoManager.clearFileCache();
+
     final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) {
+    // hasAccess covers both 'authorized' and 'limited' (Android 14+ partial access)
+    if (!permission.hasAccess) {
       setState(() {
         _hasPermission = false;
         _isLoading = false;
@@ -117,7 +121,16 @@ class _CustomGalleryPickerScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.selectFromGallery)),
+      appBar: AppBar(
+        title: Text(l10n.selectFromGallery),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: l10n.refresh,
+            onPressed: _loadAssets,
+          ),
+        ],
+      ),
       body: _buildBody(l10n),
     );
   }
@@ -137,7 +150,15 @@ class _CustomGalleryPickerScreenState
             Text(l10n.permissionDenied, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => PhotoManager.openSetting(),
+              onPressed: _loadAssets,
+              child: Text(l10n.refresh),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () async {
+                await PhotoManager.openSetting();
+                await _loadAssets();
+              },
               child: Text(l10n.openSettings),
             ),
           ],
