@@ -11,6 +11,7 @@ import '../services/notification_service.dart';
 import 'editor_screen.dart';
 import 'photo_edit_daily_screen.dart';
 import 'custom_gallery_picker_screen.dart';
+import 'video_trimmer_screen.dart';
 
 class CaptureScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -47,9 +48,19 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
+  bool get _isToday {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selected = DateTime(
+        widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day);
+    return selected == today;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isToday = _isToday;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -67,20 +78,23 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  _buildCaptureOption(
-                    icon: Icons.videocam,
-                    label: l10n.recordVideo,
-                    color: Colors.grey[700]!,
-                    onTap: _captureVideo,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildCaptureOption(
-                    icon: Icons.camera_alt,
-                    label: l10n.takePhoto,
-                    color: Colors.grey[700]!,
-                    onTap: _capturePhoto,
-                  ),
-                  const SizedBox(height: 16),
+                  // Camera options only available for today
+                  if (isToday) ...[
+                    _buildCaptureOption(
+                      icon: Icons.videocam,
+                      label: l10n.recordVideo,
+                      color: Colors.grey[700]!,
+                      onTap: _captureVideo,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCaptureOption(
+                      icon: Icons.camera_alt,
+                      label: l10n.takePhoto,
+                      color: Colors.grey[700]!,
+                      onTap: _capturePhoto,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _buildCaptureOption(
                     icon: Icons.photo_library,
                     label: l10n.browseGallery,
@@ -121,11 +135,23 @@ class _CaptureScreenState extends State<CaptureScreen> {
     setState(() => _isProcessing = true);
     try {
       final video = await MediaService.captureVideo();
-      if (video != null && mounted) {
-        await _processMedia(video.path, 'video');
-      } else if (mounted) {
-        _showError(AppLocalizations.of(context)!.noVideoCaptured);
+      if (video == null || !mounted) {
+        if (mounted) _showError(AppLocalizations.of(context)!.noVideoCaptured);
+        return;
       }
+      setState(() => _isProcessing = false);
+
+      // Trim before importing
+      final trimmedPath = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoTrimmerScreen(videoPath: video.path),
+        ),
+      );
+      if (trimmedPath == null || !mounted) return;
+
+      setState(() => _isProcessing = true);
+      await _processMedia(trimmedPath, 'video', alreadyTrimmed: true);
     } catch (e) {
       if (mounted) {
         _showError(AppLocalizations.of(context)!.errorCapturingVideo(e.toString()));
@@ -162,7 +188,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
       result = await Navigator.push<GalleryPickerResult>(
         context,
         MaterialPageRoute(
-          builder: (_) => const CustomGalleryPickerScreen(),
+          builder: (_) => CustomGalleryPickerScreen(
+            filterDate: widget.selectedDate,
+          ),
         ),
       );
     }
@@ -171,7 +199,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
     setState(() => _isProcessing = true);
     try {
-      await _processMedia(result.path, result.mediaType);
+      // Videos from the gallery are always pre-trimmed by VideoTrimmerScreen.
+      await _processMedia(
+        result.path,
+        result.mediaType,
+        alreadyTrimmed: result.mediaType == 'video',
+      );
     } catch (e) {
       if (mounted) {
         _showError(AppLocalizations.of(context)!.errorSelectingMedia(e.toString()));
@@ -210,8 +243,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
     try {
       if (choice == 'video') {
         final file = await MediaService.pickVideoFromGallery();
-        if (file == null) return null;
-        return GalleryPickerResult(path: file.path, mediaType: 'video');
+        if (file == null || !mounted) return null;
+        // Trim before importing
+        final trimmedPath = await Navigator.push<String>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VideoTrimmerScreen(videoPath: file.path),
+          ),
+        );
+        if (trimmedPath == null) return null;
+        return GalleryPickerResult(path: trimmedPath, mediaType: 'video');
       } else {
         final file = await MediaService.pickPhotoFromGallery();
         if (file == null) return null;
@@ -222,7 +263,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
-  Future<void> _processMedia(String mediaPath, String mediaType) async {
+  Future<void> _processMedia(
+    String mediaPath,
+    String mediaType, {
+    bool alreadyTrimmed = false,
+  }) async {
     try {
       // Check if entry already exists for this day
       final existingEntry = HiveService.getEntryByDate(widget.selectedDate);
@@ -269,7 +314,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
       await NotificationService.checkAndCancelNotificationsForDate(entry.date);
 
       if (mounted) {
-        if (mediaType == 'video') {
+        if (mediaType == 'video' && !alreadyTrimmed) {
+          // Long-form video not yet trimmed: open the editor so the user can
+          // pick which second to keep (legacy path, e.g. direct camera imports
+          // that skipped the trimmer screen for some reason).
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -277,13 +325,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   EditorScreen(entry: entry, isNewEntry: true),
             ),
           );
-        } else {
+        } else if (mediaType == 'photo') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => PhotoEditDailyScreen(entry: entry),
             ),
           );
+        } else {
+          // Video already trimmed to 1 second — go back to the previous screen.
+          Navigator.pop(context, true);
         }
       }
     } catch (e) {
