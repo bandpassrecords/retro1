@@ -405,5 +405,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Citation inspirante quotidienne",
+  "notificationUseQuotesDescription": "Afficher une citation motivante dans la notification au lieu du message par défaut"
 }

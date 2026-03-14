@@ -7,6 +7,7 @@ import 'package:retro1/l10n/app_localizations.dart' show AppLocalizations;
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/hive_service.dart';
+import 'services/quote_service.dart';
 import 'services/timeline_prefs.dart';
 
 void main() async {
@@ -18,6 +19,9 @@ void main() async {
   
   // Inicializar Hive
   await HiveService.init();
+
+  // Inicializar serviço de frases (depende do Hive)
+  await QuoteService.init();
 
   // Inicializar preferências de visualização
   await TimelinePrefs.init();

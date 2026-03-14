@@ -750,4 +750,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String errorApplyingText(String error) {
     return 'Fehler beim Anwenden des Textes: $error';
   }
+
+  @override
+  String get notificationUseQuotes => 'Tägliches inspirierendes Zitat';
+
+  @override
+  String get notificationUseQuotesDescription =>
+      'Ein motivierendes Zitat in der Benachrichtigung anzeigen statt der Standardnachricht';
 }

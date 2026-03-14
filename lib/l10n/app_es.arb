@@ -402,5 +402,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Frase inspiradora diaria",
+  "notificationUseQuotesDescription": "Mostrar una frase motivacional en la notificación en lugar del mensaje predeterminado"
 }

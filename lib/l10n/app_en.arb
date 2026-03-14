@@ -435,5 +435,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Daily inspirational quote",
+  "notificationUseQuotesDescription": "Show a motivational quote in the notification instead of the default message"
 }

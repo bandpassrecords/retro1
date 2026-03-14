@@ -1467,6 +1467,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error applying text: {error}'**
   String errorApplyingText(String error);
+
+  /// No description provided for @notificationUseQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily inspirational quote'**
+  String get notificationUseQuotes;
+
+  /// No description provided for @notificationUseQuotesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a motivational quote in the notification instead of the default message'**
+  String get notificationUseQuotesDescription;
 }
 
 class _AppLocalizationsDelegate

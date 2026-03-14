@@ -747,4 +747,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorApplyingText(String error) {
     return 'Error al aplicar texto: $error';
   }
+
+  @override
+  String get notificationUseQuotes => 'Frase inspiradora diaria';
+
+  @override
+  String get notificationUseQuotesDescription =>
+      'Mostrar una frase motivacional en la notificación en lugar del mensaje predeterminado';
 }

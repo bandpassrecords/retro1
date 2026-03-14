@@ -748,4 +748,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String errorApplyingText(String error) {
     return 'Errore testo: $error';
   }
+
+  @override
+  String get notificationUseQuotes => 'Citazione inspirazionale giornaliera';
+
+  @override
+  String get notificationUseQuotesDescription =>
+      'Mostrare una citazione motivazionale nella notifica invece del messaggio predefinito';
 }

@@ -38,6 +38,9 @@ class AppSettings extends HiveObject {
   @HiveField(10)
   double? lastCalendarScrollPosition; // Posição de scroll do calendário
 
+  @HiveField(11)
+  bool notificationUseQuotes; // true = frase do dia, false = mensagem padrão
+
   AppSettings({
     this.notificationHour = 20,
     this.notificationMinute = 0,
@@ -50,6 +53,7 @@ class AppSettings extends HiveObject {
     this.showDateOverlay = true,
     this.reminderDelayHours = 3,
     this.lastCalendarScrollPosition,
+    this.notificationUseQuotes = true,
   });
 
   // Getter para lastCalendarScrollPosition com valor padrão

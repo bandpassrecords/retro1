@@ -405,5 +405,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Tägliches inspirierendes Zitat",
+  "notificationUseQuotesDescription": "Ein motivierendes Zitat in der Benachrichtigung anzeigen statt der Standardnachricht"
 }

@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../services/hive_service.dart';
+import '../services/quote_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -349,7 +350,15 @@ class NotificationService {
     final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
     final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
     final notificationTitle = _getLocalizedString('notificationTitle', language);
-    final notificationBody = _getLocalizedString('notificationBody', language);
+
+    // Corpo da notificação: frase do dia ou mensagem padrão
+    final String notificationBody;
+    if (settings.notificationUseQuotes) {
+      final quote = QuoteService.getQuoteForDate(scheduledDate);
+      notificationBody = '${quote.text}\n\n— ${quote.author}';
+    } else {
+      notificationBody = _getLocalizedString('notificationBody', language);
+    }
 
     final androidDetails = AndroidNotificationDetails(
       'daily_reminder',
