@@ -35,7 +35,7 @@ class VideoPreviewScreen extends StatefulWidget {
 }
 
 class _VideoPreviewScreenState extends State<VideoPreviewScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late List<DailyEntry> _entries;
   late int _currentIndex;
 
@@ -43,10 +43,19 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
   bool _isInitialized = false;
   bool _isPhoto = false;
 
-  // Swipe animation
+  // Horizontal swipe animation
   late AnimationController _slideController;
   double _dragOffset = 0.0;
   bool _isAnimating = false;
+
+  // Photo zoom tracking
+  late TransformationController _transformController;
+  bool _isZoomedIn = false;
+
+  // Swipe hint (shown once per session when there are multiple entries)
+  static bool _hintShownThisSession = false;
+  late AnimationController _hintController;
+  bool _showSwipeHint = false;
 
   DailyEntry get _current => _entries[_currentIndex];
 
@@ -55,9 +64,44 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     super.initState();
     _entries = widget.allEntries ?? [widget.entry];
     _currentIndex = widget.initialIndex.clamp(0, _entries.length - 1);
+
     _slideController = AnimationController(vsync: this);
     _slideController.addListener(_onSlideControllerUpdate);
+
+    _transformController = TransformationController();
+    _transformController.addListener(_onTransformChanged);
+
+    _hintController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
     _loadEntry();
+
+    if (_entries.length > 1 && !_hintShownThisSession) {
+      _hintShownThisSession = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _triggerSwipeHint());
+    }
+  }
+
+  void _triggerSwipeHint() {
+    if (!mounted) return;
+    setState(() => _showSwipeHint = true);
+    _hintController.repeat(reverse: true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _hintController.stop();
+        setState(() => _showSwipeHint = false);
+      }
+    });
+  }
+
+  void _onTransformChanged() {
+    final scale = _transformController.value.getMaxScaleOnAxis();
+    final zoomed = scale > 1.01;
+    if (zoomed != _isZoomedIn) {
+      setState(() => _isZoomedIn = zoomed);
+    }
   }
 
   void _onSlideControllerUpdate() => setState(() {});
@@ -67,6 +111,10 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     _controller = null;
     _isInitialized = false;
     _isPhoto = _current.mediaType == 'photo';
+
+    // Reset zoom when changing entries
+    _transformController.value = Matrix4.identity();
+    _isZoomedIn = false;
 
     if (_isPhoto) {
       setState(() => _isInitialized = true);
@@ -103,6 +151,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
   void dispose() {
     _slideController.removeListener(_onSlideControllerUpdate);
     _slideController.dispose();
+    _transformController.removeListener(_onTransformChanged);
+    _transformController.dispose();
+    _hintController.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -118,26 +169,30 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     });
   }
 
-  void _onVerticalDragUpdate(DragUpdateDetails details) {
-    if (_isAnimating) return;
+  bool get _canSwipe => !_isAnimating && !(_isPhoto && _isZoomedIn);
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (!_canSwipe) return;
     final atStart = _currentIndex == 0;
     final atEnd = _currentIndex == _entries.length - 1;
-    var delta = details.delta.dy;
-    // Add resistance when swiping past the first or last entry
+    var delta = details.delta.dx;
+    // Resistance at boundaries
     if ((atEnd && delta < 0) || (atStart && delta > 0)) {
       delta *= 0.2;
     }
     setState(() => _dragOffset += delta);
   }
 
-  void _onVerticalDragEnd(DragEndDetails details) {
-    if (_isAnimating) return;
-    final velocity = details.primaryVelocity ?? 0;
-    final screenH = MediaQuery.sizeOf(context).height;
-    final threshold = screenH * 0.25;
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    if (!_canSwipe) return;
+    final velocity = details.velocity.pixelsPerSecond.dx;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final threshold = screenW * 0.25;
 
+    // Swipe left (negative dx) → go to next entry
     final goNext = (velocity < -500 || _dragOffset < -threshold) &&
         _currentIndex < _entries.length - 1;
+    // Swipe right (positive dx) → go to previous entry
     final goPrev = (velocity > 500 || _dragOffset > threshold) &&
         _currentIndex > 0;
 
@@ -152,10 +207,9 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
 
   void _completeSlide({required bool goNext}) {
     _isAnimating = true;
-    final screenH = MediaQuery.sizeOf(context).height;
-    final slideOutTarget = goNext ? -screenH : screenH;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final slideOutTarget = goNext ? -screenW : screenW;
 
-    // Phase 1: slide current content off screen
     _slideController.duration = const Duration(milliseconds: 180);
     final phase1 = Tween<double>(begin: _dragOffset, end: slideOutTarget)
         .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeIn));
@@ -165,15 +219,12 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     _slideController.forward(from: 0).whenComplete(() {
       _slideController.removeListener(p1Listener);
 
-      // Load new entry; position off screen on the opposite side
       setState(() {
-        if (goNext) _currentIndex++;
-        else _currentIndex--;
+        if (goNext) { _currentIndex++; } else { _currentIndex--; }
         _dragOffset = -slideOutTarget;
       });
       _loadEntry();
 
-      // Phase 2: slide new content in from opposite side
       _slideController.duration = const Duration(milliseconds: 250);
       final phase2 = Tween<double>(begin: _dragOffset, end: 0.0)
           .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
@@ -242,7 +293,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
 
     if (!mounted) return;
 
-    // If there are adjacent entries, move to one; otherwise pop.
     if (_entries.length > 1) {
       final entry = _current;
       setState(() {
@@ -282,7 +332,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
                         PhotoEditDailyScreen(entry: _current),
                   ),
                 ).then((_) {
-                  // Reload entry from storage in case it was edited
                   final updated = HiveService.getEntry(_current.id);
                   if (updated != null && mounted) {
                     setState(() {
@@ -292,7 +341,6 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
                 });
               },
             ),
-          // 3-dot menu: Replace + Delete
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'replace') _replace();
@@ -321,69 +369,33 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
         ],
       ),
       body: GestureDetector(
-        onVerticalDragUpdate: _isAnimating ? null : _onVerticalDragUpdate,
-        onVerticalDragEnd: _isAnimating ? null : _onVerticalDragEnd,
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragUpdate: _onHorizontalDragUpdate,
+        onHorizontalDragEnd: _onHorizontalDragEnd,
         child: Transform.translate(
-          offset: Offset(0, _dragOffset),
+          offset: Offset(_dragOffset, 0),
           child: _isInitialized
-            ? Column(
-                children: [
-                  Expanded(
-                    child: Center(
+              ? Stack(
+                  children: [
+                    // Media fills the full body
+                    Positioned.fill(
                       child: _isPhoto
                           ? _buildPhotoPreview()
                           : _buildVideoPreview(),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          DateFormat.yMMMMd(locale.toString())
-                              .format(_current.date),
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        if (_current.caption != null &&
-                            _current.caption!.isNotEmpty)
-                          Text(_current.caption!,
-                              style: TextStyle(color: Colors.grey[600])),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              _current.mediaType == 'video'
-                                  ? Icons.videocam
-                                  : Icons.camera_alt,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _current.mediaType == 'video'
-                                  ? l10n.video
-                                  : l10n.photo,
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                            if (_entries.length > 1) ...[
-                              const Spacer(),
-                              Text(
-                                '${_currentIndex + 1} / ${_entries.length}',
-                                style: TextStyle(
-                                    color: Colors.grey[500], fontSize: 12),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
+                    // Info + metadata gradient overlay at bottom
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _buildInfoOverlay(l10n, locale),
                     ),
-                  ),
-                ],
-              )
-            : const Center(child: CircularProgressIndicator()),
+                    // Swipe hint (first time, multiple entries)
+                    if (_showSwipeHint && _entries.length > 1)
+                      Positioned.fill(child: _buildSwipeHintOverlay()),
+                  ],
+                )
+              : const Center(child: CircularProgressIndicator()),
         ),
       ),
     );
@@ -429,10 +441,18 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     }
 
     return InteractiveViewer(
-      minScale: 0.5,
+      transformationController: _transformController,
+      // Only enable pan when zoomed in; at scale 1.0, horizontal drag
+      // falls through to the parent GestureDetector for swipe navigation.
+      panEnabled: _isZoomedIn,
+      minScale: 1.0,
       maxScale: 4.0,
-      child: Image.file(imageFile, fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 64)),
+      child: Image.file(
+        imageFile,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.broken_image, size: 64),
+      ),
     );
   }
 
@@ -442,26 +462,133 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen>
     }
     return GestureDetector(
       onTap: _togglePlayPause,
-      child: AspectRatio(
-        aspectRatio: _controller!.value.aspectRatio,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            VideoPlayer(_controller!),
-            ValueListenableBuilder<VideoPlayerValue>(
-              valueListenable: _controller!,
-              builder: (_, value, __) => value.isPlaying
-                  ? const SizedBox.shrink()
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        shape: BoxShape.circle,
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: _controller!.value.aspectRatio,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              VideoPlayer(_controller!),
+              ValueListenableBuilder<VideoPlayerValue>(
+                valueListenable: _controller!,
+                builder: (_, value, __) => value.isPlaying
+                    ? const SizedBox.shrink()
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.play_circle_filled,
+                            size: 64, color: Colors.white),
                       ),
-                      child: const Icon(Icons.play_circle_filled,
-                          size: 64, color: Colors.white),
-                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoOverlay(AppLocalizations l10n, Locale locale) {
+    final fullDateStr =
+        DateFormat.yMMMMd(locale.toString()).format(_current.date);
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          16, 24, 16, MediaQuery.of(context).padding.bottom + 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            fullDateStr,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          if (_current.caption != null && _current.caption!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(_current.caption!,
+                  style: const TextStyle(color: Colors.white70)),
             ),
-          ],
+          Row(
+            children: [
+              Icon(
+                _current.mediaType == 'video'
+                    ? Icons.videocam
+                    : Icons.camera_alt,
+                size: 16,
+                color: Colors.white70,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _current.mediaType == 'video' ? l10n.video : l10n.photo,
+                style: const TextStyle(color: Colors.white70),
+              ),
+              if (_entries.length > 1) ...[
+                const Spacer(),
+                Text(
+                  '${_currentIndex + 1} / ${_entries.length}',
+                  style:
+                      const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSwipeHintOverlay() {
+    return IgnorePointer(
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _hintController,
+          builder: (_, __) {
+            final t = _hintController.value;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Transform.translate(
+                  offset: Offset(-24 * t, 0),
+                  child: const Icon(Icons.chevron_left,
+                      color: Colors.white, size: 40),
+                ),
+                const SizedBox(width: 8),
+                Opacity(
+                  opacity: 0.8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Text(
+                      'Swipe',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Transform.translate(
+                  offset: Offset(24 * t, 0),
+                  child: const Icon(Icons.chevron_right,
+                      color: Colors.white, size: 40),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

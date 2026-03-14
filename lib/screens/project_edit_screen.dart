@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:retro1/l10n/app_localizations.dart';
@@ -12,6 +11,7 @@ import '../services/media_service.dart';
 import '../services/timeline_prefs.dart';
 import '../services/video_editor_service.dart';
 import '../services/video_generator_service.dart';
+import 'custom_gallery_picker_screen.dart';
 import 'photo_edit_screen.dart';
 import 'video_edit_screen.dart';
 import 'video_preview_screen.dart';
@@ -28,7 +28,6 @@ class ProjectEditScreen extends StatefulWidget {
 class _ProjectEditScreenState extends State<ProjectEditScreen> {
   FreeProject? _project;
   List<ProjectMediaItem> _mediaItems = [];
-  final ImagePicker _picker = ImagePicker();
   bool _isGeneratingVideo = false;
 
   @override
@@ -50,32 +49,36 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   /// Pass [insertAtIndex] == _mediaItems.length to append at end.
   Future<void> _addMediaAt(int insertAtIndex) async {
     final l10n = AppLocalizations.of(context)!;
-    final source = await showDialog<String>(
+
+    // Same bottom-sheet picker as capture_screen
+    final source = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.addMedia),
-        content: Column(
+      builder: (ctx) => SafeArea(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: Text(l10n.takePhoto),
-              onTap: () => Navigator.pop(context, 'photo_camera'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: Text(l10n.photoFromGallery),
-              onTap: () => Navigator.pop(context, 'photo_gallery'),
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.videocam),
               title: Text(l10n.recordVideo),
-              onTap: () => Navigator.pop(context, 'video_camera'),
+              onTap: () => Navigator.pop(ctx, 'video_camera'),
             ),
             ListTile(
-              leading: const Icon(Icons.video_library),
-              title: Text(l10n.videoFromGallery),
-              onTap: () => Navigator.pop(context, 'video_gallery'),
+              leading: const Icon(Icons.camera_alt),
+              title: Text(l10n.takePhoto),
+              onTap: () => Navigator.pop(ctx, 'photo_camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(l10n.browseGallery),
+              onTap: () => Navigator.pop(ctx, 'gallery'),
             ),
           ],
         ),
@@ -85,31 +88,26 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     if (source == null || _project == null) return;
 
     try {
-      XFile? file;
+      String? filePath;
       String mediaType = 'photo';
 
-      switch (source) {
-        case 'photo_camera':
-          file = await _picker.pickImage(source: ImageSource.camera);
-          mediaType = 'photo';
-          break;
-        case 'photo_gallery':
-          file = await _picker.pickImage(source: ImageSource.gallery);
-          mediaType = 'photo';
-          break;
-        case 'video_camera':
-          file = await _picker.pickVideo(source: ImageSource.camera);
-          mediaType = 'video';
-          break;
-        case 'video_gallery':
-          file = await _picker.pickVideo(source: ImageSource.gallery);
-          mediaType = 'video';
-          break;
+      if (source == 'video_camera') {
+        final f = await MediaService.captureVideo();
+        filePath = f?.path;
+        mediaType = 'video';
+      } else if (source == 'photo_camera') {
+        final f = await MediaService.capturePhoto();
+        filePath = f?.path;
+        mediaType = 'photo';
+      } else if (source == 'gallery') {
+        final result = await _pickFromGallery();
+        filePath = result?.path;
+        mediaType = result?.mediaType ?? 'photo';
       }
 
-      if (file == null) return;
+      if (filePath == null) return;
 
-      final copiedPath = await MediaService.copyToAppDirectory(file.path);
+      final copiedPath = await MediaService.copyToAppDirectory(filePath);
       final bool isPhoto = mediaType == 'photo';
 
       String? videoPathForPhoto;
@@ -174,6 +172,54 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
           SnackBar(content: Text(AppLocalizations.of(context)!.errorAddingMedia(e.toString()))),
         );
       }
+    }
+  }
+
+  Future<GalleryPickerResult?> _pickFromGallery() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (MediaPickerPrefs.current == MediaPickerPrefs.systemPicker) {
+      // System picker: ask photo or video first
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: Text(l10n.videoFromGallery),
+                onTap: () => Navigator.pop(ctx, 'video'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: Text(l10n.photoFromGallery),
+                onTap: () => Navigator.pop(ctx, 'photo'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (choice == null) return null;
+      try {
+        if (choice == 'video') {
+          final f = await MediaService.pickVideoFromGallery();
+          if (f == null) return null;
+          return GalleryPickerResult(path: f.path, mediaType: 'video');
+        } else {
+          final f = await MediaService.pickPhotoFromGallery();
+          if (f == null) return null;
+          return GalleryPickerResult(path: f.path, mediaType: 'photo');
+        }
+      } catch (_) {
+        return null;
+      }
+    } else {
+      // Custom in-app gallery picker
+      if (!mounted) return null;
+      return await Navigator.push<GalleryPickerResult>(
+        context,
+        MaterialPageRoute(builder: (_) => const CustomGalleryPickerScreen()),
+      );
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -26,10 +27,12 @@ void main() async {
   // Inicializar notificações
   await NotificationService.init();
   
-  // Configurar orientação
+  // Allow all orientations (portraitDown excluded on iOS — unsupported on iPhone)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
+    if (!Platform.isIOS) DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
   
   runApp(const MyApp());
