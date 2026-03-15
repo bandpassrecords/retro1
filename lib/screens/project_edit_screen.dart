@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+import 'package:video_player/video_player.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/free_project.dart';
 import '../models/project_media_item.dart';
@@ -15,6 +16,7 @@ import 'custom_gallery_picker_screen.dart';
 import 'photo_edit_screen.dart';
 import 'video_edit_screen.dart';
 import 'video_preview_screen.dart';
+import 'video_trimmer_screen.dart';
 
 class ProjectEditScreen extends StatefulWidget {
   final String projectId;
@@ -90,11 +92,22 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     try {
       String? filePath;
       String mediaType = 'photo';
+      bool alreadyTrimmed = false;
 
       if (source == 'video_camera') {
         final f = await MediaService.captureVideo();
-        filePath = f?.path;
+        if (f == null || !mounted) return;
+        // Trim + crop before importing
+        final trimmedPath = await Navigator.push<String>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VideoTrimmerScreen(videoPath: f.path),
+          ),
+        );
+        if (trimmedPath == null || !mounted) return;
+        filePath = trimmedPath;
         mediaType = 'video';
+        alreadyTrimmed = true;
       } else if (source == 'photo_camera') {
         final f = await MediaService.capturePhoto();
         filePath = f?.path;
@@ -103,6 +116,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         final result = await _pickFromGallery();
         filePath = result?.path;
         mediaType = result?.mediaType ?? 'photo';
+        alreadyTrimmed = result?.mediaType == 'video';
       }
 
       if (filePath == null) return;
@@ -130,7 +144,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       final mediaItem = ProjectMediaItem(
         id: const Uuid().v4(),
         mediaType: mediaType,
-        originalPath: isPhoto ? copiedPath : copiedPath,
+        originalPath: copiedPath,
         editedPath: isPhoto ? videoPathForPhoto : null,
         startTimeMs: 0,
         durationMs: 1000,
@@ -139,10 +153,8 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         thumbnailPath: thumbnailPath,
       );
 
-      // Insert at the requested position and shift later items
       await HiveService.saveProjectMediaItem(mediaItem);
 
-      // Add to project and reorder so new item ends up at insertAtIndex
       final currentIds = List<String>.from(_project!.mediaItemIds);
       currentIds.insert(insertAtIndex, mediaItem.id);
       await HiveService.reorderProjectMediaItems(_project!.id, currentIds);
@@ -157,7 +169,8 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
               builder: (context) => PhotoEditScreen(mediaItem: mediaItem),
             ),
           ).then((_) => _loadProject());
-        } else {
+        } else if (!alreadyTrimmed) {
+          // Fallback: video not yet trimmed — open editor
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -165,6 +178,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             ),
           ).then((_) => _loadProject());
         }
+        // Already trimmed videos need no further editing
       }
     } catch (e) {
       if (mounted) {
@@ -203,8 +217,15 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       try {
         if (choice == 'video') {
           final f = await MediaService.pickVideoFromGallery();
-          if (f == null) return null;
-          return GalleryPickerResult(path: f.path, mediaType: 'video');
+          if (f == null || !mounted) return null;
+          final trimmedPath = await Navigator.push<String>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoTrimmerScreen(videoPath: f.path),
+            ),
+          );
+          if (trimmedPath == null) return null;
+          return GalleryPickerResult(path: trimmedPath, mediaType: 'video');
         } else {
           final f = await MediaService.pickPhotoFromGallery();
           if (f == null) return null;
@@ -286,10 +307,13 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         MaterialPageRoute(builder: (context) => PhotoEditScreen(mediaItem: item)),
       ).then((_) => _loadProject());
     } else {
+      final videoPath = item.editedPath ?? item.originalPath;
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => VideoEditScreen(mediaItem: item)),
-      ).then((_) => _loadProject());
+        MaterialPageRoute(
+          builder: (_) => _SimpleVideoPlayerScreen(videoPath: videoPath),
+        ),
+      );
     }
   }
 
@@ -703,6 +727,84 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
       },
         );
       },
+    );
+  }
+}
+
+// ── Simple video player screen ───────────────────────────────────────────────
+
+class _SimpleVideoPlayerScreen extends StatefulWidget {
+  final String videoPath;
+  const _SimpleVideoPlayerScreen({required this.videoPath});
+
+  @override
+  State<_SimpleVideoPlayerScreen> createState() =>
+      _SimpleVideoPlayerScreenState();
+}
+
+class _SimpleVideoPlayerScreenState extends State<_SimpleVideoPlayerScreen> {
+  late VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.file(File(widget.videoPath))
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() => _initialized = true);
+          _controller.setLooping(true);
+          _controller.play();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: _initialized
+            ? GestureDetector(
+                onTap: () => setState(() {
+                  _controller.value.isPlaying
+                      ? _controller.pause()
+                      : _controller.play();
+                }),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: _controller.value.aspectRatio,
+                      child: VideoPlayer(_controller),
+                    ),
+                    ValueListenableBuilder<VideoPlayerValue>(
+                      valueListenable: _controller,
+                      builder: (_, v, __) => AnimatedOpacity(
+                        opacity: v.isPlaying ? 0 : 0.7,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Icon(
+                          Icons.play_circle_fill,
+                          size: 72,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(),
+      ),
     );
   }
 }

@@ -6,8 +6,33 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
+class CropParams {
+  final int x, y, width, height;
+  final int outWidth, outHeight;
+  const CropParams({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.outWidth,
+    required this.outHeight,
+  });
+}
+
 class VideoEditorService {
   static const _uuid = Uuid();
+
+  static String _msToTimestamp(int ms) {
+    final seconds = ms ~/ 1000;
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+    final millis = ms % 1000;
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${secs.toString().padLeft(2, '0')}.'
+        '${millis.toString().padLeft(3, '0')}';
+  }
 
   // Obter duração do vídeo
   static Future<Duration?> getVideoDuration(String videoPath) async {
@@ -22,16 +47,17 @@ class VideoEditorService {
     }
   }
 
-  // Extrair 1 segundo do vídeo
+  // Extrair 1 segundo do vídeo (com crop opcional)
   static Future<String?> extractOneSecond({
     required String inputPath,
     required int startTimeMs,
+    CropParams? crop,
     String? outputPath,
   }) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final outputDir = Directory(path.join(appDir.path, 'clips'));
-      
+
       if (!await outputDir.exists()) {
         await outputDir.create(recursive: true);
       }
@@ -39,21 +65,17 @@ class VideoEditorService {
       final fileName = outputPath ?? '${_uuid.v4()}.mp4';
       final finalOutputPath = path.join(outputDir.path, fileName);
 
-      // Converter startTimeMs para formato HH:MM:SS.mmm
-      final seconds = startTimeMs ~/ 1000;
-      final hours = seconds ~/ 3600;
-      final minutes = (seconds % 3600) ~/ 60;
-      final secs = seconds % 60;
-      final ms = startTimeMs % 1000;
-      final startTime = '${hours.toString().padLeft(2, '0')}:'
-          '${minutes.toString().padLeft(2, '0')}:'
-          '${secs.toString().padLeft(2, '0')}.'
-          '${ms.toString().padLeft(3, '0')}';
+      final startTime = _msToTimestamp(startTimeMs);
 
-      // Comando FFmpeg para extrair 1 segundo
+      final vfArg = crop != null
+          ? '-vf "crop=${crop.width}:${crop.height}:${crop.x}:${crop.y},'
+              'scale=${crop.outWidth}:${crop.outHeight}:flags=lanczos,setsar=1" '
+          : '';
+
       final command = '-i "$inputPath" '
           '-ss $startTime '
           '-t 00:00:01.000 '
+          '$vfArg'
           '-c:v libx264 '
           '-c:a aac '
           '-preset fast '
