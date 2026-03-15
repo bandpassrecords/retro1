@@ -1270,6 +1270,24 @@ abstract class AppLocalizations {
   /// **'Browse Gallery'**
   String get browseGallery;
 
+  /// No description provided for @mediaFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get mediaFilterAll;
+
+  /// No description provided for @mediaFilterPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get mediaFilterPhotos;
+
+  /// No description provided for @mediaFilterVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get mediaFilterVideos;
+
   /// No description provided for @selectFromGallery.
   ///
   /// In en, this message translates to:

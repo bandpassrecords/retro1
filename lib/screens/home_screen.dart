@@ -317,6 +317,7 @@ class _TimelineTabState extends State<_TimelineTab> {
       floatingActionButton: hasTodayEntry
           ? null
           : FloatingActionButton(
+              heroTag: 'home_fab',
               onPressed: () => _openCapture(DateTime.now()),
               tooltip: l10n.recordToday,
               backgroundColor: const Color(0xFF66BB6A),

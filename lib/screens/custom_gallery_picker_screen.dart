@@ -25,6 +25,8 @@ class CustomGalleryPickerScreen extends StatefulWidget {
       _CustomGalleryPickerScreenState();
 }
 
+enum _MediaFilter { all, photos, videos }
+
 class _CustomGalleryPickerScreenState
     extends State<CustomGalleryPickerScreen> {
   List<AssetEntity> _assets = [];
@@ -36,6 +38,9 @@ class _CustomGalleryPickerScreenState
   bool _hasMore = true;
   bool _isLoadingMore = false;
   final ScrollController _scrollController = ScrollController();
+
+  _MediaFilter _mediaFilter = _MediaFilter.all;
+  bool _filterByDate = true; // only relevant when widget.filterDate != null
 
   @override
   void initState() {
@@ -86,26 +91,29 @@ class _CustomGalleryPickerScreenState
   Future<void> _fetchPage(int page) async {
     final date = widget.filterDate;
 
+    final orders = [
+      const OrderOption(type: OrderOptionType.createDate, asc: false)
+    ];
     FilterOptionGroup filterOption;
-    if (date != null) {
+    if (date != null && _filterByDate) {
       final dayStart = DateTime(date.year, date.month, date.day);
       final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59);
       filterOption = FilterOptionGroup(
         createTimeCond: DateTimeCond(min: dayStart, max: dayEnd),
-        orders: [
-          const OrderOption(type: OrderOptionType.createDate, asc: false)
-        ],
+        orders: orders,
       );
     } else {
-      filterOption = FilterOptionGroup(
-        orders: [
-          const OrderOption(type: OrderOptionType.createDate, asc: false)
-        ],
-      );
+      filterOption = FilterOptionGroup(orders: orders);
     }
 
+    final requestType = switch (_mediaFilter) {
+      _MediaFilter.all => RequestType.common,
+      _MediaFilter.photos => RequestType.image,
+      _MediaFilter.videos => RequestType.video,
+    };
+
     final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
+      type: requestType,
       filterOption: filterOption,
     );
 
@@ -154,6 +162,62 @@ class _CustomGalleryPickerScreenState
             onPressed: _loadAssets,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(widget.filterDate != null ? 96 : 48),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<_MediaFilter>(
+                  segments: [
+                    ButtonSegment(
+                      value: _MediaFilter.all,
+                      icon: const Icon(Icons.perm_media, size: 16),
+                      label: Text(l10n.mediaFilterAll),
+                    ),
+                    ButtonSegment(
+                      value: _MediaFilter.photos,
+                      icon: const Icon(Icons.photo, size: 16),
+                      label: Text(l10n.mediaFilterPhotos),
+                    ),
+                    ButtonSegment(
+                      value: _MediaFilter.videos,
+                      icon: const Icon(Icons.videocam, size: 16),
+                      label: Text(l10n.mediaFilterVideos),
+                    ),
+                  ],
+                  selected: {_mediaFilter},
+                  onSelectionChanged: (selection) {
+                    setState(() => _mediaFilter = selection.first);
+                    _loadAssets();
+                  },
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                if (widget.filterDate != null) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilterChip(
+                      label: Text(
+                        DateFormat('dd/MM/yyyy').format(widget.filterDate!),
+                      ),
+                      avatar: const Icon(Icons.calendar_today, size: 14),
+                      selected: _filterByDate,
+                      onSelected: (value) {
+                        setState(() => _filterByDate = value);
+                        _loadAssets();
+                      },
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
       body: _buildBody(l10n),
     );

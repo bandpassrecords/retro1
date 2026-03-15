@@ -648,6 +648,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get browseGallery => 'Galerie durchsuchen';
 
   @override
+  String get mediaFilterAll => 'Alle';
+
+  @override
+  String get mediaFilterPhotos => 'Fotos';
+
+  @override
+  String get mediaFilterVideos => 'Videos';
+
+  @override
   String get selectFromGallery => 'Aus Galerie auswählen';
 
   @override
