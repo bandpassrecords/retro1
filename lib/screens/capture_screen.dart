@@ -142,16 +142,21 @@ class _CaptureScreenState extends State<CaptureScreen> {
       setState(() => _isProcessing = false);
 
       // Trim before importing
-      final trimmedPath = await Navigator.push<String>(
+      final trimResult = await Navigator.push<({String path, bool muted})>(
         context,
         MaterialPageRoute(
           builder: (_) => VideoTrimmerScreen(videoPath: video.path),
         ),
       );
-      if (trimmedPath == null || !mounted) return;
+      if (trimResult == null || !mounted) return;
 
       setState(() => _isProcessing = true);
-      await _processMedia(trimmedPath, 'video', alreadyTrimmed: true);
+      await _processMedia(
+        trimResult.path,
+        'video',
+        alreadyTrimmed: true,
+        muteAudio: trimResult.muted,
+      );
     } catch (e) {
       if (mounted) {
         _showError(AppLocalizations.of(context)!.errorCapturingVideo(e.toString()));
@@ -204,6 +209,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         result.path,
         result.mediaType,
         alreadyTrimmed: result.mediaType == 'video',
+        muteAudio: result.muteAudio,
       );
     } catch (e) {
       if (mounted) {
@@ -245,14 +251,18 @@ class _CaptureScreenState extends State<CaptureScreen> {
         final file = await MediaService.pickVideoFromGallery();
         if (file == null || !mounted) return null;
         // Trim before importing
-        final trimmedPath = await Navigator.push<String>(
+        final trimResult = await Navigator.push<({String path, bool muted})>(
           context,
           MaterialPageRoute(
             builder: (_) => VideoTrimmerScreen(videoPath: file.path),
           ),
         );
-        if (trimmedPath == null) return null;
-        return GalleryPickerResult(path: trimmedPath, mediaType: 'video');
+        if (trimResult == null) return null;
+        return GalleryPickerResult(
+          path: trimResult.path,
+          mediaType: 'video',
+          muteAudio: trimResult.muted,
+        );
       } else {
         final file = await MediaService.pickPhotoFromGallery();
         if (file == null) return null;
@@ -267,6 +277,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     String mediaPath,
     String mediaType, {
     bool alreadyTrimmed = false,
+    bool muteAudio = false,
   }) async {
     try {
       // Check if entry already exists for this day
@@ -307,7 +318,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         createdAt: DateTime.now(),
         timezone: DateTime.now().timeZoneName,
         thumbnailPath: thumbnailPath,
-        hasAudio: mediaType == 'video',
+        hasAudio: mediaType == 'video' && !muteAudio,
       );
 
       await HiveService.saveEntry(entry);

@@ -11,7 +11,12 @@ import 'video_trimmer_screen.dart';
 class GalleryPickerResult {
   final String path;
   final String mediaType; // 'video' or 'photo'
-  const GalleryPickerResult({required this.path, required this.mediaType});
+  final bool muteAudio;
+  const GalleryPickerResult({
+    required this.path,
+    required this.mediaType,
+    this.muteAudio = false,
+  });
 }
 
 class CustomGalleryPickerScreen extends StatefulWidget {
@@ -309,16 +314,20 @@ class _CustomGalleryPickerScreenState
     if (asset.type == AssetType.video) {
       // Videos go straight to the trimmer — user picks the 1-second window
       // before the file is imported into the app.
-      final trimmedPath = await Navigator.push<String>(
+      final result = await Navigator.push<({String path, bool muted})>(
         context,
         MaterialPageRoute(
           builder: (_) => VideoTrimmerScreen(videoPath: file.path),
         ),
       );
-      if (trimmedPath != null && mounted) {
+      if (result != null && mounted) {
         Navigator.pop(
           context,
-          GalleryPickerResult(path: trimmedPath, mediaType: 'video'),
+          GalleryPickerResult(
+            path: result.path,
+            mediaType: 'video',
+            muteAudio: result.muted,
+          ),
         );
       }
     } else {

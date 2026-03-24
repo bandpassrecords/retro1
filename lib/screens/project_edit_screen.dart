@@ -93,21 +93,23 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       String? filePath;
       String mediaType = 'photo';
       bool alreadyTrimmed = false;
+      bool muteAudio = false;
 
       if (source == 'video_camera') {
         final f = await MediaService.captureVideo();
         if (f == null || !mounted) return;
         // Trim + crop before importing
-        final trimmedPath = await Navigator.push<String>(
+        final trimResult = await Navigator.push<({String path, bool muted})>(
           context,
           MaterialPageRoute(
             builder: (_) => VideoTrimmerScreen(videoPath: f.path),
           ),
         );
-        if (trimmedPath == null || !mounted) return;
-        filePath = trimmedPath;
+        if (trimResult == null || !mounted) return;
+        filePath = trimResult.path;
         mediaType = 'video';
         alreadyTrimmed = true;
+        muteAudio = trimResult.muted;
       } else if (source == 'photo_camera') {
         final f = await MediaService.capturePhoto();
         filePath = f?.path;
@@ -117,6 +119,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         filePath = result?.path;
         mediaType = result?.mediaType ?? 'photo';
         alreadyTrimmed = result?.mediaType == 'video';
+        muteAudio = result?.muteAudio ?? false;
       }
 
       if (filePath == null) return;
@@ -151,6 +154,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         order: insertAtIndex,
         createdAt: DateTime.now(),
         thumbnailPath: thumbnailPath,
+        muteAudio: muteAudio,
       );
 
       await HiveService.saveProjectMediaItem(mediaItem);
@@ -218,14 +222,18 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         if (choice == 'video') {
           final f = await MediaService.pickVideoFromGallery();
           if (f == null || !mounted) return null;
-          final trimmedPath = await Navigator.push<String>(
+          final trimResult = await Navigator.push<({String path, bool muted})>(
             context,
             MaterialPageRoute(
               builder: (_) => VideoTrimmerScreen(videoPath: f.path),
             ),
           );
-          if (trimmedPath == null) return null;
-          return GalleryPickerResult(path: trimmedPath, mediaType: 'video');
+          if (trimResult == null) return null;
+          return GalleryPickerResult(
+            path: trimResult.path,
+            mediaType: 'video',
+            muteAudio: trimResult.muted,
+          );
         } else {
           final f = await MediaService.pickPhotoFromGallery();
           if (f == null) return null;
@@ -307,11 +315,14 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         MaterialPageRoute(builder: (context) => PhotoEditScreen(mediaItem: item)),
       ).then((_) => _loadProject());
     } else {
-      final videoPath = item.editedPath ?? item.originalPath;
+      final initialIndex = _mediaItems.indexOf(item);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => _SimpleVideoPlayerScreen(videoPath: videoPath),
+          builder: (_) => _SimpleVideoPlayerScreen(
+            items: _mediaItems,
+            initialIndex: initialIndex < 0 ? 0 : initialIndex,
+          ),
         ),
       );
     }
@@ -348,21 +359,48 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     if (_mediaItems.isEmpty) return;
 
     final l10n = AppLocalizations.of(context)!;
+    bool isPortrait = false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.renderProjectVideo),
-        content: Text(l10n.renderProjectVideoConfirm(_mediaItems.length)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.renderProjectVideo),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.renderProjectVideoConfirm(_mediaItems.length)),
+              const SizedBox(height: 16),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Landscape'),
+                    icon: Icon(Icons.crop_landscape),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text('Portrait'),
+                    icon: Icon(Icons.crop_portrait),
+                  ),
+                ],
+                selected: {isPortrait},
+                onSelectionChanged: (val) =>
+                    setDialogState(() => isPortrait = val.first),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.render),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.render),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -374,6 +412,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       final videoPath = await VideoGeneratorService.generateProjectVideo(
         mediaItems: _mediaItems,
         projectName: _project!.name,
+        isPortrait: isPortrait,
       );
 
       if (mounted) {
@@ -731,11 +770,15 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
   }
 }
 
-// ── Simple video player screen ───────────────────────────────────────────────
+// ── Swipeable project preview screen ─────────────────────────────────────────
 
 class _SimpleVideoPlayerScreen extends StatefulWidget {
-  final String videoPath;
-  const _SimpleVideoPlayerScreen({required this.videoPath});
+  final List<ProjectMediaItem> items;
+  final int initialIndex;
+  const _SimpleVideoPlayerScreen({
+    required this.items,
+    required this.initialIndex,
+  });
 
   @override
   State<_SimpleVideoPlayerScreen> createState() =>
@@ -743,25 +786,19 @@ class _SimpleVideoPlayerScreen extends StatefulWidget {
 }
 
 class _SimpleVideoPlayerScreenState extends State<_SimpleVideoPlayerScreen> {
-  late VideoPlayerController _controller;
-  bool _initialized = false;
+  late final PageController _pageController;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.videoPath))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() => _initialized = true);
-          _controller.setLooping(true);
-          _controller.play();
-        }
-      });
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -772,38 +809,97 @@ class _SimpleVideoPlayerScreenState extends State<_SimpleVideoPlayerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        title: widget.items.length > 1
+            ? Text('${_currentIndex + 1} / ${widget.items.length}')
+            : null,
       ),
-      body: Center(
-        child: _initialized
-            ? GestureDetector(
-                onTap: () => setState(() {
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play();
-                }),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: VideoPlayer(_controller),
-                    ),
-                    ValueListenableBuilder<VideoPlayerValue>(
-                      valueListenable: _controller,
-                      builder: (_, v, __) => AnimatedOpacity(
-                        opacity: v.isPlaying ? 0 : 0.7,
-                        duration: const Duration(milliseconds: 200),
-                        child: const Icon(
-                          Icons.play_circle_fill,
-                          size: 72,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.items.length,
+        onPageChanged: (i) => setState(() => _currentIndex = i),
+        itemBuilder: (_, i) => _ItemPreviewPage(item: widget.items[i]),
+      ),
+    );
+  }
+}
+
+class _ItemPreviewPage extends StatefulWidget {
+  final ProjectMediaItem item;
+  const _ItemPreviewPage({required this.item});
+
+  @override
+  State<_ItemPreviewPage> createState() => _ItemPreviewPageState();
+}
+
+class _ItemPreviewPageState extends State<_ItemPreviewPage> {
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.mediaType == 'video') {
+      final path = widget.item.originalPath;
+      _controller = VideoPlayerController.file(File(path))
+        ..initialize().then((_) {
+          if (mounted) {
+            setState(() => _initialized = true);
+            _controller!.setLooping(true);
+            _controller!.play();
+          }
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.item.mediaType == 'photo') {
+      return Center(
+        child: Image.file(
+          File(widget.item.originalPath),
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+
+    if (!_initialized) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    return GestureDetector(
+      onTap: () => setState(() {
+        _controller!.value.isPlaying
+            ? _controller!.pause()
+            : _controller!.play();
+      }),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: _controller!.value.aspectRatio,
+              child: VideoPlayer(_controller!),
+            ),
+            ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller!,
+              builder: (_, v, __) => AnimatedOpacity(
+                opacity: v.isPlaying ? 0 : 0.7,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(
+                  Icons.play_circle_fill,
+                  size: 72,
+                  color: Colors.white,
                 ),
-              )
-            : const CircularProgressIndicator(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

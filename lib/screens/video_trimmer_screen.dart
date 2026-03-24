@@ -7,7 +7,7 @@ import '../services/video_editor_service.dart';
 enum _AspectOption { original, landscape, square, portrait }
 
 /// Full-screen trimmer with filmstrip + aspect-ratio crop overlay.
-/// Pops with the path of the extracted 1-second clip, or null if cancelled.
+/// Pops with ({String path, bool muted}) or null if cancelled.
 class VideoTrimmerScreen extends StatefulWidget {
   final String videoPath;
   const VideoTrimmerScreen({super.key, required this.videoPath});
@@ -26,6 +26,9 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
   // ── Trim state ─────────────────────────────────────────────────────────────
   int _selectedStartMs = 0;
   int _totalDurationMs = 0;
+
+  // ── Audio ───────────────────────────────────────────────────────────────────
+  bool _muteAudio = false;
 
   // ── Crop state ─────────────────────────────────────────────────────────────
   _AspectOption _aspectOption = _AspectOption.original;
@@ -143,6 +146,7 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
   ({int x, int y, int w, int h})? _nativeCrop() {
     if (_aspectOption == _AspectOption.original || !_isInitialized) return null;
     final size = _controller!.value.size;
+    if (size.width == 0 || size.height == 0) return null;
     final vw = (size.width ~/ 2) * 2;
     final vh = (size.height ~/ 2) * 2;
 
@@ -195,6 +199,9 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
       return Rect.fromLTWH(0, 0, displaySize.width, displaySize.height);
     }
     final ns = _controller!.value.size;
+    if (ns.width == 0 || ns.height == 0) {
+      return Rect.fromLTWH(0, 0, displaySize.width, displaySize.height);
+    }
     final sx = displaySize.width / ns.width;
     final sy = displaySize.height / ns.height;
     return Rect.fromLTWH(nc.x * sx, nc.y * sy, nc.w * sx, nc.h * sy);
@@ -260,9 +267,10 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
         inputPath: widget.videoPath,
         startTimeMs: _selectedStartMs,
         crop: _buildCropParams(),
+        muteAudio: _muteAudio,
       );
       if (path == null) throw Exception('Failed to trim video');
-      if (mounted) Navigator.pop(context, path);
+      if (mounted) Navigator.pop(context, (path: path, muted: _muteAudio));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -295,51 +303,6 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
           if (_isInitialized && _controller != null)
             Column(
               children: [
-                // ── Aspect ratio selector ─────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _AspectOption.values.map((opt) {
-                      final selected = _aspectOption == opt;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: GestureDetector(
-                          onTap: () => setState(() {
-                            _aspectOption = opt;
-                            _cropOffset = 0.5;
-                          }),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? primary.withValues(alpha: 0.25)
-                                  : Colors.white10,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: selected ? primary : Colors.white24,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              _aspectLabel(opt),
-                              style: TextStyle(
-                                color: selected ? primary : Colors.white60,
-                                fontSize: 12,
-                                fontWeight: selected
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
                 // ── Video preview + crop overlay ──────────────────────────
                 Expanded(
                   child: LayoutBuilder(builder: (ctx, constraints) {
@@ -433,7 +396,66 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
                 // ── Filmstrip ─────────────────────────────────────────────
                 _buildFilmstrip(context),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+
+                // ── Aspect ratio selector + mute toggle ───────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 4, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: _AspectOption.values.map((opt) {
+                            final selected = _aspectOption == opt;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: GestureDetector(
+                                onTap: () => setState(() {
+                                  _aspectOption = opt;
+                                  _cropOffset = 0.5;
+                                }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? primary.withValues(alpha: 0.25)
+                                        : Colors.white10,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: selected ? primary : Colors.white24,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _aspectLabel(opt),
+                                    style: TextStyle(
+                                      color: selected ? primary : Colors.white60,
+                                      fontSize: 12,
+                                      fontWeight: selected
+                                          ? FontWeight.w700
+                                          : FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _muteAudio ? Icons.volume_off : Icons.volume_up,
+                          color: _muteAudio ? primary : Colors.white54,
+                        ),
+                        onPressed: () => setState(() => _muteAudio = !_muteAudio),
+                        tooltip: _muteAudio ? 'Unmute' : 'Mute',
+                      ),
+                    ],
+                  ),
+                ),
 
                 // ── Save button ───────────────────────────────────────────
                 Padding(
@@ -571,9 +593,9 @@ class _VideoTrimmerScreenState extends State<VideoTrimmerScreen> {
 
   String _aspectLabel(_AspectOption opt) => switch (opt) {
         _AspectOption.original => 'Original',
-        _AspectOption.landscape => '16:9',
-        _AspectOption.square => '1:1',
-        _AspectOption.portrait => '9:16',
+        _AspectOption.landscape => 'Landscape',
+        _AspectOption.square => 'Square',
+        _AspectOption.portrait => 'Portrait',
       };
 
   String _fmt(int ms) {
@@ -597,6 +619,7 @@ class _CropOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (!cropRect.isFinite || size.isEmpty) return;
     final fullRect = Offset.zero & size;
 
     // Dark mask with hole cut out

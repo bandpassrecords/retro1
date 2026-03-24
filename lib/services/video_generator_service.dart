@@ -622,6 +622,7 @@ class VideoGeneratorService {
     required String projectName,
     String quality = '1080p',
     String? externalAudioPath,
+    bool isPortrait = false,
   }) async {
     if (mediaItems.isEmpty) {
       return null;
@@ -635,6 +636,7 @@ class VideoGeneratorService {
       title: projectName,
       quality: quality,
       externalAudioPath: externalAudioPath,
+      isPortrait: isPortrait,
     );
   }
 
@@ -644,6 +646,7 @@ class VideoGeneratorService {
     required String title,
     String quality = '1080p',
     String? externalAudioPath,
+    bool isPortrait = false,
   }) async {
     print('[VideoGenerator] Starting project video generation for: $title');
     print('[VideoGenerator] Media items count: ${mediaItems.length}');
@@ -704,6 +707,12 @@ class VideoGeneratorService {
           height = 2160;
           videoBitrate = '20000k';
           break;
+      }
+
+      if (isPortrait) {
+        final tmp = width;
+        width = height;
+        height = tmp;
       }
 
       final concatPathUnix = concatFile.replaceAll('\\', '/');

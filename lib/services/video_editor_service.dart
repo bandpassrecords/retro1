@@ -53,6 +53,7 @@ class VideoEditorService {
     required int startTimeMs,
     CropParams? crop,
     String? outputPath,
+    bool muteAudio = false,
   }) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
@@ -72,12 +73,14 @@ class VideoEditorService {
               'scale=${crop.outWidth}:${crop.outHeight}:flags=lanczos,setsar=1" '
           : '';
 
+      final audioArg = muteAudio ? '-an ' : '-c:a aac ';
+
       final command = '-i "$inputPath" '
           '-ss $startTime '
           '-t 00:00:01.000 '
           '$vfArg'
           '-c:v libx264 '
-          '-c:a aac '
+          '$audioArg'
           '-preset fast '
           '-y '
           '"$finalOutputPath"';
