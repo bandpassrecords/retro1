@@ -433,6 +433,9 @@
   "saturdayShort": "Sáb",
   "sundayShort": "Dom",
   "browseGallery": "Navegar na Galeria",
+  "mediaFilterAll": "Todos",
+  "mediaFilterPhotos": "Fotos",
+  "mediaFilterVideos": "Vídeos",
   "selectFromGallery": "Selecionar da Galeria",
   "openSettings": "Abrir Configurações",
   "errorAccessingFile": "Não foi possível acessar o arquivo",
@@ -479,5 +482,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Frase inspiracional diária",
+  "notificationUseQuotesDescription": "Exibir uma frase motivacional na notificação em vez da mensagem padrão"
 }

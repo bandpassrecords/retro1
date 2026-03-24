@@ -648,6 +648,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get browseGallery => 'Parcourir la galerie';
 
   @override
+  String get mediaFilterAll => 'Tout';
+
+  @override
+  String get mediaFilterPhotos => 'Photos';
+
+  @override
+  String get mediaFilterVideos => 'Vidéos';
+
+  @override
   String get selectFromGallery => 'Sélectionner depuis la galerie';
 
   @override
@@ -751,4 +760,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String errorApplyingText(String error) {
     return 'Erreur d\'application du texte : $error';
   }
+
+  @override
+  String get notificationUseQuotes => 'Citation inspirante quotidienne';
+
+  @override
+  String get notificationUseQuotesDescription =>
+      'Afficher une citation motivante dans la notification au lieu du message par défaut';
 }

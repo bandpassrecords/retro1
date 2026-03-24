@@ -389,6 +389,9 @@
   "saturdayShort": "Sat",
   "sundayShort": "Sun",
   "browseGallery": "Browse Gallery",
+  "mediaFilterAll": "All",
+  "mediaFilterPhotos": "Photos",
+  "mediaFilterVideos": "Videos",
   "selectFromGallery": "Select from Gallery",
   "openSettings": "Open Settings",
   "errorAccessingFile": "Could not access file",
@@ -435,5 +438,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Daily inspirational quote",
+  "notificationUseQuotesDescription": "Show a motivational quote in the notification instead of the default message"
 }

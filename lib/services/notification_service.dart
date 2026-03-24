@@ -4,147 +4,167 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../services/hive_service.dart';
+import '../services/quote_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+
     print('[NotificationService] Initializing...');
-    
+
     // 1. Inicializar timezones primeiro
     tz.initializeTimeZones();
-    
+
     // 2. Configurar timezone local do sistema
     try {
-      // Obter o offset do timezone do sistema
-      final systemOffset = DateTime.now().timeZoneOffset;
-      final offsetHours = systemOffset.inHours;
-      final offsetMinutes = systemOffset.inMinutes % 60;
-      
-      print('[NotificationService] System timezone offset: $systemOffset (${offsetHours >= 0 ? '+' : ''}$offsetHours:${offsetMinutes.toString().padLeft(2, '0')})');
-      
-      // Mapear offset para timezone IANA comum
-      // Usar timezones reais em vez de Etc/GMT para melhor suporte a DST
-      final timezoneMap = {
-        0: 'UTC',
-        1: 'Europe/Paris',      // UTC+1 (CET/CEST)
-        -1: 'Atlantic/Azores',   // UTC-1
-        2: 'Europe/Berlin',      // UTC+2 (CEST)
-        -2: 'Atlantic/South_Georgia', // UTC-2
-        3: 'Europe/Moscow',      // UTC+3
-        -3: 'America/Sao_Paulo', // UTC-3 (BRT)
-        4: 'Asia/Dubai',         // UTC+4
-        -4: 'America/New_York',  // UTC-4 (EDT) ou UTC-5 (EST)
-        5: 'Asia/Karachi',       // UTC+5
-        -5: 'America/Chicago',   // UTC-5 (CDT) ou UTC-6 (CST)
-        -6: 'America/Denver',    // UTC-6 (MDT) ou UTC-7 (MST)
-        -7: 'America/Los_Angeles', // UTC-7 (PDT) ou UTC-8 (PST)
-        8: 'Asia/Shanghai',      // UTC+8
-        -8: 'Pacific/Pitcairn',  // UTC-8
-        9: 'Asia/Tokyo',         // UTC+9
-        -9: 'Pacific/Gambier',   // UTC-9
-        10: 'Australia/Sydney',  // UTC+10 (AEDT) ou UTC+11 (AEST)
-        -10: 'Pacific/Honolulu', // UTC-10
-      };
-      
-      // Tentar usar timezone baseado no offset
-      final suggestedTimezone = timezoneMap[offsetHours];
-      if (suggestedTimezone != null) {
-        try {
-          final suggestedLocation = tz.getLocation(suggestedTimezone);
-          tz.setLocalLocation(suggestedLocation);
-          final suggestedOffset = suggestedLocation.currentTimeZone.offset;
-          final suggestedOffsetHours = suggestedOffset ~/ 3600;
-          print('[NotificationService] Set timezone to: $suggestedTimezone (offset: $suggestedOffset seconds, $suggestedOffsetHours hours)');
-        } catch (e) {
-          print('[NotificationService] Could not set suggested timezone $suggestedTimezone: $e');
-          // Usar Etc/GMT como fallback
+        // Obter o offset do timezone do sistema
+        final systemOffset = DateTime.now().timeZoneOffset;
+        final offsetHours = systemOffset.inHours;
+        final offsetMinutes = systemOffset.inMinutes % 60;
+        
+        print('[NotificationService] System timezone offset: $systemOffset (${offsetHours >= 0 ? '+' : ''}$offsetHours:${offsetMinutes.toString().padLeft(2, '0')})');
+        
+        // Mapear offset para timezone IANA comum
+        // Usar timezones reais em vez de Etc/GMT para melhor suporte a DST
+        final timezoneMap = {
+          0: 'UTC',
+          1: 'Europe/Paris',      // UTC+1 (CET/CEST)
+          -1: 'Atlantic/Azores',   // UTC-1
+          2: 'Europe/Berlin',      // UTC+2 (CEST)
+          -2: 'Atlantic/South_Georgia', // UTC-2
+          3: 'Europe/Moscow',      // UTC+3
+          -3: 'America/Sao_Paulo', // UTC-3 (BRT)
+          4: 'Asia/Dubai',         // UTC+4
+          -4: 'America/New_York',  // UTC-4 (EDT) ou UTC-5 (EST)
+          5: 'Asia/Karachi',       // UTC+5
+          -5: 'America/Chicago',   // UTC-5 (CDT) ou UTC-6 (CST)
+          -6: 'America/Denver',    // UTC-6 (MDT) ou UTC-7 (MST)
+          -7: 'America/Los_Angeles', // UTC-7 (PDT) ou UTC-8 (PST)
+          8: 'Asia/Shanghai',      // UTC+8
+          -8: 'Pacific/Pitcairn',  // UTC-8
+          9: 'Asia/Tokyo',         // UTC+9
+          -9: 'Pacific/Gambier',   // UTC-9
+          10: 'Australia/Sydney',  // UTC+10 (AEDT) ou UTC+11 (AEST)
+          -10: 'Pacific/Honolulu', // UTC-10
+        };
+        
+        // Tentar usar timezone baseado no offset
+        final suggestedTimezone = timezoneMap[offsetHours];
+        if (suggestedTimezone != null) {
+          try {
+            final suggestedLocation = tz.getLocation(suggestedTimezone);
+            tz.setLocalLocation(suggestedLocation);
+            final suggestedOffset = suggestedLocation.currentTimeZone.offset;
+            final suggestedOffsetHours = suggestedOffset ~/ 3600;
+            print('[NotificationService] Set timezone to: $suggestedTimezone (offset: $suggestedOffset seconds, $suggestedOffsetHours hours)');
+          } catch (e) {
+            print('[NotificationService] Could not set suggested timezone $suggestedTimezone: $e');
+            // Usar Etc/GMT como fallback
+            _setTimezoneByOffset(offsetHours);
+          }
+        } else {
+          // Se não houver mapeamento, usar Etc/GMT baseado no offset
           _setTimezoneByOffset(offsetHours);
         }
-      } else {
-        // Se não houver mapeamento, usar Etc/GMT baseado no offset
-        _setTimezoneByOffset(offsetHours);
-      }
-      
-      // Verificar se o timezone foi configurado corretamente
-      final localLocation = tz.local;
-      final locationOffset = localLocation.currentTimeZone.offset;
-      // currentTimeZone.offset retorna int (segundos) na versão nova do timezone
-      final locationOffsetHours = locationOffset ~/ 3600; // Converter segundos para horas
-      print('[NotificationService] Configured timezone: ${localLocation.name}');
-      print('[NotificationService] Configured timezone offset: $locationOffset seconds (${locationOffsetHours} hours)');
-      
-      // Verificar se o offset corresponde ao sistema
-      // Permitir diferença de até 1 hora devido a DST (Daylight Saving Time)
-      final offsetDiff = (locationOffsetHours - offsetHours).abs();
-      if (offsetDiff > 1) {
-        print('[NotificationService] WARNING: Timezone offset mismatch! System: $offsetHours, Configured: $locationOffsetHours');
-        print('[NotificationService] Attempting to fix...');
-        _setTimezoneByOffset(offsetHours);
         
-        // Verificar novamente após correção
-        final correctedLocation = tz.local;
-        final correctedOffset = correctedLocation.currentTimeZone.offset;
-        final correctedOffsetHours = correctedOffset ~/ 3600; // Converter segundos para horas
-        print('[NotificationService] After correction - Timezone: ${correctedLocation.name}, Offset: $correctedOffset seconds ($correctedOffsetHours hours)');
-      } else {
-        print('[NotificationService] Timezone configured correctly (offset difference: $offsetDiff hours, may be due to DST)');
+        // Verificar se o timezone foi configurado corretamente
+        final localLocation = tz.local;
+        final locationOffset = localLocation.currentTimeZone.offset;
+        // currentTimeZone.offset retorna int (segundos) na versão nova do timezone
+        final locationOffsetHours = locationOffset ~/ 3600; // Converter segundos para horas
+        print('[NotificationService] Configured timezone: ${localLocation.name}');
+        print('[NotificationService] Configured timezone offset: $locationOffset seconds (${locationOffsetHours} hours)');
+        
+        // Verificar se o offset corresponde ao sistema
+        // Permitir diferença de até 1 hora devido a DST (Daylight Saving Time)
+        final offsetDiff = (locationOffsetHours - offsetHours).abs();
+        if (offsetDiff > 1) {
+          print('[NotificationService] WARNING: Timezone offset mismatch! System: $offsetHours, Configured: $locationOffsetHours');
+          print('[NotificationService] Attempting to fix...');
+          _setTimezoneByOffset(offsetHours);
+          
+          // Verificar novamente após correção
+          final correctedLocation = tz.local;
+          final correctedOffset = correctedLocation.currentTimeZone.offset;
+          final correctedOffsetHours = correctedOffset ~/ 3600; // Converter segundos para horas
+          print('[NotificationService] After correction - Timezone: ${correctedLocation.name}, Offset: $correctedOffset seconds ($correctedOffsetHours hours)');
+        } else {
+          print('[NotificationService] Timezone configured correctly (offset difference: $offsetDiff hours, may be due to DST)');
+        }
+      } catch (e) {
+        print('[NotificationService] WARNING: Could not configure local timezone: $e');
+        // Fallback para UTC se não conseguir detectar
+        try {
+          tz.setLocalLocation(tz.getLocation('UTC'));
+          print('[NotificationService] Fallback to UTC timezone');
+        } catch (e2) {
+          print('[NotificationService] ERROR setting UTC timezone: $e2');
+        }
       }
-    } catch (e) {
-      print('[NotificationService] WARNING: Could not configure local timezone: $e');
-      // Fallback para UTC se não conseguir detectar
-      try {
-        tz.setLocalLocation(tz.getLocation('UTC'));
-        print('[NotificationService] Fallback to UTC timezone');
-      } catch (e2) {
-        print('[NotificationService] ERROR setting UTC timezone: $e2');
+      
+      // 3. Configurar inicialização do plugin
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const darwinSettings = DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: darwinSettings,
+      );
+
+      final initialized = await _notifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
+      print('[NotificationService] Initialized: $initialized');
+
+      if (initialized != true) {
+        print('[NotificationService] WARNING: Plugin initialization failed');
+        return;
       }
-    }
-    
-    // 3. Configurar inicialização do plugin (apenas Android)
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-    );
 
-    final initialized = await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
-    print('[NotificationService] Initialized: $initialized');
-
-    if (initialized != true) {
-      print('[NotificationService] WARNING: Plugin initialization failed');
-      return;
-    }
-
-    // 4. Solicitar permissões
-    await _requestPermissions();
-    
-    // 5. Agendar notificações
-    await scheduleNotifications();
-    print('[NotificationService] Initialization complete');
+      // 4. Solicitar permissões
+      await _requestPermissions();
+      
+      // 5. Agendar notificações
+      await scheduleNotifications();
+      print('[NotificationService] Initialization complete');
   }
 
   static Future<void> _requestPermissions() async {
     if (Platform.isAndroid) {
       final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
-      
+
       if (androidPlugin != null) {
         // Solicitar permissão de notificações (Android 13+)
         final notificationPermission = await androidPlugin.requestNotificationsPermission();
         print('[NotificationService] Notification permission granted: $notificationPermission');
-        
+
         // Verificar se as notificações estão habilitadas
         final areNotificationsEnabled = await androidPlugin.areNotificationsEnabled();
         print('[NotificationService] Are notifications enabled: $areNotificationsEnabled');
-        
+
         if (areNotificationsEnabled == false) {
           print('[NotificationService] WARNING: Notifications are disabled in system settings');
         }
+      }
+    } else if (Platform.isIOS) {
+      final iOSPlugin = _notifications.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (iOSPlugin != null) {
+        final granted = await iOSPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        print('[NotificationService] iOS notification permission granted: $granted');
       }
     }
   }
@@ -330,7 +350,15 @@ class NotificationService {
     final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
     final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
     final notificationTitle = _getLocalizedString('notificationTitle', language);
-    final notificationBody = _getLocalizedString('notificationBody', language);
+
+    // Corpo da notificação: frase do dia ou mensagem padrão
+    final String notificationBody;
+    if (settings.notificationUseQuotes) {
+      final quote = QuoteService.getQuoteForDate(scheduledDate);
+      notificationBody = '${quote.text}\n\n— ${quote.author}';
+    } else {
+      notificationBody = _getLocalizedString('notificationBody', language);
+    }
 
     final androidDetails = AndroidNotificationDetails(
       'daily_reminder',
@@ -342,9 +370,15 @@ class NotificationService {
       enableVibration: true,
       playSound: true,
     );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     final details = NotificationDetails(
       android: androidDetails,
+      iOS: darwinDetails,
     );
 
     try {
@@ -392,9 +426,15 @@ class NotificationService {
       enableVibration: true,
       playSound: true,
     );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     final details = NotificationDetails(
       android: androidDetails,
+      iOS: darwinDetails,
     );
 
     try {
@@ -438,9 +478,15 @@ class NotificationService {
       enableVibration: true,
       playSound: true,
     );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
 
     final details = NotificationDetails(
       android: androidDetails,
+      iOS: darwinDetails,
     );
 
     try {

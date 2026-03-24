@@ -9,15 +9,26 @@ class MediaService {
   static final ImagePicker _picker = ImagePicker();
   static const _uuid = Uuid();
 
-  // Solicitar permissões
-  static Future<bool> requestPermissions() async {
-    final cameraResult = await Permission.camera.request();
-    if (!cameraResult.isGranted) return false;
+  // PermissionStatus.granted OR .limited both count as accessible.
+  static bool _isMediaAccessible(PermissionStatus? status) {
+    if (status == null) return false;
+    return status.isGranted || status.isLimited;
+  }
 
+  /// Request only camera (+ microphone for video) — no photo library needed.
+  static Future<bool> _requestCameraPermission({bool withMic = false}) async {
+    final camera = await Permission.camera.request();
+    if (!camera.isGranted) return false;
+    if (withMic) {
+      final mic = await Permission.microphone.request();
+      if (!mic.isGranted) return false;
+    }
+    return true;
+  }
+
+  /// Request photo library access for gallery operations.
+  static Future<bool> _requestGalleryPermission() async {
     if (Platform.isAndroid) {
-      // Android 13+ uses READ_MEDIA_IMAGES + READ_MEDIA_VIDEO separately.
-      // Older Android uses READ_EXTERNAL_STORAGE (Permission.storage).
-      // Request all three; at least one media permission must be accessible.
       final results = await [
         Permission.storage,
         Permission.photos,
@@ -28,82 +39,57 @@ class MediaService {
       final videosOk = _isMediaAccessible(results[Permission.videos]);
       return storageOk || photosOk || videosOk;
     } else if (Platform.isIOS) {
-      // iOS may grant limited (selected photos) access — treat as granted.
       final photosResult = await Permission.photos.request();
       return _isMediaAccessible(photosResult);
     }
     return true;
   }
 
-  // PermissionStatus.granted OR .limited both count as accessible.
-  static bool _isMediaAccessible(PermissionStatus? status) {
-    if (status == null) return false;
-    return status.isGranted || status.isLimited;
-  }
-
   // Capturar vídeo da câmera
   static Future<XFile?> captureVideo() async {
-    if (!await requestPermissions()) {
-      return null;
-    }
-
+    if (!await _requestCameraPermission(withMic: true)) return null;
     try {
-      final XFile? video = await _picker.pickVideo(
+      return await _picker.pickVideo(
         source: ImageSource.camera,
         maxDuration: const Duration(minutes: 5),
       );
-      return video;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   // Capturar foto da câmera
   static Future<XFile?> capturePhoto() async {
-    if (!await requestPermissions()) {
-      return null;
-    }
-
+    if (!await _requestCameraPermission()) return null;
     try {
-      final XFile? photo = await _picker.pickImage(
+      return await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 90,
       );
-      return photo;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   // Selecionar vídeo da galeria
   static Future<XFile?> pickVideoFromGallery() async {
-    if (!await requestPermissions()) {
-      return null;
-    }
-
+    if (!await _requestGalleryPermission()) return null;
     try {
-      final XFile? video = await _picker.pickVideo(
-        source: ImageSource.gallery,
-      );
-      return video;
-    } catch (e) {
+      return await _picker.pickVideo(source: ImageSource.gallery);
+    } catch (_) {
       return null;
     }
   }
 
   // Selecionar foto da galeria
   static Future<XFile?> pickPhotoFromGallery() async {
-    if (!await requestPermissions()) {
-      return null;
-    }
-
+    if (!await _requestGalleryPermission()) return null;
     try {
-      final XFile? photo = await _picker.pickImage(
+      return await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 90,
       );
-      return photo;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

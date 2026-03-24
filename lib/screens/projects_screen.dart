@@ -148,6 +148,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'projects_fab',
         onPressed: _createNewProject,
         child: const Icon(Icons.add),
       ),

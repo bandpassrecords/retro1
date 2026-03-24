@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,6 +7,7 @@ import 'package:retro1/l10n/app_localizations.dart' show AppLocalizations;
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/hive_service.dart';
+import 'services/quote_service.dart';
 import 'services/timeline_prefs.dart';
 
 void main() async {
@@ -18,6 +20,9 @@ void main() async {
   // Inicializar Hive
   await HiveService.init();
 
+  // Inicializar serviço de frases (depende do Hive)
+  await QuoteService.init();
+
   // Inicializar preferências de visualização
   await TimelinePrefs.init();
   await ThumbnailSizePrefs.init();
@@ -26,10 +31,12 @@ void main() async {
   // Inicializar notificações
   await NotificationService.init();
   
-  // Configurar orientação
+  // Allow all orientations (portraitDown excluded on iOS — unsupported on iPhone)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
+    if (!Platform.isIOS) DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
   
   runApp(const MyApp());

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+import 'package:video_player/video_player.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../models/free_project.dart';
 import '../models/project_media_item.dart';
@@ -12,9 +12,11 @@ import '../services/media_service.dart';
 import '../services/timeline_prefs.dart';
 import '../services/video_editor_service.dart';
 import '../services/video_generator_service.dart';
+import 'custom_gallery_picker_screen.dart';
 import 'photo_edit_screen.dart';
 import 'video_edit_screen.dart';
 import 'video_preview_screen.dart';
+import 'video_trimmer_screen.dart';
 
 class ProjectEditScreen extends StatefulWidget {
   final String projectId;
@@ -28,7 +30,6 @@ class ProjectEditScreen extends StatefulWidget {
 class _ProjectEditScreenState extends State<ProjectEditScreen> {
   FreeProject? _project;
   List<ProjectMediaItem> _mediaItems = [];
-  final ImagePicker _picker = ImagePicker();
   bool _isGeneratingVideo = false;
 
   @override
@@ -50,32 +51,36 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   /// Pass [insertAtIndex] == _mediaItems.length to append at end.
   Future<void> _addMediaAt(int insertAtIndex) async {
     final l10n = AppLocalizations.of(context)!;
-    final source = await showDialog<String>(
+
+    // Same bottom-sheet picker as capture_screen
+    final source = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.addMedia),
-        content: Column(
+      builder: (ctx) => SafeArea(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: Text(l10n.takePhoto),
-              onTap: () => Navigator.pop(context, 'photo_camera'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: Text(l10n.photoFromGallery),
-              onTap: () => Navigator.pop(context, 'photo_gallery'),
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.videocam),
               title: Text(l10n.recordVideo),
-              onTap: () => Navigator.pop(context, 'video_camera'),
+              onTap: () => Navigator.pop(ctx, 'video_camera'),
             ),
             ListTile(
-              leading: const Icon(Icons.video_library),
-              title: Text(l10n.videoFromGallery),
-              onTap: () => Navigator.pop(context, 'video_gallery'),
+              leading: const Icon(Icons.camera_alt),
+              title: Text(l10n.takePhoto),
+              onTap: () => Navigator.pop(ctx, 'photo_camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(l10n.browseGallery),
+              onTap: () => Navigator.pop(ctx, 'gallery'),
             ),
           ],
         ),
@@ -85,31 +90,41 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     if (source == null || _project == null) return;
 
     try {
-      XFile? file;
+      String? filePath;
       String mediaType = 'photo';
+      bool alreadyTrimmed = false;
+      bool muteAudio = false;
 
-      switch (source) {
-        case 'photo_camera':
-          file = await _picker.pickImage(source: ImageSource.camera);
-          mediaType = 'photo';
-          break;
-        case 'photo_gallery':
-          file = await _picker.pickImage(source: ImageSource.gallery);
-          mediaType = 'photo';
-          break;
-        case 'video_camera':
-          file = await _picker.pickVideo(source: ImageSource.camera);
-          mediaType = 'video';
-          break;
-        case 'video_gallery':
-          file = await _picker.pickVideo(source: ImageSource.gallery);
-          mediaType = 'video';
-          break;
+      if (source == 'video_camera') {
+        final f = await MediaService.captureVideo();
+        if (f == null || !mounted) return;
+        // Trim + crop before importing
+        final trimResult = await Navigator.push<({String path, bool muted})>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VideoTrimmerScreen(videoPath: f.path),
+          ),
+        );
+        if (trimResult == null || !mounted) return;
+        filePath = trimResult.path;
+        mediaType = 'video';
+        alreadyTrimmed = true;
+        muteAudio = trimResult.muted;
+      } else if (source == 'photo_camera') {
+        final f = await MediaService.capturePhoto();
+        filePath = f?.path;
+        mediaType = 'photo';
+      } else if (source == 'gallery') {
+        final result = await _pickFromGallery();
+        filePath = result?.path;
+        mediaType = result?.mediaType ?? 'photo';
+        alreadyTrimmed = result?.mediaType == 'video';
+        muteAudio = result?.muteAudio ?? false;
       }
 
-      if (file == null) return;
+      if (filePath == null) return;
 
-      final copiedPath = await MediaService.copyToAppDirectory(file.path);
+      final copiedPath = await MediaService.copyToAppDirectory(filePath);
       final bool isPhoto = mediaType == 'photo';
 
       String? videoPathForPhoto;
@@ -132,19 +147,18 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       final mediaItem = ProjectMediaItem(
         id: const Uuid().v4(),
         mediaType: mediaType,
-        originalPath: isPhoto ? copiedPath : copiedPath,
+        originalPath: copiedPath,
         editedPath: isPhoto ? videoPathForPhoto : null,
         startTimeMs: 0,
         durationMs: 1000,
         order: insertAtIndex,
         createdAt: DateTime.now(),
         thumbnailPath: thumbnailPath,
+        muteAudio: muteAudio,
       );
 
-      // Insert at the requested position and shift later items
       await HiveService.saveProjectMediaItem(mediaItem);
 
-      // Add to project and reorder so new item ends up at insertAtIndex
       final currentIds = List<String>.from(_project!.mediaItemIds);
       currentIds.insert(insertAtIndex, mediaItem.id);
       await HiveService.reorderProjectMediaItems(_project!.id, currentIds);
@@ -159,7 +173,8 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
               builder: (context) => PhotoEditScreen(mediaItem: mediaItem),
             ),
           ).then((_) => _loadProject());
-        } else {
+        } else if (!alreadyTrimmed) {
+          // Fallback: video not yet trimmed — open editor
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -167,6 +182,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
             ),
           ).then((_) => _loadProject());
         }
+        // Already trimmed videos need no further editing
       }
     } catch (e) {
       if (mounted) {
@@ -174,6 +190,65 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
           SnackBar(content: Text(AppLocalizations.of(context)!.errorAddingMedia(e.toString()))),
         );
       }
+    }
+  }
+
+  Future<GalleryPickerResult?> _pickFromGallery() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (MediaPickerPrefs.current == MediaPickerPrefs.systemPicker) {
+      // System picker: ask photo or video first
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: Text(l10n.videoFromGallery),
+                onTap: () => Navigator.pop(ctx, 'video'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: Text(l10n.photoFromGallery),
+                onTap: () => Navigator.pop(ctx, 'photo'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (choice == null) return null;
+      try {
+        if (choice == 'video') {
+          final f = await MediaService.pickVideoFromGallery();
+          if (f == null || !mounted) return null;
+          final trimResult = await Navigator.push<({String path, bool muted})>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoTrimmerScreen(videoPath: f.path),
+            ),
+          );
+          if (trimResult == null) return null;
+          return GalleryPickerResult(
+            path: trimResult.path,
+            mediaType: 'video',
+            muteAudio: trimResult.muted,
+          );
+        } else {
+          final f = await MediaService.pickPhotoFromGallery();
+          if (f == null) return null;
+          return GalleryPickerResult(path: f.path, mediaType: 'photo');
+        }
+      } catch (_) {
+        return null;
+      }
+    } else {
+      // Custom in-app gallery picker
+      if (!mounted) return null;
+      return await Navigator.push<GalleryPickerResult>(
+        context,
+        MaterialPageRoute(builder: (_) => const CustomGalleryPickerScreen()),
+      );
     }
   }
 
@@ -240,10 +315,16 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
         MaterialPageRoute(builder: (context) => PhotoEditScreen(mediaItem: item)),
       ).then((_) => _loadProject());
     } else {
+      final initialIndex = _mediaItems.indexOf(item);
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => VideoEditScreen(mediaItem: item)),
-      ).then((_) => _loadProject());
+        MaterialPageRoute(
+          builder: (_) => _SimpleVideoPlayerScreen(
+            items: _mediaItems,
+            initialIndex: initialIndex < 0 ? 0 : initialIndex,
+          ),
+        ),
+      );
     }
   }
 
@@ -278,21 +359,48 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
     if (_mediaItems.isEmpty) return;
 
     final l10n = AppLocalizations.of(context)!;
+    bool isPortrait = false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.renderProjectVideo),
-        content: Text(l10n.renderProjectVideoConfirm(_mediaItems.length)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.renderProjectVideo),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.renderProjectVideoConfirm(_mediaItems.length)),
+              const SizedBox(height: 16),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Landscape'),
+                    icon: Icon(Icons.crop_landscape),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text('Portrait'),
+                    icon: Icon(Icons.crop_portrait),
+                  ),
+                ],
+                selected: {isPortrait},
+                onSelectionChanged: (val) =>
+                    setDialogState(() => isPortrait = val.first),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.render),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.render),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -304,6 +412,7 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
       final videoPath = await VideoGeneratorService.generateProjectVideo(
         mediaItems: _mediaItems,
         projectName: _project!.name,
+        isPortrait: isPortrait,
       );
 
       if (mounted) {
@@ -657,6 +766,141 @@ class _ProjectDragGridState extends State<_ProjectDragGrid> {
       },
         );
       },
+    );
+  }
+}
+
+// ── Swipeable project preview screen ─────────────────────────────────────────
+
+class _SimpleVideoPlayerScreen extends StatefulWidget {
+  final List<ProjectMediaItem> items;
+  final int initialIndex;
+  const _SimpleVideoPlayerScreen({
+    required this.items,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_SimpleVideoPlayerScreen> createState() =>
+      _SimpleVideoPlayerScreenState();
+}
+
+class _SimpleVideoPlayerScreenState extends State<_SimpleVideoPlayerScreen> {
+  late final PageController _pageController;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: widget.items.length > 1
+            ? Text('${_currentIndex + 1} / ${widget.items.length}')
+            : null,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.items.length,
+        onPageChanged: (i) => setState(() => _currentIndex = i),
+        itemBuilder: (_, i) => _ItemPreviewPage(item: widget.items[i]),
+      ),
+    );
+  }
+}
+
+class _ItemPreviewPage extends StatefulWidget {
+  final ProjectMediaItem item;
+  const _ItemPreviewPage({required this.item});
+
+  @override
+  State<_ItemPreviewPage> createState() => _ItemPreviewPageState();
+}
+
+class _ItemPreviewPageState extends State<_ItemPreviewPage> {
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.mediaType == 'video') {
+      final path = widget.item.originalPath;
+      _controller = VideoPlayerController.file(File(path))
+        ..initialize().then((_) {
+          if (mounted) {
+            setState(() => _initialized = true);
+            _controller!.setLooping(true);
+            _controller!.play();
+          }
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.item.mediaType == 'photo') {
+      return Center(
+        child: Image.file(
+          File(widget.item.originalPath),
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+
+    if (!_initialized) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    return GestureDetector(
+      onTap: () => setState(() {
+        _controller!.value.isPlaying
+            ? _controller!.pause()
+            : _controller!.play();
+      }),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: _controller!.value.aspectRatio,
+              child: VideoPlayer(_controller!),
+            ),
+            ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller!,
+              builder: (_, v, __) => AnimatedOpacity(
+                opacity: v.isPlaying ? 0 : 0.7,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(
+                  Icons.play_circle_fill,
+                  size: 72,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

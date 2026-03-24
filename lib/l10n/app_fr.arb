@@ -359,6 +359,9 @@
   "saturdayShort": "Sam",
   "sundayShort": "Dim",
   "browseGallery": "Parcourir la galerie",
+  "mediaFilterAll": "Tout",
+  "mediaFilterPhotos": "Photos",
+  "mediaFilterVideos": "Vidéos",
   "selectFromGallery": "Sélectionner depuis la galerie",
   "openSettings": "Ouvrir les paramètres",
   "errorAccessingFile": "Impossible d'accéder au fichier",
@@ -405,5 +408,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationUseQuotes": "Citation inspirante quotidienne",
+  "notificationUseQuotesDescription": "Afficher une citation motivante dans la notification au lieu du message par défaut"
 }

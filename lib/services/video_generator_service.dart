@@ -130,9 +130,22 @@ class VideoGeneratorService {
       final finalOutputPath = path.join(outputDir.path, fileName);
       print('[VideoGenerator] Output file: $finalOutputPath');
 
+      // Find font for date overlay (once, cached)
+      String? fontPath;
+      if (showDateOverlay) {
+        fontPath = await _findFontPath();
+        if (fontPath == null) {
+          print('[VideoGenerator] WARNING: No system font found, date overlay disabled');
+        }
+      }
+
       // Criar arquivo de lista para concatenação
       print('[VideoGenerator] Creating concat file...');
-      final concatFile = await _createConcatFile(entries);
+      final concatFile = await _createConcatFile(
+        entries,
+        showDateOverlay: showDateOverlay && fontPath != null,
+        fontPath: fontPath,
+      );
       if (concatFile == null) {
         print('[VideoGenerator] ERROR: Failed to create concat file');
         return null;
@@ -377,12 +390,17 @@ class VideoGeneratorService {
   }
 
   // Criar arquivo de concatenação para FFmpeg
-  static Future<String?> _createConcatFile(List<DailyEntry> entries) async {
+  static Future<String?> _createConcatFile(
+    List<DailyEntry> entries, {
+    bool showDateOverlay = false,
+    String? fontPath,
+  }) async {
     print('[VideoGenerator] Creating concat file for ${entries.length} entries');
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final tempDir = Directory(path.join(appDir.path, 'temp'));
-      
+      final tempDirPath = path.join(appDir.path, 'temp');
+      final tempDir = Directory(tempDirPath);
+
       if (!await tempDir.exists()) {
         await tempDir.create(recursive: true);
         print('[VideoGenerator] Created temp directory');
@@ -396,54 +414,76 @@ class VideoGeneratorService {
       for (var i = 0; i < entries.length; i++) {
         final entry = entries[i];
         print('[VideoGenerator] Processing entry $i/${entries.length}: ${entry.id} (${entry.mediaType})');
-        
+
         // Verificar se o arquivo existe
         String clipPath = entry.originalPath;
         final file = File(clipPath);
-        
+
         if (!await file.exists()) {
           print('[VideoGenerator] WARNING: Entry ${entry.id} - File does not exist: $clipPath');
           invalidEntries++;
           continue;
         }
-        
+
         // Se for foto, precisamos converter para vídeo primeiro
         if (entry.mediaType == 'photo') {
           print('[VideoGenerator] Entry ${entry.id} is a photo, converting to video...');
-          // Usar thumbnailPath se disponível (foto original), senão usar originalPath
           final photoPath = entry.thumbnailPath ?? entry.originalPath;
-          print('[VideoGenerator] Using photo path: $photoPath');
-          
-          // Verificar se o arquivo existe e é realmente uma imagem
+
           final photoFile = File(photoPath);
           if (!await photoFile.exists()) {
             print('[VideoGenerator] ERROR: Photo file does not exist: $photoPath');
             invalidEntries++;
             continue;
           }
-          
-          // Verificar extensão
+
           final fileExtension = path.extension(photoPath).toLowerCase();
           final imageExtensions = ['.jpg', '.jpeg', '.png', '.bmp', '.webp'];
           if (!imageExtensions.contains(fileExtension)) {
-            print('[VideoGenerator] WARNING: File extension "$fileExtension" is not an image. Skipping conversion.');
+            print('[VideoGenerator] WARNING: File extension "$fileExtension" is not an image. Skipping.');
             invalidEntries++;
             continue;
           }
-          
-          // Converter foto para vídeo de 1 segundo usando VideoEditorService
-          final videoPath = await VideoEditorService.convertPhotoToVideo(photoPath: photoPath);
-          if (videoPath == null) {
-            print('[VideoGenerator] ERROR: Failed to convert photo to video for entry ${entry.id}');
-            invalidEntries++;
-            continue;
+
+          if (showDateOverlay && fontPath != null) {
+            // Convert photo → video with date overlay in one pass
+            final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
+            final dated = await _convertPhotoToVideoWithDate(
+              photoPath: photoPath,
+              dateText: dateText,
+              fontPath: fontPath,
+              tempDir: tempDirPath,
+            );
+            if (dated == null) {
+              // Fallback: plain conversion
+              final plain = await VideoEditorService.convertPhotoToVideo(photoPath: photoPath);
+              if (plain == null) { invalidEntries++; continue; }
+              clipPath = plain;
+            } else {
+              clipPath = dated;
+            }
+          } else {
+            final videoPath = await VideoEditorService.convertPhotoToVideo(photoPath: photoPath);
+            if (videoPath == null) {
+              print('[VideoGenerator] ERROR: Failed to convert photo to video for entry ${entry.id}');
+              invalidEntries++;
+              continue;
+            }
+            clipPath = videoPath;
           }
-          clipPath = videoPath;
-          print('[VideoGenerator] Photo converted to video: $clipPath');
+          print('[VideoGenerator] Photo processed to video: $clipPath');
+        } else if (showDateOverlay && fontPath != null) {
+          // Burn date into existing video clip
+          final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
+          clipPath = await _addDateOverlayToVideo(
+            inputPath: clipPath,
+            dateText: dateText,
+            fontPath: fontPath,
+            tempDir: tempDirPath,
+          );
         }
 
         // Escapar barras invertidas e aspas no caminho para FFmpeg
-        // FFmpeg no Android espera caminhos Unix-style
         final escapedPath = clipPath.replaceAll('\\', '/').replaceAll("'", "\\'");
         print('[VideoGenerator] Adding to concat: $escapedPath');
         buffer.writeln("file '$escapedPath'");
@@ -479,12 +519,101 @@ class VideoGeneratorService {
   static Future<Directory> getExportDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
     final outputDir = Directory(path.join(appDir.path, 'exports'));
-    
+
     if (!await outputDir.exists()) {
       await outputDir.create(recursive: true);
     }
 
     return outputDir;
+  }
+
+  // ─── Date overlay helpers ────────────────────────────────────────────────
+
+  static String? _cachedFontPath;
+
+  /// Returns the first available font path for FFmpeg drawtext, or null.
+  /// On Android tries system fonts; on iOS tries app-documents bundled font.
+  static Future<String?> _findFontPath() async {
+    if (_cachedFontPath != null) return _cachedFontPath;
+
+    if (Platform.isAndroid) {
+      const candidates = [
+        '/system/fonts/Roboto-Regular.ttf',
+        '/system/fonts/DroidSans.ttf',
+        '/system/fonts/NotoSans-Regular.ttf',
+        '/system/fonts/LiberationSans-Regular.ttf',
+      ];
+      for (final p in candidates) {
+        if (await File(p).exists()) {
+          _cachedFontPath = p;
+          return p;
+        }
+      }
+    } else if (Platform.isIOS) {
+      // On iOS, check the app documents dir for a font extracted from assets.
+      // The user/setup script can place Roboto-Regular.ttf there.
+      final docsDir = await getApplicationDocumentsDirectory();
+      final candidate = path.join(docsDir.path, 'Roboto-Regular.ttf');
+      if (await File(candidate).exists()) {
+        _cachedFontPath = candidate;
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  /// Burns [dateText] into a video clip using FFmpeg drawtext.
+  /// Returns the path to the processed clip, or [inputPath] on failure.
+  static Future<String> _addDateOverlayToVideo({
+    required String inputPath,
+    required String dateText,
+    required String fontPath,
+    required String tempDir,
+  }) async {
+    final outputPath =
+        path.join(tempDir, 'dated_${_uuid.v4()}.mp4');
+    final safeFont = fontPath.replaceAll('\\', '/');
+    final filter =
+        "drawtext=text='$dateText':fontfile='$safeFont':fontsize=28:"
+        "fontcolor=white:x=w-tw-10:y=h-th-10:"
+        "box=1:boxcolor=black@0.5:boxborderw=4";
+    final inputUnix = inputPath.replaceAll('\\', '/');
+    final outputUnix = outputPath.replaceAll('\\', '/');
+    final cmd =
+        '-i "$inputUnix" -vf "$filter" -c:v libx264 -crf 23 -c:a copy -y "$outputUnix"';
+    final session = await FFmpegKit.execute(cmd);
+    final rc = await session.getReturnCode();
+    if (ReturnCode.isSuccess(rc)) return outputPath;
+    print('[VideoGenerator] WARNING: date overlay failed for $inputPath, using original');
+    return inputPath;
+  }
+
+  /// Converts a photo to a 1-second video with [dateText] burned in.
+  /// Returns the output path, or null on failure.
+  static Future<String?> _convertPhotoToVideoWithDate({
+    required String photoPath,
+    required String dateText,
+    required String fontPath,
+    required String tempDir,
+  }) async {
+    final outputPath =
+        path.join(tempDir, 'photo_dated_${_uuid.v4()}.mp4');
+    final safeFont = fontPath.replaceAll('\\', '/');
+    final filter =
+        "drawtext=text='$dateText':fontfile='$safeFont':fontsize=28:"
+        "fontcolor=white:x=w-tw-10:y=h-th-10:"
+        "box=1:boxcolor=black@0.5:boxborderw=4";
+    final photoUnix = photoPath.replaceAll('\\', '/');
+    final outputUnix = outputPath.replaceAll('\\', '/');
+    final cmd = '-loop 1 -t 1 -i "$photoUnix" '
+        '-vf "$filter" '
+        '-c:v libx264 -crf 23 -pix_fmt yuv420p -an -r 30 -y "$outputUnix"';
+    final session = await FFmpegKit.execute(cmd);
+    final rc = await session.getReturnCode();
+    if (ReturnCode.isSuccess(rc)) return outputPath;
+    print('[VideoGenerator] WARNING: photo+date conversion failed for $photoPath');
+    return null;
   }
 
   // Gerar vídeo de um projeto livre
@@ -493,6 +622,7 @@ class VideoGeneratorService {
     required String projectName,
     String quality = '1080p',
     String? externalAudioPath,
+    bool isPortrait = false,
   }) async {
     if (mediaItems.isEmpty) {
       return null;
@@ -506,6 +636,7 @@ class VideoGeneratorService {
       title: projectName,
       quality: quality,
       externalAudioPath: externalAudioPath,
+      isPortrait: isPortrait,
     );
   }
 
@@ -515,6 +646,7 @@ class VideoGeneratorService {
     required String title,
     String quality = '1080p',
     String? externalAudioPath,
+    bool isPortrait = false,
   }) async {
     print('[VideoGenerator] Starting project video generation for: $title');
     print('[VideoGenerator] Media items count: ${mediaItems.length}');
@@ -575,6 +707,12 @@ class VideoGeneratorService {
           height = 2160;
           videoBitrate = '20000k';
           break;
+      }
+
+      if (isPortrait) {
+        final tmp = width;
+        width = height;
+        height = tmp;
       }
 
       final concatPathUnix = concatFile.replaceAll('\\', '/');

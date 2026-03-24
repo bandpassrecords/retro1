@@ -403,6 +403,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _saveSettings();
             },
           ),
+          SwitchListTile(
+            title: Text(l10n.notificationUseQuotes),
+            subtitle: Text(l10n.notificationUseQuotesDescription),
+            value: _settings.notificationUseQuotes,
+            onChanged: _settings.notificationsEnabled
+                ? (value) {
+                    setState(() {
+                      _settings.notificationUseQuotes = value;
+                    });
+                    _saveSettings();
+                  }
+                : null,
+          ),
           ListTile(
             title: Text(l10n.notificationTime),
             subtitle: Column(

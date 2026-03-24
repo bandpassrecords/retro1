@@ -1270,6 +1270,24 @@ abstract class AppLocalizations {
   /// **'Browse Gallery'**
   String get browseGallery;
 
+  /// No description provided for @mediaFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get mediaFilterAll;
+
+  /// No description provided for @mediaFilterPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get mediaFilterPhotos;
+
+  /// No description provided for @mediaFilterVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get mediaFilterVideos;
+
   /// No description provided for @selectFromGallery.
   ///
   /// In en, this message translates to:
@@ -1467,6 +1485,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error applying text: {error}'**
   String errorApplyingText(String error);
+
+  /// No description provided for @notificationUseQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily inspirational quote'**
+  String get notificationUseQuotes;
+
+  /// No description provided for @notificationUseQuotesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a motivational quote in the notification instead of the default message'**
+  String get notificationUseQuotesDescription;
 }
 
 class _AppLocalizationsDelegate

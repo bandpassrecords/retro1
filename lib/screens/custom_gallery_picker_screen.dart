@@ -6,20 +6,31 @@ import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import '../services/timeline_prefs.dart';
+import 'video_trimmer_screen.dart';
 
 class GalleryPickerResult {
   final String path;
   final String mediaType; // 'video' or 'photo'
-  const GalleryPickerResult({required this.path, required this.mediaType});
+  final bool muteAudio;
+  const GalleryPickerResult({
+    required this.path,
+    required this.mediaType,
+    this.muteAudio = false,
+  });
 }
 
 class CustomGalleryPickerScreen extends StatefulWidget {
-  const CustomGalleryPickerScreen({super.key});
+  /// When set, only media created on this date will be shown.
+  final DateTime? filterDate;
+
+  const CustomGalleryPickerScreen({super.key, this.filterDate});
 
   @override
   State<CustomGalleryPickerScreen> createState() =>
       _CustomGalleryPickerScreenState();
 }
+
+enum _MediaFilter { all, photos, videos }
 
 class _CustomGalleryPickerScreenState
     extends State<CustomGalleryPickerScreen> {
@@ -32,6 +43,9 @@ class _CustomGalleryPickerScreenState
   bool _hasMore = true;
   bool _isLoadingMore = false;
   final ScrollController _scrollController = ScrollController();
+
+  _MediaFilter _mediaFilter = _MediaFilter.all;
+  bool _filterByDate = true; // only relevant when widget.filterDate != null
 
   @override
   void initState() {
@@ -80,13 +94,32 @@ class _CustomGalleryPickerScreenState
   }
 
   Future<void> _fetchPage(int page) async {
+    final date = widget.filterDate;
+
+    final orders = [
+      const OrderOption(type: OrderOptionType.createDate, asc: false)
+    ];
+    FilterOptionGroup filterOption;
+    if (date != null && _filterByDate) {
+      final dayStart = DateTime(date.year, date.month, date.day);
+      final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      filterOption = FilterOptionGroup(
+        createTimeCond: DateTimeCond(min: dayStart, max: dayEnd),
+        orders: orders,
+      );
+    } else {
+      filterOption = FilterOptionGroup(orders: orders);
+    }
+
+    final requestType = switch (_mediaFilter) {
+      _MediaFilter.all => RequestType.common,
+      _MediaFilter.photos => RequestType.image,
+      _MediaFilter.videos => RequestType.video,
+    };
+
     final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
-      filterOption: FilterOptionGroup(
-        orders: [
-          const OrderOption(type: OrderOptionType.createDate, asc: false)
-        ],
-      ),
+      type: requestType,
+      filterOption: filterOption,
     );
 
     if (albums.isEmpty) {
@@ -122,7 +155,11 @@ class _CustomGalleryPickerScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.selectFromGallery),
+        title: Text(
+          widget.filterDate != null
+              ? DateFormat('dd/MM/yyyy').format(widget.filterDate!)
+              : AppLocalizations.of(context)!.browseGallery,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -130,6 +167,62 @@ class _CustomGalleryPickerScreenState
             onPressed: _loadAssets,
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(widget.filterDate != null ? 96 : 48),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<_MediaFilter>(
+                  segments: [
+                    ButtonSegment(
+                      value: _MediaFilter.all,
+                      icon: const Icon(Icons.perm_media, size: 16),
+                      label: Text(l10n.mediaFilterAll),
+                    ),
+                    ButtonSegment(
+                      value: _MediaFilter.photos,
+                      icon: const Icon(Icons.photo, size: 16),
+                      label: Text(l10n.mediaFilterPhotos),
+                    ),
+                    ButtonSegment(
+                      value: _MediaFilter.videos,
+                      icon: const Icon(Icons.videocam, size: 16),
+                      label: Text(l10n.mediaFilterVideos),
+                    ),
+                  ],
+                  selected: {_mediaFilter},
+                  onSelectionChanged: (selection) {
+                    setState(() => _mediaFilter = selection.first);
+                    _loadAssets();
+                  },
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                if (widget.filterDate != null) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilterChip(
+                      label: Text(
+                        DateFormat('dd/MM/yyyy').format(widget.filterDate!),
+                      ),
+                      avatar: const Icon(Icons.calendar_today, size: 14),
+                      selected: _filterByDate,
+                      onSelected: (value) {
+                        setState(() => _filterByDate = value);
+                        _loadAssets();
+                      },
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
       body: _buildBody(l10n),
     );
@@ -218,21 +311,39 @@ class _CustomGalleryPickerScreenState
       return;
     }
 
-    // Show preview — user confirms selection inside the sheet
-    final selected = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _MediaPreviewSheet(asset: asset, file: file),
-    );
-
-    if (selected == true && mounted) {
-      final mediaType =
-          asset.type == AssetType.video ? 'video' : 'photo';
-      Navigator.pop(
+    if (asset.type == AssetType.video) {
+      // Videos go straight to the trimmer — user picks the 1-second window
+      // before the file is imported into the app.
+      final result = await Navigator.push<({String path, bool muted})>(
         context,
-        GalleryPickerResult(path: file.path, mediaType: mediaType),
+        MaterialPageRoute(
+          builder: (_) => VideoTrimmerScreen(videoPath: file.path),
+        ),
       );
+      if (result != null && mounted) {
+        Navigator.pop(
+          context,
+          GalleryPickerResult(
+            path: result.path,
+            mediaType: 'video',
+            muteAudio: result.muted,
+          ),
+        );
+      }
+    } else {
+      // Photos: show the existing preview sheet for confirmation.
+      final selected = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _MediaPreviewSheet(asset: asset, file: file),
+      );
+      if (selected == true && mounted) {
+        Navigator.pop(
+          context,
+          GalleryPickerResult(path: file.path, mediaType: 'photo'),
+        );
+      }
     }
   }
 }
