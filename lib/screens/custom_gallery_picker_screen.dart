@@ -155,11 +155,7 @@ class _CustomGalleryPickerScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.filterDate != null
-              ? DateFormat('dd/MM/yyyy').format(widget.filterDate!)
-              : AppLocalizations.of(context)!.browseGallery,
-        ),
+        title: Text(AppLocalizations.of(context)!.browseGallery),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

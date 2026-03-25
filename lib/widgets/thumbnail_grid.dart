@@ -41,6 +41,16 @@ class ThumbnailGridState extends State<ThumbnailGrid> {
     if (mounted) setState(() {});
   }
 
+  /// Jump to today instantly (used on initial load — no visible animation).
+  void jumpToToday() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  /// Animate to today (used when the user taps the "Today" button).
   void scrollToToday() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -102,7 +112,7 @@ class ThumbnailGridState extends State<ThumbnailGrid> {
       valueListenable: ThumbnailSizePrefs.notifier,
       builder: (context, _, __) => GridView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.only(bottom: 80),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: ThumbnailSizePrefs.crossAxisCount,
         crossAxisSpacing: 1,

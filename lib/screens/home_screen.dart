@@ -123,7 +123,7 @@ class _TimelineTabState extends State<_TimelineTab> {
     super.initState();
     if (TimelinePrefs.current == TimelinePrefs.gridView) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _gridKey.currentState?.scrollToToday();
+        _gridKey.currentState?.jumpToToday();
       });
     }
   }
