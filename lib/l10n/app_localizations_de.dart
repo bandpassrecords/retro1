@@ -341,7 +341,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get testNotificationDescription =>
-      'Jetzt eine Testbenachrichtigung senden';
+      'Jetzt eine Testbenachrichtigung senden (zufälliges Zitat)';
 
   @override
   String get testNotificationSent => 'Testbenachrichtigung gesendet!';
@@ -349,6 +349,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get testNotificationError =>
       'Fehler beim Senden der Testbenachrichtigung';
+
+  @override
+  String get testProductionNotification => 'Heutige Benachrichtigung vorschau';
+
+  @override
+  String get testProductionNotificationDescription =>
+      'Sehen Sie genau, wie die heutige Benachrichtigung aussehen wird';
 
   @override
   String get today => 'Heute';

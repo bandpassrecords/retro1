@@ -353,9 +353,14 @@ class NotificationService {
 
     // Corpo da notificação: frase do dia ou mensagem padrão
     final String notificationBody;
+    StyleInformation? styleInformation;
     if (settings.notificationUseQuotes) {
       final quote = QuoteService.getQuoteForDate(scheduledDate);
-      notificationBody = '${quote.text}\n\n— ${quote.author}';
+      notificationBody = quote.text;
+      styleInformation = BigTextStyleInformation(
+        quote.text,
+        contentTitle: quote.author
+      );
     } else {
       notificationBody = _getLocalizedString('notificationBody', language);
     }
@@ -369,6 +374,7 @@ class NotificationService {
       showWhen: true,
       enableVibration: true,
       playSound: true,
+      styleInformation: styleInformation,
     );
     const darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -458,16 +464,23 @@ class NotificationService {
   // Enviar notificação de teste manualmente
   static Future<void> sendTestNotification() async {
     print('[NotificationService] Sending test notification...');
-    
-    // Obter idioma das configurações para traduções
+
     final settings = HiveService.getSettings();
     final language = settings.language;
-    
+
     final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
     final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
     final testNotificationTitle = _getLocalizedString('testNotificationTitle', language);
-    final testNotificationBody = _getLocalizedString('testNotificationBody', language);
-    
+
+    // Use a real quote (random) so the user can see how the notification looks
+    final quote = QuoteService.getRandomQuote();
+    final notificationBody = quote.text;
+    final styleInformation = BigTextStyleInformation(
+      quote.text,
+      contentTitle: testNotificationTitle,
+      summaryText: ' ${quote.author}',
+    );
+
     final androidDetails = AndroidNotificationDetails(
       'daily_reminder',
       dailyReminderTitle,
@@ -477,6 +490,7 @@ class NotificationService {
       showWhen: true,
       enableVibration: true,
       playSound: true,
+      styleInformation: styleInformation,
     );
     const darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -491,14 +505,66 @@ class NotificationService {
 
     try {
       await _notifications.show(
-        999, // ID único para notificação de teste
+        999,
         testNotificationTitle,
-        testNotificationBody,
+        notificationBody,
         details,
       );
       print('[NotificationService] Test notification sent successfully');
     } catch (e) {
       print('[NotificationService] ERROR sending test notification: $e');
+      rethrow;
+    }
+  }
+
+  // Enviar prévia de produção: usa a frase de hoje e o mesmo formato das notificações agendadas
+  static Future<void> sendProductionPreviewNotification() async {
+    print('[NotificationService] Sending production preview notification...');
+
+    final settings = HiveService.getSettings();
+    final language = settings.language;
+
+    final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
+    final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
+    final notificationTitle = _getLocalizedString('notificationTitle', language);
+
+    final String notificationBody;
+    StyleInformation? styleInformation;
+    if (settings.notificationUseQuotes) {
+      final quote = QuoteService.getTodayQuote();
+      notificationBody = quote.text;
+      styleInformation = BigTextStyleInformation(
+        quote.text,
+        contentTitle: quote.author
+      );
+    } else {
+      notificationBody = _getLocalizedString('notificationBody', language);
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      'daily_reminder',
+      dailyReminderTitle,
+      channelDescription: dailyReminderDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      styleInformation: styleInformation,
+    );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final details = NotificationDetails(android: androidDetails, iOS: darwinDetails);
+
+    try {
+      await _notifications.show(998, notificationTitle, notificationBody, details);
+      print('[NotificationService] Production preview notification sent successfully');
+    } catch (e) {
+      print('[NotificationService] ERROR sending production preview: $e');
       rethrow;
     }
   }

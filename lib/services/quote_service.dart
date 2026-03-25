@@ -1,66 +1,28 @@
-import 'dart:math';
-import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-
 /// Manages the daily inspirational quote cycle.
+/// Each day of the year always maps to the same quote (deterministic).
 /// Quotes are exclusive to push notifications — never displayed inside the app.
 class QuoteService {
-  static const _boxName = 'quote_state';
-  static const _orderKey = 'shuffled_order';
-  static const _cycleStartKey = 'cycle_start_ms';
+  /// Call after HiveService.init(). No-op now — kept for compatibility.
+  static Future<void> init() async {}
 
-  static Box? _box;
-
-  /// Call after HiveService.init().
-  static Future<void> init() async {
-    _box = await Hive.openBox(_boxName);
-    _ensureCycleInitialized();
-  }
-
-  static void _ensureCycleInitialized() {
-    final today = _dateOnly(DateTime.now());
-    final cycleStartMs = _box!.get(_cycleStartKey) as int?;
-    final rawOrder = _box!.get(_orderKey);
-
-    if (cycleStartMs == null || rawOrder == null) {
-      _resetCycle(today);
-      return;
-    }
-
-    final cycleStart = DateTime.fromMillisecondsSinceEpoch(cycleStartMs);
-    if (today.difference(cycleStart).inDays >= quotes.length) {
-      // Full cycle complete — advance start by exactly 365 days and re-shuffle.
-      _resetCycle(cycleStart.add(Duration(days: quotes.length)));
-    }
-  }
-
-  static void _resetCycle(DateTime cycleStart) {
-    final order = List<int>.generate(quotes.length, (i) => i)..shuffle(Random());
-    _box!.put(_orderKey, order);
-    _box!.put(_cycleStartKey, cycleStart.millisecondsSinceEpoch);
-    print('[QuoteService] New 365-day cycle started: $cycleStart');
-  }
-
-  /// Returns the quote assigned to [date] within the current cycle.
+  /// Returns the quote assigned to [date].
+  /// Uses dayOfYear so the same calendar day always gets the same quote.
   static ({String text, String author}) getQuoteForDate(DateTime date) {
-    final cycleStartMs = _box!.get(_cycleStartKey) as int?;
-    final rawOrder = _box!.get(_orderKey);
-
-    if (cycleStartMs == null || rawOrder == null) {
-      return (text: quotes[0].$1, author: quotes[0].$2);
-    }
-
-    final cycleStart = DateTime.fromMillisecondsSinceEpoch(cycleStartMs);
-    final dayIndex =
-        _dateOnly(date).difference(cycleStart).inDays.clamp(0, quotes.length - 1);
-    final order = List<int>.from(rawOrder as List);
-    final q = quotes[order[dayIndex]];
+    final startOfYear = DateTime(date.year, 1, 1);
+    final dayOfYear = date.difference(startOfYear).inDays; // 0-based
+    final index = dayOfYear % quotes.length;
+    final q = quotes[index];
     return (text: q.$1, author: q.$2);
   }
 
   static ({String text, String author}) getTodayQuote() =>
       getQuoteForDate(DateTime.now());
 
-  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+  static ({String text, String author}) getRandomQuote() {
+    final index = DateTime.now().millisecondsSinceEpoch % quotes.length;
+    final q = quotes[index];
+    return (text: q.$1, author: q.$2);
+  }
 
   // ---------------------------------------------------------------------------
   // 365 curated quotes — push notifications only, not shown inside the app

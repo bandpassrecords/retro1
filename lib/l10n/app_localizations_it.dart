@@ -338,7 +338,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get testNotification => 'Testa notifica';
 
   @override
-  String get testNotificationDescription => 'Invia una notifica di test ora';
+  String get testNotificationDescription =>
+      'Invia una notifica di test ora (citazione casuale)';
 
   @override
   String get testNotificationSent => 'Notifica di test inviata!';
@@ -346,6 +347,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get testNotificationError =>
       'Errore nell\'invio della notifica di test';
+
+  @override
+  String get testProductionNotification => 'Anteprima notifica di oggi';
+
+  @override
+  String get testProductionNotificationDescription =>
+      'Vedi esattamente come apparirà la notifica di oggi';
 
   @override
   String get today => 'Oggi';
