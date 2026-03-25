@@ -294,6 +294,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get showDateInVideo => 'Afficher la date dans la vidéo';
 
   @override
+  String get dateFormatLabel => 'Format de date dans la vidéo';
+
+  @override
   String get autoExportEndOfYear => 'Exportation automatique en fin d\'année';
 
   @override

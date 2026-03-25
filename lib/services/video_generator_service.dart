@@ -22,13 +22,13 @@ class VideoGeneratorService {
     bool showDateOverlay = true,
     String? externalAudioPath,
     String? locale,
+    String dateFormat = 'dd/MM/yyyy',
   }) async {
     final entries = HiveService.getEntriesByMonth(year, month);
     if (entries.isEmpty) {
       return null;
     }
 
-    // Usar locale fornecido ou padrão 'en'
     final localeToUse = locale ?? 'en';
     return await _generateCompiledVideo(
       entries: entries,
@@ -36,6 +36,7 @@ class VideoGeneratorService {
       quality: quality,
       showDateOverlay: showDateOverlay,
       externalAudioPath: externalAudioPath,
+      dateFormat: dateFormat,
     );
   }
 
@@ -45,6 +46,7 @@ class VideoGeneratorService {
     String quality = '1080p',
     bool showDateOverlay = true,
     String? externalAudioPath,
+    String dateFormat = 'dd/MM/yyyy',
   }) async {
     final entries = HiveService.getEntriesByYear(year);
     if (entries.isEmpty) {
@@ -57,6 +59,7 @@ class VideoGeneratorService {
       quality: quality,
       showDateOverlay: showDateOverlay,
       externalAudioPath: externalAudioPath,
+      dateFormat: dateFormat,
     );
   }
 
@@ -68,17 +71,16 @@ class VideoGeneratorService {
     bool showDateOverlay = true,
     String? externalAudioPath,
     String? locale,
+    String dateFormat = 'dd/MM/yyyy',
   }) async {
     final entries = HiveService.getEntriesByDateRange(startDate, endDate);
     if (entries.isEmpty) {
       return null;
     }
 
-    // Usar formato de data sem barras para evitar problemas no nome do arquivo
-    // Usar locale fornecido ou padrão 'en'
     final localeToUse = locale ?? 'en';
-    final dateFormat = DateFormat('dd-MM-yyyy', localeToUse);
-    final title = '${dateFormat.format(startDate)}_-_${dateFormat.format(endDate)}';
+    final titleFmt = DateFormat('dd-MM-yyyy', localeToUse);
+    final title = '${titleFmt.format(startDate)}_-_${titleFmt.format(endDate)}';
 
     return await _generateCompiledVideo(
       entries: entries,
@@ -86,6 +88,7 @@ class VideoGeneratorService {
       quality: quality,
       showDateOverlay: showDateOverlay,
       externalAudioPath: externalAudioPath,
+      dateFormat: dateFormat,
     );
   }
 
@@ -96,6 +99,7 @@ class VideoGeneratorService {
     String quality = '1080p',
     bool showDateOverlay = true,
     String? externalAudioPath,
+    String dateFormat = 'dd/MM/yyyy',
   }) async {
     print('[VideoGenerator] Starting video generation for: $title');
     print('[VideoGenerator] Entries count: ${entries.length}');
@@ -145,6 +149,7 @@ class VideoGeneratorService {
         entries,
         showDateOverlay: showDateOverlay && fontPath != null,
         fontPath: fontPath,
+        dateFormat: dateFormat,
       );
       if (concatFile == null) {
         print('[VideoGenerator] ERROR: Failed to create concat file');
@@ -282,7 +287,7 @@ class VideoGeneratorService {
         print('[VideoGenerator] FFmpeg command (using concat demuxer with normalization): $command');
       }
       
-      print('[VideoGenerator] Resolution: ${width}x${height}, Bitrate: $videoBitrate');
+      print('[VideoGenerator] Resolution: ${width}x$height, Bitrate: $videoBitrate');
 
       // Se mostrar overlay de data, adicionar filtro
       if (showDateOverlay) {
@@ -394,6 +399,7 @@ class VideoGeneratorService {
     List<DailyEntry> entries, {
     bool showDateOverlay = false,
     String? fontPath,
+    String dateFormat = 'dd/MM/yyyy',
   }) async {
     print('[VideoGenerator] Creating concat file for ${entries.length} entries');
     try {
@@ -447,7 +453,7 @@ class VideoGeneratorService {
 
           if (showDateOverlay && fontPath != null) {
             // Convert photo → video with date overlay in one pass
-            final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
+            final dateText = DateFormat(dateFormat).format(entry.date);
             final dated = await _convertPhotoToVideoWithDate(
               photoPath: photoPath,
               dateText: dateText,
@@ -474,7 +480,7 @@ class VideoGeneratorService {
           print('[VideoGenerator] Photo processed to video: $clipPath');
         } else if (showDateOverlay && fontPath != null) {
           // Burn date into existing video clip
-          final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
+          final dateText = DateFormat(dateFormat).format(entry.date);
           clipPath = await _addDateOverlayToVideo(
             inputPath: clipPath,
             dateText: dateText,
@@ -529,39 +535,7 @@ class VideoGeneratorService {
 
   // ─── Date overlay helpers ────────────────────────────────────────────────
 
-  static String? _cachedFontPath;
-
-  /// Returns the first available font path for FFmpeg drawtext, or null.
-  /// On Android tries system fonts; on iOS tries app-documents bundled font.
-  static Future<String?> _findFontPath() async {
-    if (_cachedFontPath != null) return _cachedFontPath;
-
-    if (Platform.isAndroid) {
-      const candidates = [
-        '/system/fonts/Roboto-Regular.ttf',
-        '/system/fonts/DroidSans.ttf',
-        '/system/fonts/NotoSans-Regular.ttf',
-        '/system/fonts/LiberationSans-Regular.ttf',
-      ];
-      for (final p in candidates) {
-        if (await File(p).exists()) {
-          _cachedFontPath = p;
-          return p;
-        }
-      }
-    } else if (Platform.isIOS) {
-      // On iOS, check the app documents dir for a font extracted from assets.
-      // The user/setup script can place Roboto-Regular.ttf there.
-      final docsDir = await getApplicationDocumentsDirectory();
-      final candidate = path.join(docsDir.path, 'Roboto-Regular.ttf');
-      if (await File(candidate).exists()) {
-        _cachedFontPath = candidate;
-        return candidate;
-      }
-    }
-
-    return null;
-  }
+  static Future<String?> _findFontPath() => VideoEditorService.findFontPath();
 
   /// Burns [dateText] into a video clip using FFmpeg drawtext.
   /// Returns the path to the processed clip, or [inputPath] on failure.
@@ -574,10 +548,13 @@ class VideoGeneratorService {
     final outputPath =
         path.join(tempDir, 'dated_${_uuid.v4()}.mp4');
     final safeFont = fontPath.replaceAll('\\', '/');
+    // Normalize to 1920x1080 first so fontsize and position are consistent
     final filter =
-        "drawtext=text='$dateText':fontfile='$safeFont':fontsize=28:"
-        "fontcolor=white:x=w-tw-10:y=h-th-10:"
-        "box=1:boxcolor=black@0.5:boxborderw=4";
+        'scale=1920:1080:force_original_aspect_ratio=decrease,'
+        'pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,'
+        'drawtext=text=\'$dateText\':fontfile=\'$safeFont\':fontsize=64:'
+        'fontcolor=white:x=w-tw-60:y=h-th-60:'
+        'bordercolor=black@0.8:borderw=2';
     final inputUnix = inputPath.replaceAll('\\', '/');
     final outputUnix = outputPath.replaceAll('\\', '/');
     final cmd =
@@ -600,10 +577,13 @@ class VideoGeneratorService {
     final outputPath =
         path.join(tempDir, 'photo_dated_${_uuid.v4()}.mp4');
     final safeFont = fontPath.replaceAll('\\', '/');
+    // Scale/pad to 1920x1080 first so fontsize and position match video clips
     final filter =
-        "drawtext=text='$dateText':fontfile='$safeFont':fontsize=28:"
-        "fontcolor=white:x=w-tw-10:y=h-th-10:"
-        "box=1:boxcolor=black@0.5:boxborderw=4";
+        'scale=1920:1080:force_original_aspect_ratio=decrease,'
+        'pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,'
+        'drawtext=text=\'$dateText\':fontfile=\'$safeFont\':fontsize=64:'
+        'fontcolor=white:x=w-tw-60:y=h-th-60:'
+        'bordercolor=black@0.8:borderw=2';
     final photoUnix = photoPath.replaceAll('\\', '/');
     final outputUnix = outputPath.replaceAll('\\', '/');
     final cmd = '-loop 1 -t 1 -i "$photoUnix" '
@@ -820,7 +800,7 @@ class VideoGeneratorService {
         print('[VideoGenerator] FFmpeg command (using concat demuxer with normalization): $command');
       }
       
-      print('[VideoGenerator] Resolution: ${width}x${height}, Bitrate: $videoBitrate');
+      print('[VideoGenerator] Resolution: ${width}x$height, Bitrate: $videoBitrate');
 
       // Se já executamos o comando em duas etapas (com áudio externo), não executar novamente
       ReturnCode? finalReturnCode;

@@ -292,6 +292,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showDateInVideo => 'Show date in video';
 
   @override
+  String get dateFormatLabel => 'Date format in video';
+
+  @override
   String get autoExportEndOfYear => 'Auto export at end of year';
 
   @override

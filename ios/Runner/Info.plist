@@ -7,7 +7,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Retro1 needs camera access to record your daily moments.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Retro1 needs microphone access to record video with audio.</string>
+	<string>Retro1 needs ¬phone access to record video with audio.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Retro1 needs access to your photo library to import media.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

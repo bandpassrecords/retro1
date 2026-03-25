@@ -171,6 +171,7 @@
   "weeklySummary": "Wöchentliche Zusammenfassung",
   "videoQuality": "Videoqualität",
   "showDateInVideo": "Datum im Video anzeigen",
+  "dateFormatLabel": "Datumsformat im Video",
   "autoExportEndOfYear": "Automatischer Export am Jahresende",
   "autoBackup": "Automatisches Backup",
   "totalEntries": "Gesamte Einträge",

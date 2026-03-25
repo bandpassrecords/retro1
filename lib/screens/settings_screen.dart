@@ -557,6 +557,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
+          SwitchListTile(
+            title: Text(l10n.showDateInVideo),
+            value: _settings.showDateOverlay,
+            onChanged: (value) {
+              setState(() => _settings.showDateOverlay = value);
+              _saveSettings();
+            },
+          ),
+          if (_settings.showDateOverlay)
+            ListTile(
+              title: Text(l10n.dateFormatLabel),
+              subtitle: Text(_settings.dateFormat),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(l10n.dateFormatLabel),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        RadioListTile<String>(
+                          title: const Text('dd/MM/yyyy'),
+                          subtitle: const Text('31/12/2024'),
+                          value: 'dd/MM/yyyy',
+                          groupValue: _settings.dateFormat,
+                          onChanged: (value) {
+                            setState(() => _settings.dateFormat = value!);
+                            Navigator.pop(context);
+                            _saveSettings();
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('MM/dd/yyyy'),
+                          subtitle: const Text('12/31/2024'),
+                          value: 'MM/dd/yyyy',
+                          groupValue: _settings.dateFormat,
+                          onChanged: (value) {
+                            setState(() => _settings.dateFormat = value!);
+                            Navigator.pop(context);
+                            _saveSettings();
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('yyyy/MM/dd'),
+                          subtitle: const Text('2024/12/31'),
+                          value: 'yyyy/MM/dd',
+                          groupValue: _settings.dateFormat,
+                          onChanged: (value) {
+                            setState(() => _settings.dateFormat = value!);
+                            Navigator.pop(context);
+                            _saveSettings();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
           // Exportação
           _buildSectionHeader(l10n.export),
           ListTile(

@@ -27,6 +27,7 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
   String? _selectedAudioPath;
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
+  bool _showDateOverlay = HiveService.getSettings().showDateOverlay;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +72,11 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
             _buildSuccessCard()
           else ...[
             _buildAudioSelectionCard(),
+            SwitchListTile(
+              title: Text(AppLocalizations.of(context)!.showDateInVideo),
+              value: _showDateOverlay,
+              onChanged: (v) => setState(() => _showDateOverlay = v),
+            ),
             _buildSectionHeader(AppLocalizations.of(context)!.generateByPeriod),
             _buildGenerateButton(
               icon: Icons.calendar_month,
@@ -315,9 +321,10 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
         year: year,
         month: month,
         quality: settings.videoQuality,
-        showDateOverlay: settings.showDateOverlay,
+        showDateOverlay: _showDateOverlay,
         externalAudioPath: _selectedAudioPath,
         locale: locale,
+        dateFormat: settings.dateFormat,
       );
 
       if (path != null && mounted) {
@@ -391,8 +398,9 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
       final path = await VideoGeneratorService.generateYearVideo(
         year: year,
         quality: settings.videoQuality,
-        showDateOverlay: settings.showDateOverlay,
+        showDateOverlay: _showDateOverlay,
         externalAudioPath: _selectedAudioPath,
+        dateFormat: settings.dateFormat,
       );
 
       if (path != null && mounted) {
@@ -484,9 +492,10 @@ class _VideoGeneratorScreenState extends State<VideoGeneratorScreen> {
         startDate: startDate,
         endDate: endDate,
         quality: settings.videoQuality,
-        showDateOverlay: settings.showDateOverlay,
+        showDateOverlay: _showDateOverlay,
         externalAudioPath: _selectedAudioPath,
         locale: locale,
+        dateFormat: settings.dateFormat,
       );
 
       if (path != null && mounted) {

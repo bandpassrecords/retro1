@@ -118,6 +118,16 @@ class _TimelineTabState extends State<_TimelineTab> {
   bool _isRefreshing = false;
   DateTime? _calendarSelectedDay;
 
+  @override
+  void initState() {
+    super.initState();
+    if (TimelinePrefs.current == TimelinePrefs.gridView) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _gridKey.currentState?.scrollToToday();
+      });
+    }
+  }
+
   Future<void> _handleRefresh() async {
     setState(() => _isRefreshing = true);
     await Future.delayed(const Duration(milliseconds: 300));
