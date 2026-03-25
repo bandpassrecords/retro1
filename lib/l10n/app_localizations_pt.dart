@@ -293,6 +293,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get showDateInVideo => 'Mostrar data no vídeo';
 
   @override
+  String get dateFormatLabel => 'Formato de data no vídeo';
+
+  @override
   String get autoExportEndOfYear => 'Exportação automática no fim do ano';
 
   @override

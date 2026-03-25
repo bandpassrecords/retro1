@@ -41,6 +41,9 @@ class AppSettings extends HiveObject {
   @HiveField(11)
   bool notificationUseQuotes; // true = frase do dia, false = mensagem padrão
 
+  @HiveField(12)
+  String dateFormat; // 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy/MM/dd'
+
   AppSettings({
     this.notificationHour = 20,
     this.notificationMinute = 0,
@@ -54,6 +57,7 @@ class AppSettings extends HiveObject {
     this.reminderDelayHours = 3,
     this.lastCalendarScrollPosition,
     this.notificationUseQuotes = true,
+    this.dateFormat = 'dd/MM/yyyy',
   });
 
   // Getter para lastCalendarScrollPosition com valor padrão

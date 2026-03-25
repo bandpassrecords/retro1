@@ -45,7 +45,7 @@ class _CustomGalleryPickerScreenState
   final ScrollController _scrollController = ScrollController();
 
   _MediaFilter _mediaFilter = _MediaFilter.all;
-  bool _filterByDate = true; // only relevant when widget.filterDate != null
+  bool _filterByDate = false; // only relevant when widget.filterDate != null
 
   @override
   void initState() {
@@ -206,10 +206,8 @@ class _CustomGalleryPickerScreenState
                   Align(
                     alignment: Alignment.centerLeft,
                     child: FilterChip(
-                      label: Text(
-                        DateFormat('dd/MM/yyyy').format(widget.filterDate!),
-                      ),
-                      avatar: const Icon(Icons.calendar_today, size: 14),
+                      label: Text(AppLocalizations.of(context)!.today),
+                      avatar: const Icon(Icons.today, size: 14),
                       selected: _filterByDate,
                       onSelected: (value) {
                         setState(() => _filterByDate = value);

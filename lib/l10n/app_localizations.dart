@@ -616,6 +616,12 @@ abstract class AppLocalizations {
   /// **'Show date in video'**
   String get showDateInVideo;
 
+  /// No description provided for @dateFormatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format in video'**
+  String get dateFormatLabel;
+
   /// No description provided for @autoExportEndOfYear.
   ///
   /// In en, this message translates to:

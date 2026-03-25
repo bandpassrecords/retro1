@@ -317,6 +317,37 @@ class VideoEditorService {
     }
   }
 
+  // Encontrar caminho do fonte para FFmpeg drawtext
+  static String? _cachedFontPath;
+
+  static Future<String?> findFontPath() async {
+    if (_cachedFontPath != null) return _cachedFontPath;
+
+    if (Platform.isAndroid) {
+      const candidates = [
+        '/system/fonts/Roboto-Regular.ttf',
+        '/system/fonts/DroidSans.ttf',
+        '/system/fonts/NotoSans-Regular.ttf',
+        '/system/fonts/LiberationSans-Regular.ttf',
+      ];
+      for (final p in candidates) {
+        if (await File(p).exists()) {
+          _cachedFontPath = p;
+          return p;
+        }
+      }
+    } else if (Platform.isIOS) {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final candidate = path.join(docsDir.path, 'Roboto-Regular.ttf');
+      if (await File(candidate).exists()) {
+        _cachedFontPath = candidate;
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
   // Gerar thumbnail do vídeo
   static Future<String?> generateThumbnail({
     required String videoPath,
