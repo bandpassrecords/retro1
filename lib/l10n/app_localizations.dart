@@ -709,7 +709,7 @@ abstract class AppLocalizations {
   /// No description provided for @testNotificationDescription.
   ///
   /// In en, this message translates to:
-  /// **'Send a test notification now'**
+  /// **'Send a test notification now (random quote)'**
   String get testNotificationDescription;
 
   /// No description provided for @testNotificationSent.
@@ -723,6 +723,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error sending test notification'**
   String get testNotificationError;
+
+  /// No description provided for @testProductionNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview today\'s notification'**
+  String get testProductionNotification;
+
+  /// No description provided for @testProductionNotificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'See exactly how today\'s notification will appear'**
+  String get testProductionNotificationDescription;
 
   /// No description provided for @today.
   ///

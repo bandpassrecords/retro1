@@ -499,6 +499,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
           ),
+          ListTile(
+            title: Text(l10n.testProductionNotification),
+            subtitle: Text(l10n.testProductionNotificationDescription),
+            trailing: const Icon(Icons.preview_outlined),
+            onTap: () async {
+              try {
+                await NotificationService.sendProductionPreviewNotification();
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.testNotificationError}: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
 
           // Vídeo
           _buildSectionHeader(l10n.video),

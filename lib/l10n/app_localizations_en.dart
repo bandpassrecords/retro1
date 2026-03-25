@@ -337,13 +337,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get testNotification => 'Test notification';
 
   @override
-  String get testNotificationDescription => 'Send a test notification now';
+  String get testNotificationDescription =>
+      'Send a test notification now (random quote)';
 
   @override
   String get testNotificationSent => 'Test notification sent!';
 
   @override
   String get testNotificationError => 'Error sending test notification';
+
+  @override
+  String get testProductionNotification => 'Preview today\'s notification';
+
+  @override
+  String get testProductionNotificationDescription =>
+      'See exactly how today\'s notification will appear';
 
   @override
   String get today => 'Today';
