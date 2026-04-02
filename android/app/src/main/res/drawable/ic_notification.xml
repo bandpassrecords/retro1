@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+  <!-- R: vertical stem -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M1,3 L4.5,3 L4.5,21 L1,21 Z"/>
+
+  <!-- R: bowl (upper-right bump) + leg, with inner counter hole -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:fillType="evenOdd"
+      android:pathData="M4,3 L8.5,3 Q13,3 13,7.75 Q13,12.5 8.5,12.5 L13.5,21 L10,21 L4,12.5 Z
+                        M6,5.5 L8,5.5 Q10.5,5.5 10.5,7.75 Q10.5,10 8,10 L6,10 Z"/>
+
+  <!-- 1: vertical stroke -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M17,3 L21,3 L21,21 L17,21 Z"/>
+
+  <!-- 1: top-left diagonal notch (matches logo style) -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M14,5 L17,3 L17,7 Z"/>
+
+</vector>
