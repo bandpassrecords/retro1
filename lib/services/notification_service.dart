@@ -24,9 +24,9 @@ class NotificationService {
         final systemOffset = DateTime.now().timeZoneOffset;
         final offsetHours = systemOffset.inHours;
         final offsetMinutes = systemOffset.inMinutes % 60;
-        
+
         print('[NotificationService] System timezone offset: $systemOffset (${offsetHours >= 0 ? '+' : ''}$offsetHours:${offsetMinutes.toString().padLeft(2, '0')})');
-        
+
         // Mapear offset para timezone IANA comum
         // Usar timezones reais em vez de Etc/GMT para melhor suporte a DST
         final timezoneMap = {
@@ -50,7 +50,7 @@ class NotificationService {
           10: 'Australia/Sydney',  // UTC+10 (AEDT) ou UTC+11 (AEST)
           -10: 'Pacific/Honolulu', // UTC-10
         };
-        
+
         // Tentar usar timezone baseado no offset
         final suggestedTimezone = timezoneMap[offsetHours];
         if (suggestedTimezone != null) {
@@ -69,7 +69,7 @@ class NotificationService {
           // Se não houver mapeamento, usar Etc/GMT baseado no offset
           _setTimezoneByOffset(offsetHours);
         }
-        
+
         // Verificar se o timezone foi configurado corretamente
         final localLocation = tz.local;
         final locationOffset = localLocation.currentTimeZone.offset;
@@ -77,7 +77,7 @@ class NotificationService {
         final locationOffsetHours = locationOffset ~/ 3600; // Converter segundos para horas
         print('[NotificationService] Configured timezone: ${localLocation.name}');
         print('[NotificationService] Configured timezone offset: $locationOffset seconds (${locationOffsetHours} hours)');
-        
+
         // Verificar se o offset corresponde ao sistema
         // Permitir diferença de até 1 hora devido a DST (Daylight Saving Time)
         final offsetDiff = (locationOffsetHours - offsetHours).abs();
@@ -85,7 +85,7 @@ class NotificationService {
           print('[NotificationService] WARNING: Timezone offset mismatch! System: $offsetHours, Configured: $locationOffsetHours');
           print('[NotificationService] Attempting to fix...');
           _setTimezoneByOffset(offsetHours);
-          
+
           // Verificar novamente após correção
           final correctedLocation = tz.local;
           final correctedOffset = correctedLocation.currentTimeZone.offset;
@@ -104,9 +104,9 @@ class NotificationService {
           print('[NotificationService] ERROR setting UTC timezone: $e2');
         }
       }
-      
+
       // 3. Configurar inicialização do plugin
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_notification');
       const darwinSettings = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -131,7 +131,7 @@ class NotificationService {
 
       // 4. Solicitar permissões
       await _requestPermissions();
-      
+
       // 5. Agendar notificações
       await scheduleNotifications();
       print('[NotificationService] Initialization complete');
@@ -181,7 +181,7 @@ class NotificationService {
       } else {
         timezoneName = 'Etc/GMT+${-offsetHours}';
       }
-      
+
       final location = tz.getLocation(timezoneName);
       tz.setLocalLocation(location);
       print('[NotificationService] Set timezone to: $timezoneName (offset: $offsetHours)');
@@ -201,15 +201,15 @@ class NotificationService {
   static Future<void> checkAndCancelNotificationsForDate(DateTime date) async {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final hasEntry = HiveService.hasEntryForDate(dateOnly);
-    
+
     if (hasEntry) {
       print('[NotificationService] Entry exists for $dateOnly, canceling notifications for this date');
-      
+
       // Calcular o offset do dia (quantos dias a partir de hoje)
       final today = DateTime.now();
       final todayOnly = DateTime(today.year, today.month, today.day);
       final dayOffset = dateOnly.difference(todayOnly).inDays;
-      
+
       if (dayOffset >= 0 && dayOffset < 30) {
         // Cancelar notificação principal (ID 0-29)
         await _notifications.cancel(dayOffset);
@@ -219,7 +219,7 @@ class NotificationService {
       }
     }
   }
-  
+
   // Reagendar notificações após uma entrada ser adicionada
   static Future<void> rescheduleNotificationsAfterEntryAdded() async {
     print('[NotificationService] Rescheduling notifications after entry added');
@@ -231,10 +231,10 @@ class NotificationService {
   // Agora verifica se a entrada existe antes de agendar
   static Future<void> scheduleNotifications() async {
     print('[NotificationService] Scheduling notifications...');
-    
+
     // Cancelar todas as notificações existentes primeiro
     await cancelAllNotifications();
-    
+
     final settings = HiveService.getSettings();
     if (!settings.notificationsEnabled) {
       print('[NotificationService] Notifications are disabled in settings');
@@ -246,32 +246,32 @@ class NotificationService {
       minute: settings.notificationMinute,
     );
     print('[NotificationService] Notification time: ${time.hour}:${time.minute}');
-    
+
     // Obter data/hora atual no timezone local
     final systemNow = DateTime.now();
     final now = tz.TZDateTime.now(tz.local);
-    
+
     print('[NotificationService] System time: $systemNow (offset: ${systemNow.timeZoneOffset})');
     print('[NotificationService] Local timezone time: $now');
     print('[NotificationService] Local timezone: ${tz.local.name}');
     final localOffset = tz.local.currentTimeZone.offset;
     final localOffsetHours = localOffset ~/ 3600;
     print('[NotificationService] Local timezone offset: $localOffset seconds ($localOffsetHours hours)');
-    
+
     // Agendar notificações para os próximos 30 dias, mas apenas para dias que não têm entrada
     // Isso garante que notificações só aparecem quando necessário
     for (int dayOffset = 0; dayOffset < 30; dayOffset++) {
       final targetDate = now.add(Duration(days: dayOffset));
       final targetDateOnly = DateTime(targetDate.year, targetDate.month, targetDate.day);
-      
+
       // Verificar se já existe entrada para este dia
       final hasEntry = HiveService.hasEntryForDate(targetDateOnly);
-      
+
       if (hasEntry) {
         print('[NotificationService] Entry exists for ${targetDateOnly}, skipping notification');
         continue;
       }
-      
+
       // Criar data agendada para este dia no horário especificado
       var scheduledDate = tz.TZDateTime(
         tz.local,
@@ -281,13 +281,13 @@ class NotificationService {
         time.hour,
         time.minute,
       );
-      
-      // Se já passou o horário de hoje, pular
-      if (dayOffset == 0 && (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now))) {
-        print('[NotificationService] Time already passed for today, skipping');
+
+      // Skip if scheduled time has already passed
+      if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
+        print('[NotificationService] Time already passed for day $dayOffset, skipping');
         continue;
       }
-      
+
       print('[NotificationService] Scheduling notification for: $scheduledDate (day ${dayOffset})');
       await _scheduleNotificationForDate(scheduledDate, dayOffset);
 
@@ -301,7 +301,7 @@ class NotificationService {
           time.hour + settings.reminderDelayHours,
           time.minute,
         );
-        
+
         if (reminderDate.hour >= 24) {
           reminderDate = tz.TZDateTime(
             tz.local,
@@ -312,7 +312,7 @@ class NotificationService {
             reminderDate.minute,
           );
         }
-        
+
         // Verificar se ainda não tem entrada no dia do lembrete
         final reminderDateOnly = DateTime(reminderDate.year, reminderDate.month, reminderDate.day);
         if (!HiveService.hasEntryForDate(reminderDateOnly)) {
@@ -321,7 +321,7 @@ class NotificationService {
         }
       }
     }
-    
+
     // Verificar notificações pendentes após agendamento
     await Future.delayed(const Duration(milliseconds: 1000));
     final pendingNotifications = await _notifications.pendingNotificationRequests();
@@ -329,7 +329,7 @@ class NotificationService {
     for (var notif in pendingNotifications) {
       print('[NotificationService]   - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
     }
-    
+
     print('[NotificationService] Notifications scheduled successfully');
   }
 
@@ -337,7 +337,7 @@ class NotificationService {
   // Usa um ID único baseado no dia para permitir cancelamento individual
   static Future<void> _scheduleNotificationForDate(tz.TZDateTime scheduledDate, int dayOffset) async {
     print('[NotificationService] Scheduling notification at: $scheduledDate (day offset: $dayOffset)');
-    
+
     // Usar ID único baseado no dia (0-29 para os próximos 30 dias)
     // ID 0-29 para notificações principais, 100-129 para lembretes
     final notificationId = dayOffset;
@@ -345,7 +345,7 @@ class NotificationService {
     // Obter idioma das configurações para traduções
     final settings = HiveService.getSettings();
     final language = settings.language;
-    
+
     // Traduções baseadas no idioma (fallback para inglês)
     final dailyReminderTitle = _getLocalizedString('dailyReminder', language);
     final dailyReminderDescription = _getLocalizedString('dailyReminderDescription', language);
@@ -398,7 +398,7 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.inexact,
         payload: 'check_entry_$dayOffset',
       );
-      
+
       print('[NotificationService] Notification scheduled successfully for day $dayOffset');
     } catch (e, stackTrace) {
       print('[NotificationService] ERROR scheduling notification: $e');
@@ -409,14 +409,14 @@ class NotificationService {
   // Agendar notificação de lembrete para uma data específica
   static Future<void> _scheduleReminderNotificationForDate(tz.TZDateTime scheduledDate, int dayOffset) async {
     print('[NotificationService] Scheduling reminder notification at: $scheduledDate (day offset: $dayOffset)');
-    
+
     // Usar ID único baseado no dia + 100 para lembretes (100-129)
     final notificationId = 100 + dayOffset;
 
     // Obter idioma das configurações para traduções
     final settings = HiveService.getSettings();
     final language = settings.language;
-    
+
     // Traduções baseadas no idioma
     final reminderTitle = _getLocalizedString('reminder', language);
     final reminderDescription = _getLocalizedString('reminderChannelDescription', language);
@@ -453,7 +453,7 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.inexact,
         payload: 'reminder_$dayOffset',
       );
-      
+
       print('[NotificationService] Reminder notification scheduled successfully for day $dayOffset');
     } catch (e, stackTrace) {
       print('[NotificationService] ERROR scheduling reminder notification: $e');
