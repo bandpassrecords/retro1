@@ -7,6 +7,7 @@ import 'package:retro1/l10n/app_localizations.dart' show AppLocalizations;
 import 'screens/home_screen.dart';
 import 'services/notification_service.dart';
 import 'services/hive_service.dart';
+import 'services/backup_service.dart';
 import 'services/quote_service.dart';
 import 'services/timeline_prefs.dart';
 
@@ -30,6 +31,9 @@ void main() async {
 
   // Inicializar notificações
   await NotificationService.init();
+
+  // Auto backup (runs silently in background if enabled)
+  BackupService.checkAndRunAutoBackup();
   
   // Allow all orientations (portraitDown excluded on iOS — unsupported on iPhone)
   await SystemChrome.setPreferredOrientations([

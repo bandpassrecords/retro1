@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:retro1/l10n/app_localizations.dart';
 import 'package:retro1/main.dart';
 import '../services/hive_service.dart';
 import '../services/notification_service.dart';
+import '../services/backup_service.dart';
 import '../services/timeline_prefs.dart';
 import '../models/app_settings.dart';
 import 'video_generator_screen.dart';
@@ -16,17 +18,39 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late AppSettings _settings;
+  GoogleSignInAccount? _googleAccount;
+  String? _lastBackupLabel;
+  bool _backupInProgress = false;
+  bool _restoreInProgress = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadBackupState();
   }
 
   void _loadSettings() {
     setState(() {
       _settings = HiveService.getSettings();
     });
+  }
+
+  Future<void> _loadBackupState() async {
+    final account = await BackupService.currentUser;
+    final backupFile = await BackupService.getLatestBackupInfo();
+    if (!mounted) return;
+    setState(() {
+      _googleAccount = account;
+      _lastBackupLabel = _settings.lastBackupTime != null
+          ? _formatDateTime(_settings.lastBackupTime!)
+          : (backupFile != null ? 'Available on Drive' : 'No backup found');
+    });
+  }
+
+  String _formatDateTime(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} '
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _saveSettings() async {
@@ -484,12 +508,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: Text(l10n.testNotificationDescription),
             trailing: const Icon(Icons.notifications_active),
             onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
               try {
                 await NotificationService.sendTestNotification();
-                // Notificação de teste enviada silenciosamente
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('${l10n.testNotificationError}: $e'),
                       backgroundColor: Colors.red,
@@ -504,11 +528,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: Text(l10n.testProductionNotificationDescription),
             trailing: const Icon(Icons.preview_outlined),
             onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
               try {
                 await NotificationService.sendProductionPreviewNotification();
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('${l10n.testNotificationError}: $e'),
                       backgroundColor: Colors.red,
@@ -652,6 +677,174 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+
+          // Backup
+          _buildSectionHeader('Google Drive Backup'),
+          if (_googleAccount == null) ...[
+            ListTile(
+              leading: const Icon(Icons.account_circle_outlined),
+              title: const Text('Sign in with Google'),
+              subtitle: const Text('Required to enable backup'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final account = await BackupService.signIn();
+                if (!mounted) return;
+                setState(() => _googleAccount = account);
+                if (account != null) _loadBackupState();
+              },
+            ),
+          ] else ...[
+            ListTile(
+              leading: const Icon(Icons.account_circle),
+              title: Text(_googleAccount!.displayName ?? _googleAccount!.email),
+              subtitle: Text(_googleAccount!.email),
+              trailing: TextButton(
+                child: const Text('Sign out'),
+                onPressed: () async {
+                  await BackupService.signOut();
+                  if (!mounted) return;
+                  setState(() {
+                    _googleAccount = null;
+                    _settings.autoBackup = false;
+                  });
+                  await _saveSettings();
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: const Text('Back up now'),
+              subtitle: Text(_lastBackupLabel ?? 'Never backed up'),
+              trailing: _backupInProgress
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.chevron_right),
+              onTap: _backupInProgress ? null : () async {
+                final messenger = ScaffoldMessenger.of(context);
+                setState(() => _backupInProgress = true);
+                try {
+                  await BackupService.performBackup();
+                  if (!mounted) return;
+                  setState(() => _lastBackupLabel = _formatDateTime(DateTime.now()));
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Backup completed successfully')),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Backup failed: $e')),
+                  );
+                } finally {
+                  if (mounted) setState(() => _backupInProgress = false);
+                }
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.autorenew),
+              title: const Text('Automatic backup'),
+              value: _settings.autoBackup,
+              onChanged: (value) async {
+                setState(() => _settings.autoBackup = value);
+                await _saveSettings();
+              },
+            ),
+            if (_settings.autoBackup)
+              ListTile(
+                leading: const SizedBox(width: 24),
+                title: const Text('Frequency'),
+                subtitle: Text(_settings.backupFrequency == 'daily' ? 'Daily' : 'Weekly'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final selected = await showDialog<String>(
+                    context: context,
+                    builder: (ctx) => StatefulBuilder(
+                      builder: (ctx, setDialogState) => AlertDialog(
+                        title: const Text('Backup frequency'),
+                        content: RadioGroup<String>(
+                          groupValue: _settings.backupFrequency,
+                          onChanged: (v) => setDialogState(() {}),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              RadioListTile<String>(
+                                title: Text('Daily'),
+                                value: 'daily',
+                              ),
+                              RadioListTile<String>(
+                                title: Text('Weekly'),
+                                value: 'weekly',
+                              ),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(
+                              ctx,
+                              _settings.backupFrequency,
+                            ),
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                  if (selected == null || !mounted) return;
+                  setState(() => _settings.backupFrequency = selected);
+                  await _saveSettings();
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.cloud_download_outlined),
+              title: const Text('Restore from backup'),
+              subtitle: const Text('Replaces all current data'),
+              trailing: _restoreInProgress
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.chevron_right),
+              onTap: _restoreInProgress ? null : () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Restore backup?'),
+                    content: const Text(
+                      'This will replace all your current data with the latest backup. This cannot be undone.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Restore'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm != true) return;
+                setState(() => _restoreInProgress = true);
+                try {
+                  await BackupService.performRestore();
+                  if (!mounted) return;
+                  _loadSettings();
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Restore completed. Please restart the app.')),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Restore failed: $e')),
+                  );
+                } finally {
+                  if (mounted) setState(() => _restoreInProgress = false);
+                }
+              },
+            ),
+          ],
 
           // Estatísticas
           _buildSectionHeader(l10n.statistics),

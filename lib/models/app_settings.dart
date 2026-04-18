@@ -44,6 +44,12 @@ class AppSettings extends HiveObject {
   @HiveField(12)
   String dateFormat; // 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy/MM/dd'
 
+  @HiveField(13)
+  String backupFrequency; // 'manual', 'daily', 'weekly'
+
+  @HiveField(14)
+  DateTime? lastBackupTime;
+
   AppSettings({
     this.notificationHour = 20,
     this.notificationMinute = 0,
@@ -51,13 +57,15 @@ class AppSettings extends HiveObject {
     this.videoQuality = '1080p',
     this.autoBackup = false,
     this.themeMode = 'system',
-    this.language = 'en', // Default to English
+    this.language = 'en',
     this.autoExportYearEnd = false,
     this.showDateOverlay = true,
     this.reminderDelayHours = 3,
     this.lastCalendarScrollPosition,
     this.notificationUseQuotes = true,
     this.dateFormat = 'dd/MM/yyyy',
+    this.backupFrequency = 'manual',
+    this.lastBackupTime,
   });
 
   // Getter para lastCalendarScrollPosition com valor padrão

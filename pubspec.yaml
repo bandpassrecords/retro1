@@ -39,6 +39,14 @@ dependencies:
   # App shortcuts
   quick_actions: ^1.0.0
 
+  # Backup
+  google_sign_in: ^7.2.0
+  google_sign_in_platform_interface: ^3.1.0
+  googleapis: ^16.0.0
+  googleapis_auth: ^2.0.0
+  archive: ^3.6.1
+  http: ^1.2.2
+
   # Utilitários
   uuid: ^4.2.1
   shared_preferences: ^2.2.2
